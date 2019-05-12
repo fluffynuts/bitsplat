@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitsplat", "bitsplat\bitsplat.csproj", "{E07B2784-DC27-4F58-B927-191EC4C78C12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitsplat.Tests", "bitsplat.Tests\bitsplat.Tests.csproj", "{91F1F712-91F1-4751-9D33-D16C10D363D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E07B2784-DC27-4F58-B927-191EC4C78C12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E07B2784-DC27-4F58-B927-191EC4C78C12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E07B2784-DC27-4F58-B927-191EC4C78C12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E07B2784-DC27-4F58-B927-191EC4C78C12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91F1F712-91F1-4751-9D33-D16C10D363D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91F1F712-91F1-4751-9D33-D16C10D363D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91F1F712-91F1-4751-9D33-D16C10D363D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91F1F712-91F1-4751-9D33-D16C10D363D7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
