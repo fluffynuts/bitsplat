@@ -114,6 +114,52 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
+        public class Exists
+        {
+            [Test]
+            public void WhenFileExists_ShouldReturnTrue()
+            {
+                // Arrange
+                using (var tempFile = new AutoTempFile())
+                {
+                    var sut = Create(Path.GetDirectoryName(tempFile.Path));
+                    // Act
+                    var result = sut.Exists(tempFile.Path);
+                    // Assert
+                    Expect(result).To.Be.True();
+                }
+            }            
+            
+            [Test]
+            public void WhenDirectoryExists_ShouldReturnTrue()
+            {
+                // Arrange
+                using (var tempFolder = new AutoTempFolder())
+                {
+                    var sut = Create(tempFolder.Path);
+                    // Act
+                    var result = sut.Exists(tempFolder.Path);
+                    // Assert
+                    Expect(result).To.Be.True();
+                }
+            }
+
+            [Test]
+            public void WhenNothingFound_ShouldReturnFalse()
+            {
+                // Arrange
+                using (var tempFolder = new AutoTempFolder())
+                {
+                    var sut = Create(tempFolder);
+                    // Act
+                    var result = sut.Exists(Guid.NewGuid().ToString());
+                    // Assert
+                    Expect(result).To.Be.False();
+                }
+            }
+        }
+
+        [TestFixture]
         public class Open
         {
             [Test]
