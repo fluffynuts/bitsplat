@@ -1,25 +1,21 @@
 using System;
 using System.IO;
-using NUnit.Framework;
-using static NExpect.Expectations;
 using NExpect;
-using NExpect.Implementations;
-using NExpect.Interfaces;
-using NExpect.MatcherLogic;
+using NUnit.Framework;
+using PeanutButter.RandomGenerators;
 using PeanutButter.Utils;
-using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests
 {
     [TestFixture]
-    public class FileSystem
+    public class TestFileSystem
     {
         [Test]
         public void ShouldImplement_IFileSystem()
         {
             // Arrange
             // Act
-            Expect(typeof(LocalFileSystem))
+            Expectations.Expect(typeof(LocalFileSystem))
                 .To.Implement<IFileSystem>();
             // Assert
         }
@@ -31,9 +27,9 @@ namespace bitsplat.Tests
             using (var folder = new AutoTempFolder())
             {
                 var baseFolder = Path.Combine(folder.Path, Guid.NewGuid().ToString());
-                Expect(baseFolder).Not.To.Exist();
+                Expectations.Expect(baseFolder).Not.To.Exist();
                 // Act
-                Expect(() => Create(baseFolder))
+                Expectations.Expect(() => Create(baseFolder))
                     .To.Throw<DirectoryNotFoundException>();
                 // Assert
             }
@@ -53,7 +49,7 @@ namespace bitsplat.Tests
                     // Act
                     var result = sut.IsFile(tempFile.Path);
                     // Assert
-                    Expect(result)
+                    Expectations.Expect(result)
                         .To.Be.True();
                 }
             }
@@ -69,7 +65,7 @@ namespace bitsplat.Tests
                     // Act
                     var result = sut.IsFile(test);
                     // Assert
-                    Expect(result).To.Be.False();
+                    Expectations.Expect(result).To.Be.False();
                 }
             }
         }
@@ -86,12 +82,12 @@ namespace bitsplat.Tests
                     var test = Guid.NewGuid().ToString();
                     var sub = Path.Combine(tempDir.Path, test);
                     Directory.CreateDirectory(sub);
-                    Expect(sub).To.Be.A.Directory();
+                    Expectations.Expect(sub).To.Be.A.Directory();
                     var sut = Create(tempDir.Path);
                     // Act
                     var result = sut.IsDirectory(test);
                     // Assert
-                    Expect(result).To.Be.True();
+                    Expectations.Expect(result).To.Be.True();
                 }
             }            
             
@@ -103,12 +99,12 @@ namespace bitsplat.Tests
                 {
                     var test = Guid.NewGuid().ToString();
                     var sub = Path.Combine(tempDir.Path, test);
-                    Expect(sub).Not.To.Exist();
+                    Expectations.Expect(sub).Not.To.Exist();
                     var sut = Create(tempDir.Path);
                     // Act
                     var result = sut.IsDirectory(test);
                     // Assert
-                    Expect(result).To.Be.False();
+                    Expectations.Expect(result).To.Be.False();
                 }
             }
         }
@@ -126,7 +122,7 @@ namespace bitsplat.Tests
                     // Act
                     var result = sut.Exists(tempFile.Path);
                     // Assert
-                    Expect(result).To.Be.True();
+                    Expectations.Expect(result).To.Be.True();
                 }
             }            
             
@@ -140,7 +136,7 @@ namespace bitsplat.Tests
                     // Act
                     var result = sut.Exists(tempFolder.Path);
                     // Assert
-                    Expect(result).To.Be.True();
+                    Expectations.Expect(result).To.Be.True();
                 }
             }
 
@@ -154,7 +150,7 @@ namespace bitsplat.Tests
                     // Act
                     var result = sut.Exists(Guid.NewGuid().ToString());
                     // Assert
-                    Expect(result).To.Be.False();
+                    Expectations.Expect(result).To.Be.False();
                 }
             }
         }
@@ -169,8 +165,8 @@ namespace bitsplat.Tests
                 using (var tempFolder = new AutoTempFolder())
                 {
                     var fileName = Guid.NewGuid().ToString();
-                    Expect(Path.Combine(tempFolder.Path, fileName)).Not.To.Exist();
-                    var expected = GetRandomBytes(1024);
+                    Expectations.Expect(Path.Combine(tempFolder.Path, fileName)).Not.To.Exist();
+                    var expected = RandomValueGen.GetRandomBytes(1024);
                     var sut = Create(tempFolder);
                     // Act
                     using (var stream = sut.Open(fileName, FileMode.OpenOrCreate))
@@ -183,9 +179,9 @@ namespace bitsplat.Tests
                         Path.Combine(
                             tempFolder.Path,
                             fileName
-                            )
-                        );
-                    Expect(written).To.Equal(expected);
+                        )
+                    );
+                    Expectations.Expect(written).To.Equal(expected);
                 }
             }            
             
@@ -196,8 +192,8 @@ namespace bitsplat.Tests
                 using (var tempFolder = new AutoTempFolder())
                 {
                     var fileName = Guid.NewGuid().ToString();
-                    Expect(Path.Combine(tempFolder.Path, fileName)).Not.To.Exist();
-                    var expected = GetRandomBytes(1024);
+                    Expectations.Expect(Path.Combine(tempFolder.Path, fileName)).Not.To.Exist();
+                    var expected = RandomValueGen.GetRandomBytes(1024);
                     var sut = Create(tempFolder);
                     // Act
                     using (var stream = sut.Open(fileName, FileMode.Append))
@@ -210,9 +206,9 @@ namespace bitsplat.Tests
                         Path.Combine(
                             tempFolder.Path,
                             fileName
-                            )
-                        );
-                    Expect(written).To.Equal(expected);
+                        )
+                    );
+                    Expectations.Expect(written).To.Equal(expected);
                 }
             }
         }
@@ -225,54 +221,6 @@ namespace bitsplat.Tests
         private static IFileSystem Create(AutoTempFolder baseFolder)
         {
             return Create(baseFolder.Path);
-        }
-    }
-
-    public static class Matchers
-    {
-        public static void Exist(
-            this ITo<string> to)
-        {
-            to.AddMatcher(actual =>
-            {
-                var passed = System.IO.File.Exists(actual) || System.IO.Directory.Exists(actual);
-                return new MatcherResult(
-                    passed,
-                    () => $"Expected {actual} {passed.AsNot()}to exist");
-            });
-        }
-        public static void Exist(
-            this IStringToAfterNot to)
-        {
-            to.AddMatcher(actual =>
-            {
-                var passed = System.IO.File.Exists(actual) || System.IO.Directory.Exists(actual);
-                return new MatcherResult(
-                    passed,
-                    () => $"Expected {actual} {passed.AsNot()}to exist");
-            });
-        }
-
-        public static void Directory(this IA<string> a)
-        {
-            a.AddMatcher(actual =>
-            {
-                var passed = System.IO.Directory.Exists(actual);
-                return new MatcherResult(
-                    passed,
-                    () => $"Expected {actual} {passed.AsNot()}to exist");
-            });
-        }
-        
-        public static void File(this IA<string> a)
-        {
-            a.AddMatcher(actual =>
-            {
-                var passed = System.IO.File.Exists(actual);
-                return new MatcherResult(
-                    passed,
-                    () => $"Expected {actual} {passed.AsNot()}to exist");
-            });
         }
     }
 }
