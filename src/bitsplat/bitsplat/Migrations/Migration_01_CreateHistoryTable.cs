@@ -19,6 +19,7 @@ namespace bitsplat.Migrations
                 
                 .WithColumn(Columns.PATH)
                 .AsString(1024)
+                .Unique()
                 .NotNullable()
                 
                 .WithColumn(Columns.SIZE)
