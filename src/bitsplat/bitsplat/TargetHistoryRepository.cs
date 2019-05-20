@@ -1,27 +1,12 @@
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Reflection;
 using Dapper;
-using FluentMigrator.Runner.Initialization;
-using FluentMigrator.Runner.Processors.SQLite;
-using Microsoft.Extensions.Options;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
 
 namespace bitsplat
 {
-    public class BitsplatDbMigrationRunner : DbMigrationsRunner<SQLiteProcessorFactory>
-    {
-        public BitsplatDbMigrationRunner(
-            string connectionString)
-            : base(
-                typeof(BitsplatDbMigrationRunner).Assembly,
-                connectionString)
-        {
-        }
-    }
-
     public interface ITargetHistoryRepository
     {
         void Add(History item);
@@ -93,8 +78,6 @@ namespace bitsplat
 
         private void MigrateUp()
         {
-//            var runner = new BitsplatDbMigrationRunner(ConnectionString);
-//            runner.MigrateToLatest();
             var runner = new EasyRunner(ConnectionString, GetType().Assembly);
             runner.MigrateUp();
         }

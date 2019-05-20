@@ -61,7 +61,7 @@ namespace bitsplat.Tests
                 using (var tempFolder = new AutoTempFolder())
                 {
                     var test = Path.Combine(tempFolder.Path, Guid.NewGuid().ToString());
-                    var sut = Create(test);
+                    var sut = Create(tempFolder);
                     // Act
                     var result = sut.IsFile(test);
                     // Assert

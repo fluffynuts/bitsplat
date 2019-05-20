@@ -8,7 +8,8 @@
     <e p="$USER_HOME$/.nuget/packages/nunit3testadapter/3.11.0/build/netcoreapp1.0/nunit.engine.netstandard.dll" t="Include" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="bitsplat" t="IncludeRecursive">
-        <e p="DbMigrationRunner.cs" t="Include" />
+        <e p="Bootstrapper.cs" t="Include" />
+        <e p="DateTimeHandler.cs" t="Include" />
         <e p="EasyRunner.cs" t="Include" />
         <e p="History.cs" t="Include" />
         <e p="LocalFileSystem.cs" t="Include" />
@@ -29,6 +30,8 @@
         </e>
       </e>
       <e p="bitsplat.Tests" t="IncludeRecursive">
+        <e p="HistoryBuilder.cs" t="Include" />
+        <e p="HistoryMatchers.cs" t="Include" />
         <e p="Matchers.cs" t="Include" />
         <e p="TestFileSystem.cs" t="Include" />
         <e p="TestTargetHistoryRepository.cs" t="Include" />

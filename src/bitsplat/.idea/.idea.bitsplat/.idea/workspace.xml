@@ -2,9 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6c1b11c4-0a23-4d51-a994-380d6d7c4b1d" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/bitsplat/EasyRunner.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bitsplat.Tests/HistoryBuilder.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bitsplat/Bootstrapper.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bitsplat/DateTimeHandler.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.bitsplat/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.bitsplat/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.bitsplat/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.bitsplat/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bitsplat/DbMigrationRunner.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs" beforeDir="false" afterPath="$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,41 +27,84 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="175">
-                  <caret line="81" column="47" lean-forward="true" selection-start-line="81" selection-start-column="47" selection-end-line="81" selection-end-column="47" />
+                <state relative-caret-position="656">
+                  <caret line="44" column="27" lean-forward="true" selection-start-line="44" selection-start-column="27" selection-end-line="44" selection-end-column="27" />
                   <folding>
-                    <marker date="1558333422627" expanded="true" signature="6:357" ph="..." />
-                    <marker date="1558333422627" expanded="true" signature="377:3409" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="467:692" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="666:686" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="739:852" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="921:3407" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="1257:1362" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="1401:1853" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="1472:1843" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="1895:2236" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="1966:2226" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2141:2193" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2277:2619" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2348:2609" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2520:2572" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2653:2900" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2664:2779" ph="/* var runner = new BitsplatDbMigrationRunner(ConnectionString); ... */" />
-                    <marker date="1558333422627" expanded="true" signature="2939:3024" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="2999:3014" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="3072:3184" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="3233:3401" ph="{...}" />
-                    <marker date="1558333422627" expanded="true" signature="3311:3379" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="6:205" ph="..." />
+                    <marker date="1558370535802" expanded="true" signature="225:2827" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="273:386" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="455:2825" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="791:896" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="935:1387" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1006:1377" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1429:1770" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1500:1760" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1675:1727" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1811:2153" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="1882:2143" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2054:2106" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2187:2318" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2357:2442" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2417:2432" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2490:2602" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2651:2819" ph="{...}" />
+                    <marker date="1558370535802" expanded="true" signature="2729:2797" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat/DateTimeHandler.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="160">
+                  <caret line="10" column="35" selection-start-line="10" selection-start-column="35" selection-end-line="10" selection-end-column="35" />
+                  <folding>
+                    <marker date="1558370713767" expanded="true" signature="6:46" ph="..." />
+                    <marker date="1558370713767" expanded="true" signature="66:438" ph="{...}" />
+                    <marker date="1558370713767" expanded="true" signature="135:436" ph="{...}" />
+                    <marker date="1558370713767" expanded="true" signature="223:280" ph="{...}" />
+                    <marker date="1558370713767" expanded="true" signature="334:430" ph="{...}" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
           <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="496">
+                  <caret line="31" column="62" selection-start-line="31" selection-start-column="62" selection-end-line="31" selection-end-column="62" />
+                  <folding>
+                    <marker date="1558370862756" expanded="true" signature="6:151" ph="..." />
+                    <marker date="1558370862756" expanded="true" signature="222:1201" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="312:1199" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="352:1107" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="1144:1193" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat/Bootstrapper.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="128">
+                  <caret line="8" column="60" selection-start-line="8" selection-start-column="60" selection-end-line="8" selection-end-column="60" />
+                  <folding>
+                    <marker date="1558370756552" expanded="true" signature="33:187" ph="{...}" />
+                    <marker date="1558370756552" expanded="true" signature="65:185" ph="{...}" />
+                    <marker date="1558370756552" expanded="true" signature="98:179" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/bitsplat/EasyRunner.cs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="298">
-                  <caret line="82" column="56" selection-start-line="82" selection-start-column="56" selection-end-line="82" selection-end-column="56" />
+                <state relative-caret-position="384">
+                  <caret line="94" column="49" selection-start-line="94" selection-start-column="49" selection-end-line="94" selection-end-column="49" />
                   <folding>
                     <marker date="1558333802167" expanded="true" signature="6:368" ph="..." />
                     <marker date="1558333802167" expanded="true" signature="388:5279" ph="{...}" />
@@ -149,61 +199,174 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="689">
-                  <caret line="81" column="40" selection-start-line="81" selection-start-column="40" selection-end-line="81" selection-end-column="40" />
+                <state relative-caret-position="210">
+                  <caret line="212" column="39" selection-start-line="212" selection-start-column="39" selection-end-line="212" selection-end-column="39" />
                   <folding>
-                    <marker date="1557942472602" expanded="true" signature="6:448" ph="..." />
-                    <marker date="1557942472602" expanded="true" signature="474:11959" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="539:11073" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="623:845" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="902:4390" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="998:1929" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="1114:1915" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="1642:1736" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="2023:2994" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="2139:2980" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="2488:2600" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="2743:2962" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="3068:4380" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="3323:4366" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="3510:4348" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="3706:3820" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="3986:4124" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="4438:7208" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="4518:5755" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="4740:5741" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="4922:5723" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="5826:7198" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="6140:7184" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="6365:7166" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="7257:8284" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="7350:7723" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="7504:7709" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="7802:8274" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="7954:8260" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="8335:9274" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="8427:8778" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="8581:8764" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="8870:9264" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="9022:9250" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="9321:10091" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="9499:9606" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="9836:9951" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="9986:10081" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10134:10190" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10289:10367" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10462:10737" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10582:10685" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10838:10898" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="10991:11067" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="11114:11693" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="11218:11687" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="11277:11675" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="11768:11957" ph="{...}" />
-                    <marker date="1557942472602" expanded="true" signature="11831:11951" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="6:357" ph="..." />
+                    <marker date="1558371136896" expanded="true" signature="383:11185" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="448:11005" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="532:754" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="811:4299" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="907:1838" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="1023:1824" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="1551:1645" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="1932:2903" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="2048:2889" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="2397:2509" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="2652:2871" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="2977:4289" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="3232:4275" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="3419:4257" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="3615:3729" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="3895:4033" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="4347:7123" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="4427:5667" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="4652:5653" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="4834:5635" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="5738:7113" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="6055:7099" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="6280:7081" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="7172:8216" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="7265:7638" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="7419:7624" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="7717:8206" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="7886:8192" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="8267:9206" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="8359:8710" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="8513:8696" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="8802:9196" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="8954:9182" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="9253:10023" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="9431:9538" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="9768:9883" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="9918:10013" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10066:10122" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10221:10299" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10394:10669" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10514:10617" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10770:10830" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="10923:10999" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="11054:11183" ph="{...}" />
+                    <marker date="1558371136896" expanded="true" signature="11118:11177" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat/History.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="64">
+                  <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+                  <folding>
+                    <marker date="1557857204937" expanded="true" signature="33:284" ph="{...}" />
+                    <marker date="1557857204937" expanded="true" signature="60:282" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryBuilder.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="176">
+                  <caret line="11" column="81" selection-start-line="11" selection-start-column="81" selection-end-line="11" selection-end-column="81" />
+                  <folding>
+                    <marker date="1558371136889" expanded="true" signature="6:76" ph="..." />
+                    <marker date="1558371136889" expanded="true" signature="102:445" ph="{...}" />
+                    <marker date="1558371136889" expanded="true" signature="178:443" ph="{...}" />
+                    <marker date="1558371136889" expanded="true" signature="241:437" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="272">
+                  <caret line="17" column="16" selection-start-line="17" selection-start-column="16" selection-end-line="17" selection-end-column="16" />
+                  <folding>
+                    <marker date="1558370769486" expanded="true" signature="6:84" ph="..." />
+                    <marker date="1558370769486" expanded="true" signature="110:733" ph="{...}" />
+                    <marker date="1558370769486" expanded="true" signature="152:731" ph="{...}" />
+                    <marker date="1558370769486" expanded="true" signature="256:725" ph="{...}" />
+                    <marker date="1558370769486" expanded="true" signature="315:713" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="306">
+                  <caret line="63" column="46" selection-start-line="63" selection-start-column="46" selection-end-line="63" selection-end-column="46" />
+                  <folding>
+                    <marker date="1558370623889" expanded="true" signature="6:131" ph="..." />
+                    <marker date="1558370623889" expanded="true" signature="157:7723" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="209:7721" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="280:467" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="303:332" ph="/* Arrange ... */" />
+                    <marker date="1558370623889" expanded="true" signature="559:1007" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="659:997" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="1058:2225" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="1172:1648" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="1288:1634" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="1752:2215" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="1872:2201" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="2281:3713" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="2392:3009" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="2509:2995" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="3142:3703" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="3259:3689" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="3764:5237" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="3851:4255" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="3967:4241" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="4362:4751" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="4482:4737" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="4832:5227" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="4952:5213" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="5286:7447" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="5402:6360" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="5522:6346" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="5935:6006" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="6485:7437" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="6605:7423" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="7012:7083" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="7509:7581" ph="{...}" />
+                    <marker date="1558370623889" expanded="true" signature="7651:7715" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/bitsplat/LocalFileSystem.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="831">
+                  <caret line="65" selection-start-line="65" selection-end-line="65" />
+                  <folding>
+                    <marker date="1557854079115" expanded="true" signature="6:30" ph="..." />
+                    <marker date="1557854079115" expanded="true" signature="50:2727" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="85:1442" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="100:235" ph="/// Should reflect the base path for which this ... " />
+                    <marker date="1557854079115" expanded="true" signature="278:500" ph="/// Tests if a path exists as a file or directory, ... " />
+                    <marker date="1557854079115" expanded="true" signature="552:761" ph="/// Tests if a path exists as a file, relative to ... " />
+                    <marker date="1557854079115" expanded="true" signature="813:1027" ph="/// Tests if a path exists as a directory, relative to the ... " />
+                    <marker date="1557854079115" expanded="true" signature="1084:1387" ph="/// Attempts to open a file with the provided path, ... " />
+                    <marker date="1557854079115" expanded="true" signature="1489:2725" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="1593:1806" ph="/// Creates the LocalFileSystem object with the provided baseFolder from ... " />
+                    <marker date="1557854079115" expanded="true" signature="1854:2046" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="1909:2001" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="2087:2161" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="2202:2310" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="2356:2469" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="2525:2600" ph="{...}" />
+                    <marker date="1557854079115" expanded="true" signature="2649:2719" ph="{...}" />
                   </folding>
                 </state>
               </provider>
@@ -215,11 +378,11 @@
                 <state relative-caret-position="560">
                   <caret line="35" column="27" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
                   <folding>
-                    <marker date="1557940277771" expanded="true" signature="6:151" ph="..." />
-                    <marker date="1557940277771" expanded="true" signature="222:1198" ph="{...}" />
-                    <marker date="1557940277771" expanded="true" signature="312:1196" ph="{...}" />
-                    <marker date="1557940277771" expanded="true" signature="352:1104" ph="{...}" />
-                    <marker date="1557940277771" expanded="true" signature="1141:1190" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="6:151" ph="..." />
+                    <marker date="1558370862756" expanded="true" signature="222:1201" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="312:1199" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="352:1107" ph="{...}" />
+                    <marker date="1558370862756" expanded="true" signature="1144:1193" ph="{...}" />
                   </folding>
                 </state>
               </provider>
@@ -244,7 +407,7 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4AE3746D-D9F5-4E6C-9D0A-05610DCFFD87/9/MigrationRunner.cs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="306">
+                <state relative-caret-position="2816">
                   <caret line="192" column="15" selection-start-line="192" selection-start-column="15" selection-end-line="192" selection-end-column="15" />
                   <folding>
                     <marker date="1558331207116" expanded="false" signature="0:654" ph="License" />
@@ -401,21 +564,28 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/bitsplat/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2BB720D2-2ABA-4AB3-BD0F-D6FE7406E2B4/4/SQLiteProcessorFactory.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/bitsplat/Migrations/Constants.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4AE3746D-D9F5-4E6C-9D0A-05610DCFFD87/9/MigrationRunner.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat/EasyRunner.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/bitsplat/DbMigrationRunner.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/30/RunnerOptions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat.Tests/Matchers.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/31/TypeFilterOptions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/E/MigrationProcessorFactory.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat/DateTimeHandler.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat/Bootstrapper.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryBuilder.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat/History.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2BB652DA-E186-4F7D-ADF4-F51BA8FBC7F2/c0/50527452/DBMigrationsRunner`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat/Migrations/Constants.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/E/MigrationProcessorFactory.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/bitsplat/LocalFileSystem.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
@@ -426,11 +596,14 @@
         <option value="$PROJECT_DIR$/bitsplat.Tests/Matchers.cs" />
         <option value="$PROJECT_DIR$/bitsplat/Migrations/Constants.cs" />
         <option value="$PROJECT_DIR$/bitsplat/History.cs" />
+        <option value="$PROJECT_DIR$/bitsplat/EasyRunner.cs" />
         <option value="$PROJECT_DIR$/bitsplat/DbMigrationRunner.cs" />
+        <option value="$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs" />
+        <option value="$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs" />
+        <option value="$PROJECT_DIR$/bitsplat/Bootstrapper.cs" />
         <option value="$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs" />
         <option value="$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs" />
-        <option value="$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs" />
-        <option value="$PROJECT_DIR$/bitsplat/EasyRunner.cs" />
+        <option value="$PROJECT_DIR$/bitsplat.Tests/HistoryBuilder.cs" />
       </list>
     </option>
   </component>
@@ -444,10 +617,30 @@
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectView">
-    <navigator proportions="" version="1">
+    <navigator currentView="SolutionExplorer" proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="AssemblyExplorer" />
+      <pane id="SolutionExplorer">
+        <subPane>
+          <expand>
+            <path>
+              <item name="" type="784c90a0:SolutionExplorerRootNode" />
+              <item name="bitsplat" type="24d0babc:SolutionExplorerModelNode" />
+            </path>
+            <path>
+              <item name="" type="784c90a0:SolutionExplorerRootNode" />
+              <item name="bitsplat" type="24d0babc:SolutionExplorerModelNode" />
+              <item name="bitsplat" type="24d0babc:SolutionExplorerModelNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+        <option name="show-all-files" value="false" />
+      </pane>
+      <pane id="FileSystemExplorer" />
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="Rider.DefaultBreakpoints.AreToggled" value="true" />
@@ -504,7 +697,8 @@
       <workItem from="1557853146739" duration="1044000" />
       <workItem from="1557854368997" duration="4176000" />
       <workItem from="1557939698068" duration="2816000" />
-      <workItem from="1558330331631" duration="3471000" />
+      <workItem from="1558330331631" duration="3562000" />
+      <workItem from="1558370430726" duration="707000" />
     </task>
     <task id="LOCAL-00001" summary=":tada: implement `Exists()` on LocalFileSystem">
       <created>1557854111064</created>
@@ -527,11 +721,18 @@
       <option name="project" value="LOCAL" />
       <updated>1557942503213</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary=":alembic: experimenting with a new runner, which, if it can be&#10;  abstracted nicely, should end up back in PB">
+      <created>1558333879878</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1558333879878</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="14855000" />
+    <option name="totallyTimeSpent" value="15653000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -564,7 +765,7 @@
       <window_info anchor="bottom" id="Debug" order="11" weight="0.3997934" />
       <window_info anchor="bottom" id="Cvs" order="12" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="13" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="14" />
+      <window_info anchor="bottom" id="TODO" order="14" weight="0.32920536" />
       <window_info anchor="right" id="Unit Tests Coverage" order="0" />
       <window_info anchor="right" id="Capture Analysis" order="1" />
       <window_info anchor="right" id="Errors In Solution" order="2" />
@@ -585,7 +786,8 @@
     <MESSAGE value=":tada: implement `Exists()` on LocalFileSystem" />
     <MESSAGE value=":tada: start on history repo" />
     <MESSAGE value=":tada: implement Add&#10;:tada: implement Find&#10;:tada: implement Exists" />
-    <option name="LAST_COMMIT_MESSAGE" value=":tada: implement Add&#10;:tada: implement Find&#10;:tada: implement Exists" />
+    <MESSAGE value=":alembic: experimenting with a new runner, which, if it can be&#10;  abstracted nicely, should end up back in PB" />
+    <option name="LAST_COMMIT_MESSAGE" value=":alembic: experimenting with a new runner, which, if it can be&#10;  abstracted nicely, should end up back in PB" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -594,106 +796,72 @@
           <properties exception="System.Threading.ThreadAbortException" displayValue="System.Threading.ThreadAbortException" />
           <option name="timeStamp" value="1" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs</url>
+          <line>17</line>
+          <properties documentPath="$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs" initialLine="17">
+            <startOffsets>
+              <option value="520" />
+            </startOffsets>
+            <endOffsets>
+              <option value="699" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="RiderUnitTests">
+        <watch expression="actual.Created.Ticks" language="C#" custom="RiderImportsList:" />
+        <watch expression="expected.Created.Ticks" language="C#" custom="RiderImportsList:" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="watch">
+      <expression>
+        <expression-string>expected.Created.Ticks</expression-string>
+        <language-id>C#</language-id>
+        <custom-info>RiderImportsList:</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>actual.Created.Ticks</expression-string>
+        <language-id>C#</language-id>
+        <custom-info>RiderImportsList:</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>actual.Created.Ticks</expression-string>
+        <language-id>C#</language-id>
+        <custom-info>RiderImportsList:</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>actu</expression-string>
+        <language-id>C#</language-id>
+        <custom-info>RiderImportsList:</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>actual.Created &gt; expected.Created</expression-string>
+        <language-id>C#</language-id>
+        <custom-info>RiderImportsList:</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/bitsplat/Program.cs">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat/LocalFileSystem.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1120">
-          <caret line="70" column="53" selection-start-line="70" selection-start-column="53" selection-end-line="70" selection-end-column="53" />
-          <folding>
-            <marker date="1557854079115" expanded="true" signature="6:30" ph="..." />
-            <marker date="1557854079115" expanded="true" signature="50:2727" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="85:1442" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="100:235" ph="/// Should reflect the base path for which this ... " />
-            <marker date="1557854079115" expanded="true" signature="278:500" ph="/// Tests if a path exists as a file or directory, ... " />
-            <marker date="1557854079115" expanded="true" signature="552:761" ph="/// Tests if a path exists as a file, relative to ... " />
-            <marker date="1557854079115" expanded="true" signature="813:1027" ph="/// Tests if a path exists as a directory, relative to the ... " />
-            <marker date="1557854079115" expanded="true" signature="1084:1387" ph="/// Attempts to open a file with the provided path, ... " />
-            <marker date="1557854079115" expanded="true" signature="1489:2725" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="1593:1806" ph="/// Creates the LocalFileSystem object with the provided baseFolder from ... " />
-            <marker date="1557854079115" expanded="true" signature="1854:2046" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="1909:2001" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="2087:2161" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="2202:2310" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="2356:2469" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="2525:2600" ph="{...}" />
-            <marker date="1557854079115" expanded="true" signature="2649:2719" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="10" column="27" selection-start-line="10" selection-start-column="27" selection-end-line="10" selection-end-column="27" />
-          <folding>
-            <marker date="1557854543517" expanded="true" signature="6:131" ph="..." />
-            <marker date="1557854543517" expanded="true" signature="157:7717" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="209:7715" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="280:467" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="303:332" ph="/* Arrange ... */" />
-            <marker date="1557854543517" expanded="true" signature="559:1007" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="659:997" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="1058:2219" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="1172:1648" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="1288:1634" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="1752:2209" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="1872:2195" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="2275:3707" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="2386:3003" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="2503:2989" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="3136:3697" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="3253:3683" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="3758:5231" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="3845:4249" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="3961:4235" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="4356:4745" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="4476:4731" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="4826:5221" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="4946:5207" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="5280:7441" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="5396:6354" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="5516:6340" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="5929:6000" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="6479:7431" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="6599:7417" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="7006:7077" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="7503:7575" ph="{...}" />
-            <marker date="1557854543517" expanded="true" signature="7645:7709" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/E/MigrationProcessorFactory.cs">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="304">
           <caret line="19" selection-start-line="19" selection-end-line="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat/DbMigrationRunner.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="208">
-          <caret line="13" column="39" selection-start-line="13" selection-start-column="39" selection-end-line="13" selection-end-column="39" />
-          <folding>
-            <marker date="1557858182988" expanded="true" signature="6:301" ph="..." />
-            <marker date="1557858182988" expanded="true" signature="321:2747" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="364:408" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="522:2745" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="596:1075" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="906:1065" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="1427:1654" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="1765:1847" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="1886:1965" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="2042:2164" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="2291:2739" ph="{...}" />
-            <marker date="1557858182988" expanded="true" signature="2385:2431" ph="{...}" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -704,14 +872,24 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat/History.cs">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2BB720D2-2ABA-4AB3-BD0F-D6FE7406E2B4/4/SQLiteProcessorFactory.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
-          <folding>
-            <marker date="1557857204937" expanded="true" signature="33:284" ph="{...}" />
-            <marker date="1557857204937" expanded="true" signature="60:282" ph="{...}" />
-          </folding>
+        <state relative-caret-position="416">
+          <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/31/TypeFilterOptions.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="416">
+          <caret line="26" column="22" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/30/RunnerOptions.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="416">
+          <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
         </state>
       </provider>
     </entry>
@@ -744,20 +922,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="560">
-          <caret line="35" column="27" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
-          <folding>
-            <marker date="1557940277771" expanded="true" signature="6:151" ph="..." />
-            <marker date="1557940277771" expanded="true" signature="222:1198" ph="{...}" />
-            <marker date="1557940277771" expanded="true" signature="312:1196" ph="{...}" />
-            <marker date="1557940277771" expanded="true" signature="352:1104" ph="{...}" />
-            <marker date="1557940277771" expanded="true" signature="1141:1190" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/bitsplat/Migrations/Constants.cs">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="256">
@@ -772,16 +936,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2BB720D2-2ABA-4AB3-BD0F-D6FE7406E2B4/4/SQLiteProcessorFactory.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4AE3746D-D9F5-4E6C-9D0A-05610DCFFD87/9/MigrationRunner.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
+        <state relative-caret-position="2816">
           <caret line="192" column="15" selection-start-line="192" selection-start-column="15" selection-end-line="192" selection-end-column="15" />
           <folding>
             <marker date="1558331207116" expanded="false" signature="0:654" ph="License" />
@@ -928,113 +1085,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/30/RunnerOptions.cs">
+    <entry file="file://$PROJECT_DIR$/bitsplat/DbMigrationRunner.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/002AD27B-B80D-4CA5-A0CA-A60D0F7FC54C/31/TypeFilterOptions.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="26" column="22" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="689">
-          <caret line="81" column="40" selection-start-line="81" selection-start-column="40" selection-end-line="81" selection-end-column="40" />
-          <folding>
-            <marker date="1557942472602" expanded="true" signature="6:448" ph="..." />
-            <marker date="1557942472602" expanded="true" signature="474:11959" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="539:11073" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="623:845" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="902:4390" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="998:1929" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="1114:1915" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="1642:1736" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="2023:2994" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="2139:2980" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="2488:2600" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="2743:2962" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="3068:4380" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="3323:4366" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="3510:4348" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="3706:3820" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="3986:4124" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="4438:7208" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="4518:5755" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="4740:5741" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="4922:5723" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="5826:7198" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="6140:7184" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="6365:7166" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="7257:8284" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="7350:7723" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="7504:7709" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="7802:8274" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="7954:8260" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="8335:9274" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="8427:8778" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="8581:8764" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="8870:9264" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="9022:9250" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="9321:10091" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="9499:9606" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="9836:9951" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="9986:10081" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10134:10190" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10289:10367" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10462:10737" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10582:10685" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10838:10898" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="10991:11067" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="11114:11693" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="11218:11687" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="11277:11675" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="11768:11957" ph="{...}" />
-            <marker date="1557942472602" expanded="true" signature="11831:11951" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="81" column="47" lean-forward="true" selection-start-line="81" selection-start-column="47" selection-end-line="81" selection-end-column="47" />
-          <folding>
-            <marker date="1558333422627" expanded="true" signature="6:357" ph="..." />
-            <marker date="1558333422627" expanded="true" signature="377:3409" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="467:692" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="666:686" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="739:852" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="921:3407" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="1257:1362" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="1401:1853" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="1472:1843" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="1895:2236" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="1966:2226" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2141:2193" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2277:2619" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2348:2609" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2520:2572" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2653:2900" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2664:2779" ph="/* var runner = new BitsplatDbMigrationRunner(ConnectionString); ... */" />
-            <marker date="1558333422627" expanded="true" signature="2939:3024" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="2999:3014" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="3072:3184" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="3233:3401" ph="{...}" />
-            <marker date="1558333422627" expanded="true" signature="3311:3379" ph="{...}" />
-          </folding>
+        <state relative-caret-position="301">
+          <caret line="21" column="32" selection-start-line="21" selection-start-column="32" selection-end-line="21" selection-end-column="32" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/bitsplat/EasyRunner.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="298">
-          <caret line="82" column="56" selection-start-line="82" selection-start-column="56" selection-end-line="82" selection-end-column="56" />
+        <state relative-caret-position="384">
+          <caret line="94" column="49" selection-start-line="94" selection-start-column="49" selection-end-line="94" selection-end-column="49" />
           <folding>
             <marker date="1558333802167" expanded="true" signature="6:368" ph="..." />
             <marker date="1558333802167" expanded="true" signature="388:5279" ph="{...}" />
@@ -1071,6 +1132,235 @@
             <marker date="1558333802167" expanded="true" signature="5096:5144" ph="{...}" />
             <marker date="1558333802167" expanded="true" signature="5145:5165" ph="{...}" />
             <marker date="1558333802167" expanded="true" signature="5222:5271" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/LocalFileSystem.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="831">
+          <caret line="65" selection-start-line="65" selection-end-line="65" />
+          <folding>
+            <marker date="1557854079115" expanded="true" signature="6:30" ph="..." />
+            <marker date="1557854079115" expanded="true" signature="50:2727" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="85:1442" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="100:235" ph="/// Should reflect the base path for which this ... " />
+            <marker date="1557854079115" expanded="true" signature="278:500" ph="/// Tests if a path exists as a file or directory, ... " />
+            <marker date="1557854079115" expanded="true" signature="552:761" ph="/// Tests if a path exists as a file, relative to ... " />
+            <marker date="1557854079115" expanded="true" signature="813:1027" ph="/// Tests if a path exists as a directory, relative to the ... " />
+            <marker date="1557854079115" expanded="true" signature="1084:1387" ph="/// Attempts to open a file with the provided path, ... " />
+            <marker date="1557854079115" expanded="true" signature="1489:2725" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="1593:1806" ph="/// Creates the LocalFileSystem object with the provided baseFolder from ... " />
+            <marker date="1557854079115" expanded="true" signature="1854:2046" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="1909:2001" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="2087:2161" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="2202:2310" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="2356:2469" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="2525:2600" ph="{...}" />
+            <marker date="1557854079115" expanded="true" signature="2649:2719" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestFileSystem.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="63" column="46" selection-start-line="63" selection-start-column="46" selection-end-line="63" selection-end-column="46" />
+          <folding>
+            <marker date="1558370623889" expanded="true" signature="6:131" ph="..." />
+            <marker date="1558370623889" expanded="true" signature="157:7723" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="209:7721" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="280:467" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="303:332" ph="/* Arrange ... */" />
+            <marker date="1558370623889" expanded="true" signature="559:1007" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="659:997" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="1058:2225" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="1172:1648" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="1288:1634" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="1752:2215" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="1872:2201" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="2281:3713" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="2392:3009" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="2509:2995" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="3142:3703" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="3259:3689" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="3764:5237" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="3851:4255" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="3967:4241" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="4362:4751" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="4482:4737" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="4832:5227" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="4952:5213" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="5286:7447" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="5402:6360" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="5522:6346" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="5935:6006" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="6485:7437" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="6605:7423" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="7012:7083" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="7509:7581" ph="{...}" />
+            <marker date="1558370623889" expanded="true" signature="7651:7715" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/DateTimeHandler.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="10" column="35" selection-start-line="10" selection-start-column="35" selection-end-line="10" selection-end-column="35" />
+          <folding>
+            <marker date="1558370713767" expanded="true" signature="6:46" ph="..." />
+            <marker date="1558370713767" expanded="true" signature="66:438" ph="{...}" />
+            <marker date="1558370713767" expanded="true" signature="135:436" ph="{...}" />
+            <marker date="1558370713767" expanded="true" signature="223:280" ph="{...}" />
+            <marker date="1558370713767" expanded="true" signature="334:430" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/Bootstrapper.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="8" column="60" selection-start-line="8" selection-start-column="60" selection-end-line="8" selection-end-column="60" />
+          <folding>
+            <marker date="1558370756552" expanded="true" signature="33:187" ph="{...}" />
+            <marker date="1558370756552" expanded="true" signature="65:185" ph="{...}" />
+            <marker date="1558370756552" expanded="true" signature="98:179" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/TargetHistoryRepository.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="656">
+          <caret line="44" column="27" lean-forward="true" selection-start-line="44" selection-start-column="27" selection-end-line="44" selection-end-column="27" />
+          <folding>
+            <marker date="1558370535802" expanded="true" signature="6:205" ph="..." />
+            <marker date="1558370535802" expanded="true" signature="225:2827" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="273:386" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="455:2825" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="791:896" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="935:1387" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1006:1377" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1429:1770" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1500:1760" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1675:1727" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1811:2153" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="1882:2143" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2054:2106" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2187:2318" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2357:2442" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2417:2432" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2490:2602" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2651:2819" ph="{...}" />
+            <marker date="1558370535802" expanded="true" signature="2729:2797" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/Migrations/Migration_01_CreateHistoryTable.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="560">
+          <caret line="35" column="27" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
+          <folding>
+            <marker date="1558370862756" expanded="true" signature="6:151" ph="..." />
+            <marker date="1558370862756" expanded="true" signature="222:1201" ph="{...}" />
+            <marker date="1558370862756" expanded="true" signature="312:1199" ph="{...}" />
+            <marker date="1558370862756" expanded="true" signature="352:1107" ph="{...}" />
+            <marker date="1558370862756" expanded="true" signature="1144:1193" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryMatchers.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="17" column="16" selection-start-line="17" selection-start-column="16" selection-end-line="17" selection-end-column="16" />
+          <folding>
+            <marker date="1558370769486" expanded="true" signature="6:84" ph="..." />
+            <marker date="1558370769486" expanded="true" signature="110:733" ph="{...}" />
+            <marker date="1558370769486" expanded="true" signature="152:731" ph="{...}" />
+            <marker date="1558370769486" expanded="true" signature="256:725" ph="{...}" />
+            <marker date="1558370769486" expanded="true" signature="315:713" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat/History.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+          <folding>
+            <marker date="1557857204937" expanded="true" signature="33:284" ph="{...}" />
+            <marker date="1557857204937" expanded="true" signature="60:282" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/TestTargetHistoryRepository.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="212" column="39" selection-start-line="212" selection-start-column="39" selection-end-line="212" selection-end-column="39" />
+          <folding>
+            <marker date="1558371136896" expanded="true" signature="6:357" ph="..." />
+            <marker date="1558371136896" expanded="true" signature="383:11185" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="448:11005" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="532:754" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="811:4299" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="907:1838" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="1023:1824" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="1551:1645" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="1932:2903" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="2048:2889" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="2397:2509" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="2652:2871" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="2977:4289" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="3232:4275" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="3419:4257" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="3615:3729" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="3895:4033" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="4347:7123" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="4427:5667" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="4652:5653" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="4834:5635" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="5738:7113" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="6055:7099" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="6280:7081" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="7172:8216" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="7265:7638" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="7419:7624" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="7717:8206" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="7886:8192" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="8267:9206" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="8359:8710" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="8513:8696" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="8802:9196" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="8954:9182" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="9253:10023" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="9431:9538" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="9768:9883" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="9918:10013" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10066:10122" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10221:10299" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10394:10669" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10514:10617" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10770:10830" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="10923:10999" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="11054:11183" ph="{...}" />
+            <marker date="1558371136896" expanded="true" signature="11118:11177" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bitsplat.Tests/HistoryBuilder.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="176">
+          <caret line="11" column="81" selection-start-line="11" selection-start-column="81" selection-end-line="11" selection-end-column="81" />
+          <folding>
+            <marker date="1558371136889" expanded="true" signature="6:76" ph="..." />
+            <marker date="1558371136889" expanded="true" signature="102:445" ph="{...}" />
+            <marker date="1558371136889" expanded="true" signature="178:443" ph="{...}" />
+            <marker date="1558371136889" expanded="true" signature="241:437" ph="{...}" />
           </folding>
         </state>
       </provider>

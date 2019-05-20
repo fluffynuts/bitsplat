@@ -29,7 +29,7 @@ namespace bitsplat.Migrations
                 .WithColumn(Columns.CREATED)
                 .AsDateTime()
                 .NotNullable()
-                .WithDefault(SystemMethods.CurrentDateTime)
+                .WithDefault(SystemMethods.CurrentUTCDateTime)
                 
                 .WithColumn(Columns.MODIFIED)
                 .AsDateTime()

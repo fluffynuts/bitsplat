@@ -6,14 +6,11 @@ using System.Linq;
 using Dapper;
 using static NExpect.Expectations;
 using NExpect;
-using NExpect.Interfaces;
-using NExpect.MatcherLogic;
 using NUnit.Framework;
 using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using NExpect.Implementations;
-using PeanutButter.RandomGenerators;
 
 namespace bitsplat.Tests
 {
@@ -134,7 +131,7 @@ namespace bitsplat.Tests
             {
                 // Arrange
                 var item = GetRandom<History>();
-                var beforeTest = DateTime.Now.TruncateMilliseconds();
+                var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
                 {
                     // Act
@@ -165,7 +162,7 @@ namespace bitsplat.Tests
                 var item = GetRandom<History>();
                 var second = GetRandom<History>();
                 second.Path = item.Path;
-                var beforeTest = DateTime.Now.TruncateMilliseconds();
+                var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
                 {
                     // Act
@@ -214,6 +211,7 @@ namespace bitsplat.Tests
             {
                 // Arrange
                 var item = GetRandom<History>();
+                
                 using (var arena = Create())
                 {
                     // Act
@@ -324,31 +322,13 @@ namespace bitsplat.Tests
         }
     }
 
-    public static class HistoryMatchers
+    [SetUpFixture]
+    public class GlobalSetup
     {
-        public static void Match(
-            this ITo<History> to,
-            History expected)
+        [OneTimeSetUp]
+        public void OneTimeSetup()
         {
-            to.AddMatcher(actual =>
-            {
-                var passed = actual.Path == expected.Path &&
-                             actual.Size == expected.Size &&
-                             actual.Created >= expected.Created;
-                return new MatcherResult(
-                    passed,
-                    () => $"Expected {actual.Stringify()} {passed.AsNot()}to match {expected.Stringify()}"
-                );
-            });
-        }
-    }
-
-    public class HistoryBuilder : GenericBuilder<HistoryBuilder, History>
-    {
-        public override HistoryBuilder WithRandomProps()
-        {
-            return base.WithRandomProps()
-                .WithProp(o => o.Created = DateTime.Now);
+            new Bootstrapper().Init();
         }
     }
 }
