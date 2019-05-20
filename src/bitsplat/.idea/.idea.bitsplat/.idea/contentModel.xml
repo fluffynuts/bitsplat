@@ -9,6 +9,7 @@
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="bitsplat" t="IncludeRecursive">
         <e p="DbMigrationRunner.cs" t="Include" />
+        <e p="EasyRunner.cs" t="Include" />
         <e p="History.cs" t="Include" />
         <e p="LocalFileSystem.cs" t="Include" />
         <e p="Migrations" t="Include">
