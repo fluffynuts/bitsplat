@@ -12,12 +12,17 @@
         <e p="DateTimeHandler.cs" t="Include" />
         <e p="EasyRunner.cs" t="Include" />
         <e p="History.cs" t="Include" />
+        <e p="IFileResource.cs" t="Include" />
+        <e p="IFileSystem.cs" t="Include" />
+        <e p="ITargetHistoryRepository.cs" t="Include" />
+        <e p="LocalFileResource.cs" t="Include" />
         <e p="LocalFileSystem.cs" t="Include" />
         <e p="Migrations" t="Include">
           <e p="Constants.cs" t="Include" />
           <e p="Migration_01_CreateHistoryTable.cs" t="Include" />
         </e>
         <e p="Program.cs" t="Include" />
+        <e p="Synchronizer.cs" t="Include" />
         <e p="TargetHistoryRepository.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="bitsplat.csproj" t="IncludeRecursive" />
@@ -30,10 +35,12 @@
         </e>
       </e>
       <e p="bitsplat.Tests" t="IncludeRecursive">
+        <e p="AutoTempFolderExtensions.cs" t="Include" />
         <e p="HistoryBuilder.cs" t="Include" />
         <e p="HistoryMatchers.cs" t="Include" />
         <e p="Matchers.cs" t="Include" />
-        <e p="TestFileSystem.cs" t="Include" />
+        <e p="TestLocalFileSystem.cs" t="Include" />
+        <e p="TestSynchronizer.cs" t="Include" />
         <e p="TestTargetHistoryRepository.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="bitsplat.Tests.csproj" t="IncludeRecursive" />

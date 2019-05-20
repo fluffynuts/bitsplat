@@ -7,13 +7,6 @@ using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
 
 namespace bitsplat
 {
-    public interface ITargetHistoryRepository
-    {
-        void Add(History item);
-        History Find(string path);
-        bool Exists(string path);
-    }
-
     public class TargetHistoryRepository : ITargetHistoryRepository
     {
         public const string DB_NAME = ".bitsplat.db";

@@ -1,52 +1,12 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace bitsplat
 {
-    public interface IFileSystem
-    {
-        /// <summary>
-        /// Should reflect the base path for which this
-        /// filesystem wrapper was created
-        /// </summary>
-        string BasePath { get; }
-
-        /// <summary>
-        /// Tests if a path exists as a file or directory,
-        /// relative to the BasePath of the filesystem
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        bool Exists(string path);
-        
-        /// <summary>
-        /// Tests if a path exists as a file, relative to
-        /// the BasePath of the filesystem
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        bool IsFile(string path);
-        
-        /// <summary>
-        /// Tests if a path exists as a directory, relative to the
-        /// BasePath of the filesystem
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        bool IsDirectory(string path);
-        
-        /// <summary>
-        /// Attempts to open a file with the provided path,
-        /// relative to the BasePath of the filesystem, with
-        /// the required FileMode
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="mode"></param>
-        /// <returns></returns>
-        Stream Open(string path, FileMode mode);
-    }
-
-    public class LocalFileSystem: IFileSystem
+    public class LocalFileSystem : IFileSystem
     {
         public string BasePath => _basePath;
         private readonly string _basePath;
@@ -83,9 +43,26 @@ namespace bitsplat
             return Directory.Exists(fullPath);
         }
 
-        public Stream Open(string path, FileMode mode)
+        public Stream Open(
+            string path,
+            FileMode mode)
         {
             return File.Open(FullPathFor(path), mode);
+        }
+
+        public IEnumerable<IFileResource> ListResourcesRecursive()
+        {
+            return ListResourcesUnder(BasePath);
+        }
+
+        private IEnumerable<IFileResource> ListResourcesUnder(string path)
+        {
+            return Directory.GetFiles(path)
+                .Select(p => new LocalFileResource(p, BasePath))
+                .Union(
+                    Directory.GetDirectories(path)
+                        .SelectMany(dir => ListResourcesUnder(Path.Combine(path, dir)))
+                );
         }
 
         private string FullPathFor(string path)
