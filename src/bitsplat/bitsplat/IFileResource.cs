@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace bitsplat
 {
     public interface IFileResource
@@ -5,5 +7,8 @@ namespace bitsplat
         string Path { get; }
         long Size { get; }
         string RelativePath { get; }
+        
+        Stream Read();
+        Stream Write();
     }
 }

@@ -1,3 +1,6 @@
+using System.Collections;
+using System.IO;
+
 namespace bitsplat
 {
     public interface ISynchronizer
@@ -8,11 +11,6 @@ namespace bitsplat
     public class Synchronizer
         : ISynchronizer
     {
-
-        public Synchronizer()
-        {
-        }
-
         public void Synchronize(
             IFileSystem source,
             IFileSystem target
@@ -20,6 +18,12 @@ namespace bitsplat
         {
             var sourceResources = source.ListResourcesRecursive();
             var targetResources = target.ListResourcesRecursive();
+            sourceResources.ForEach(sourceResource =>
+            {
+                var sourceStream = sourceResource.Read();
+                var targetStream = target.Open(sourceResource.RelativePath, FileMode.OpenOrCreate);
+                
+            });
         }
     }
 }
