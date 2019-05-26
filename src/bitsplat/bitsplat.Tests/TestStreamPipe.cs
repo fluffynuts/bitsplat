@@ -11,101 +11,53 @@ using PeanutButter.Utils;
 namespace bitsplat.Tests
 {
     [TestFixture]
-    public class TestStreamPipe
+    public class TestPipeline
     {
         [Test]
-        public void ShouldDrainOneStreamIntoAnother()
+        public void SimplePipeline()
         {
             // Arrange
             var data = GetRandomBytes(100);
-            var source = CreateMemoryStreamContaining(data);
-            var target = new MemoryStream();
-            var sut = Create(source);
+            var sourceStream = new MemoryStream(data);
+            var targetStream = new MemoryStream();
+            var source = new StreamSource(sourceStream);
+            var target = new StreamSink(targetStream);
             // Act
-            sut.Pipe(target)
+            source
+                .Pipe(target)
                 .Drain();
             // Assert
-            Expect(target)
+            Expect(targetStream)
                 .To.Contain.Only(data);
         }
 
         [Test]
-        public void ShouldDrainThroughIntermediateStream()
+        public void ThreeLevelPipeline()
         {
             // Arrange
+            var intermediate = new PassThrough((
+                    d,
+                    c) =>
+                {
+                },
+                () =>
+                {
+                });
+
             var data = GetRandomBytes(100);
-            var source = CreateMemoryStreamContaining(data);
-            source.SetMetadata("streamId", "source");
-            var intermediate = new MemoryStream();
-            intermediate.SetMetadata("streamId", "intermediate");
-            var target = new MemoryStream();
-            target.SetMetadata("streamId", "target");
+            var sourceStream = new MemoryStream(data);
+            var targetStream = new MemoryStream();
+            var source = new StreamSource(sourceStream);
+            var target = new StreamSink(targetStream);
             // Act
             source
                 .Pipe(intermediate)
                 .Pipe(target)
                 .Drain();
             // Assert
-            Expect(intermediate).To.Contain.Only(data);
-            Expect(target).To.Contain.Only(data);
+            Expect(targetStream)
+                .To.Contain.Only(data);
         }
-
-        private static IPipeline Create(
-            Stream source)
-        {
-            return new Pipeline(source);
-        }
-
-        private static MemoryStream CreateMemoryStreamContaining(
-            byte[] data)
-        {
-            var result = new MemoryStream();
-            result.Write(data, 0, data.Length);
-            result.Rewind();
-            return result;
-        }
-    }
-
-    public class PassThroughStream : Stream
-    {
-        public override void Flush()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override int Read(
-            byte[] buffer,
-            int offset,
-            int count)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override long Seek(
-            long offset,
-            SeekOrigin origin)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void Write(
-            byte[] buffer,
-            int offset,
-            int count)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override bool CanRead { get; }
-        public override bool CanSeek { get; }
-        public override bool CanWrite { get; }
-        public override long Length { get; }
-        public override long Position { get; set; }
     }
 
     public static class StreamMatchers
