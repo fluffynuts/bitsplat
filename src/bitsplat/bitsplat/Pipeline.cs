@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using PeanutButter.Utils;
 
 namespace bitsplat
 {
@@ -16,7 +18,9 @@ namespace bitsplat
 
     public interface IWriter
     {
-        void Write(byte[] buffer, int count);
+        void Write(
+            byte[] buffer,
+            int count);
     }
 
     public interface IData
@@ -25,7 +29,7 @@ namespace bitsplat
     {
     }
 
-    internal class ReaderWriterFacade: IData
+    internal class ReaderWriterFacade : IData
     {
         private readonly Pipeline _pipe;
         private readonly Stream _stream;
@@ -44,14 +48,21 @@ namespace bitsplat
 
         public int Read(byte[] buffer)
         {
-            return _stream?.Read(buffer, 0, buffer.Length)
-                ?? _pipe.Read(buffer);
+            if (_stream != null)
+            {
+                Console.WriteLine($"read from stream: {_stream.GetMetadata<string>("streamId")}");
+            }
+
+            return _stream?.Read(buffer, 0, buffer.Length) ?? _pipe.Read(buffer);
         }
 
-        public void Write(byte[] buffer, int count)
+        public void Write(
+            byte[] buffer,
+            int count)
         {
             if (_stream != null)
             {
+                Console.WriteLine($"write to stream: {_stream.GetMetadata<string>("streamId")}");
                 _stream.Write(buffer, 0, count);
             }
             else
@@ -65,7 +76,14 @@ namespace bitsplat
     {
         private readonly IData _stream;
         private readonly List<Pipeline> _sinks = new List<Pipeline>();
-        private Pipeline _upstream;
+        private readonly Pipeline _upstream;
+        private static int _counter = 0;
+        private int _id = _counter++;
+
+        private void Log(string msg)
+        {
+            Console.WriteLine($"{_id}: {msg}");
+        }
 
         public Pipeline(Stream source)
             : this(new ReaderWriterFacade(source))
@@ -80,11 +98,12 @@ namespace bitsplat
 
         internal Pipeline(
             Pipeline source,
-            Stream target): this(new ReaderWriterFacade(target))
+            Stream target)
+            : this(new ReaderWriterFacade(target))
         {
             _upstream = source;
         }
-        
+
         internal int Read(byte[] buffer)
         {
             return _stream.Read(buffer);
@@ -94,11 +113,13 @@ namespace bitsplat
             byte[] buffer,
             int count)
         {
+            Log("write to _stream");
             _stream.Write(buffer, count);
         }
 
         public IPipeline Pipe(Stream target)
         {
+            Log("create pipeline");
             var sink = new Pipeline(this, target);
             _sinks.Add(sink);
             return sink;
@@ -106,17 +127,18 @@ namespace bitsplat
 
         public bool Pump()
         {
-            if (_upstream != null)
-            {
-                return _upstream.Pump();
-            }
+            Log("pump");
+            _upstream?.Pump();
 
+            Log($"read from _stream");
             var buffer = new byte[32768];
             var read = _stream.Read(buffer);
             if (read > 0)
             {
+                Log("write to sinks");
                 _sinks.ForEach(sink => sink.Write(buffer, read));
             }
+
             return read > 0;
         }
 
@@ -125,6 +147,17 @@ namespace bitsplat
             while (_upstream.Pump())
             {
             }
+        }
+    }
+
+    public static class StreamToPipeExtensions
+    {
+        public static IPipeline Pipe(
+            this Stream source,
+            Stream target)
+        {
+            return new Pipeline(source)
+                .Pipe(target);
         }
     }
 }
