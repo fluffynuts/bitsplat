@@ -25,11 +25,8 @@ namespace bitsplat.Tests
             sut.Pipe(target)
                 .Drain();
             // Assert
-            var targetData = target.ReadAllBytes();
-            Expect(targetData).To.Deep.Equal(data);
-            // FIXME: update to use custom matcher once PB update
-//            Expect(target)
-//                .To.Contain.Only(data);
+            Expect(target)
+                .To.Contain.Only(data);
         }
 
         private static IPipeline Create(

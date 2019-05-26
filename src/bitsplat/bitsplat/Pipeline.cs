@@ -9,7 +9,23 @@ namespace bitsplat
         void Drain();
     }
 
-    internal class ReaderWriterFacade
+    public interface IReader
+    {
+        int Read(byte[] buffer);
+    }
+
+    public interface IWriter
+    {
+        void Write(byte[] buffer, int count);
+    }
+
+    public interface IData
+        : IReader,
+          IWriter
+    {
+    }
+
+    internal class ReaderWriterFacade: IData
     {
         private readonly Pipeline _pipe;
         private readonly Stream _stream;
@@ -47,7 +63,7 @@ namespace bitsplat
 
     public class Pipeline : IPipeline
     {
-        private readonly ReaderWriterFacade _stream;
+        private readonly IData _stream;
         private readonly List<Pipeline> _sinks = new List<Pipeline>();
         private Pipeline _upstream;
 
