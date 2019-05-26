@@ -1,10 +1,8 @@
 using System.IO;
-using System.Text;
 using bitsplat.Pipes;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using static NExpect.Expectations;
-using NExpect;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 using PeanutButter.Utils;
