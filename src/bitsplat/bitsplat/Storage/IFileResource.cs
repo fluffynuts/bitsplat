@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace bitsplat
+namespace bitsplat.Storage
 {
     public interface IFileResource
     {

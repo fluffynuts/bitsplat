@@ -6,7 +6,7 @@ namespace bitsplat
     {
         public void Init()
         {
-            SqlMapper.AddTypeHandler(new DateTimeHandler());
+            SqlMapper.AddTypeHandler(new SqlMapperDateTimeHandler());
         }
     }
 }

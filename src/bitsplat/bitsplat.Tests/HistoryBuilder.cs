@@ -4,7 +4,7 @@ using PeanutButter.Utils;
 
 namespace bitsplat.Tests
 {
-    public class HistoryBuilder : GenericBuilder<HistoryBuilder, History>
+    public class HistoryBuilder : GenericBuilder<HistoryBuilder, History.History>
     {
         public override HistoryBuilder WithRandomProps()
         {

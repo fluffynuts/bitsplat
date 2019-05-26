@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace bitsplat
+namespace bitsplat.Storage
 {
     public class LocalFileResource
         : IFileResource

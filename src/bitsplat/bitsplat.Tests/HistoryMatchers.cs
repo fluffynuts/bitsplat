@@ -7,8 +7,8 @@ namespace bitsplat.Tests
     public static class HistoryMatchers
     {
         public static void Match(
-            this ITo<History> to,
-            History expected)
+            this ITo<History.History> to,
+            History.History expected)
         {
             to.AddMatcher(actual =>
             {

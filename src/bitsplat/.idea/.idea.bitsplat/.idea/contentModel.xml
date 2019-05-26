@@ -9,23 +9,36 @@
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="bitsplat" t="IncludeRecursive">
         <e p="Bootstrapper.cs" t="Include" />
-        <e p="DateTimeHandler.cs" t="Include" />
         <e p="EasyRunner.cs" t="Include" />
         <e p="EnumerableExtensions.cs" t="Include" />
-        <e p="History.cs" t="Include" />
-        <e p="IFileResource.cs" t="Include" />
-        <e p="IFileSystem.cs" t="Include" />
-        <e p="ITargetHistoryRepository.cs" t="Include" />
-        <e p="LocalFileResource.cs" t="Include" />
-        <e p="LocalFileSystem.cs" t="Include" />
+        <e p="History" t="Include">
+          <e p="History.cs" t="Include" />
+          <e p="ITargetHistoryRepository.cs" t="Include" />
+          <e p="TargetHistoryRepository.cs" t="Include" />
+        </e>
         <e p="Migrations" t="Include">
           <e p="Constants.cs" t="Include" />
           <e p="Migration_01_CreateHistoryTable.cs" t="Include" />
         </e>
-        <e p="Pipeline.cs" t="Include" />
+        <e p="Pipes" t="Include">
+          <e p="IPassThrough.cs" t="Include" />
+          <e p="IPipeElement.cs" t="Include" />
+          <e p="ISink.cs" t="Include" />
+          <e p="ISource.cs" t="Include" />
+          <e p="NullPassThrough.cs" t="Include" />
+          <e p="PassThrough.cs" t="Include" />
+          <e p="StreamSink.cs" t="Include" />
+          <e p="StreamSource.cs" t="Include" />
+        </e>
         <e p="Program.cs" t="Include" />
+        <e p="SqlMapperDateTimeHandler.cs" t="Include" />
+        <e p="Storage" t="Include">
+          <e p="IFileResource.cs" t="Include" />
+          <e p="IFileSystem.cs" t="Include" />
+          <e p="LocalFileResource.cs" t="Include" />
+          <e p="LocalFileSystem.cs" t="Include" />
+        </e>
         <e p="Synchronizer.cs" t="Include" />
-        <e p="TargetHistoryRepository.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="bitsplat.csproj" t="IncludeRecursive" />
         <e p="obj" t="ExcludeRecursive">

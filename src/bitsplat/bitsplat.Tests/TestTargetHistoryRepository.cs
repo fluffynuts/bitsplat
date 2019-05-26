@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using bitsplat.History;
 using Dapper;
 using static NExpect.Expectations;
 using NExpect;
@@ -79,7 +80,7 @@ namespace bitsplat.Tests
                         .OpenAndReturn())
                     {
                         Expect(() =>
-                                conn.Query<History>($"select * from {Table.NAME};")
+                                conn.Query<History.History>($"select * from {Table.NAME};")
                             )
                             .Not.To.Throw();
                     }
@@ -130,7 +131,7 @@ namespace bitsplat.Tests
             public void ShouldAddANewHistoryItem()
             {
                 // Arrange
-                var item = GetRandom<History>();
+                var item = GetRandom<History.History>();
                 var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
                 {
@@ -139,7 +140,7 @@ namespace bitsplat.Tests
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
-                        var result = conn.Query<History>($"select * from {Table.NAME};")
+                        var result = conn.Query<History.History>($"select * from {Table.NAME};")
                             .ToArray();
                         Expect(result)
                             .To.Contain.Exactly(1)
@@ -159,8 +160,8 @@ namespace bitsplat.Tests
             public void ShouldNotAddRepeatedPath()
             {
                 // Arrange
-                var item = GetRandom<History>();
-                var second = GetRandom<History>();
+                var item = GetRandom<History.History>();
+                var second = GetRandom<History.History>();
                 second.Path = item.Path;
                 var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
@@ -171,7 +172,7 @@ namespace bitsplat.Tests
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
-                        var result = conn.Query<History>($"select * from {Table.NAME};")
+                        var result = conn.Query<History.History>($"select * from {Table.NAME};")
                             .ToArray();
                         Expect(result)
                             .To.Contain.Exactly(1)
@@ -210,7 +211,7 @@ namespace bitsplat.Tests
             public void WhenItemDoesExist_ShouldReturnIt()
             {
                 // Arrange
-                var item = GetRandom<History>();
+                var item = GetRandom<History.History>();
                 
                 using (var arena = Create())
                 {
@@ -246,7 +247,7 @@ namespace bitsplat.Tests
             public void WhenPathIsKnown_ShouldReturnFalse()
             {
                 // Arrange
-                var item = GetRandom<History>();
+                var item = GetRandom<History.History>();
                 using (var arena = Create())
                 {
                     // Act

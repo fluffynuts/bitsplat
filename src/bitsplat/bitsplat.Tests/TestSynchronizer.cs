@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.Storage;
 using Castle.Core.Resource;
 using static NExpect.Expectations;
 using NExpect;

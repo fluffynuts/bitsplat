@@ -5,7 +5,7 @@ using Dapper;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
 
-namespace bitsplat
+namespace bitsplat.History
 {
     public class TargetHistoryRepository : ITargetHistoryRepository
     {

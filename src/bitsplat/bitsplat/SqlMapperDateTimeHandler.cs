@@ -4,7 +4,7 @@ using Dapper;
 
 namespace bitsplat
 {
-    public class DateTimeHandler : SqlMapper.TypeHandler<DateTime>
+    public class SqlMapperDateTimeHandler : SqlMapper.TypeHandler<DateTime>
     {
         public override void SetValue(IDbDataParameter parameter, DateTime value)
         {

@@ -1,8 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-namespace bitsplat
+namespace bitsplat.Storage
 {
     public interface IFileSystem
     {

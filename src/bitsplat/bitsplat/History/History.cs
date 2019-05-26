@@ -1,6 +1,6 @@
 using System;
 
-namespace bitsplat
+namespace bitsplat.History
 {
     public class History
     {

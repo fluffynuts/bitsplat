@@ -1,4 +1,4 @@
-namespace bitsplat
+namespace bitsplat.History
 {
     public interface ITargetHistoryRepository
     {

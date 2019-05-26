@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using bitsplat.Storage;
 using NExpect;
 using NExpect.MatcherLogic;
 using NUnit.Framework;

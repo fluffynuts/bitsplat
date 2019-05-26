@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using bitsplat.Pipes;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using static NExpect.Expectations;
@@ -35,15 +36,7 @@ namespace bitsplat.Tests
         public void ThreeLevelPipeline()
         {
             // Arrange
-            var intermediate = new PassThrough((
-                    d,
-                    c) =>
-                {
-                },
-                () =>
-                {
-                });
-
+            var intermediate = new NullPassThrough();
             var data = GetRandomBytes(100);
             var sourceStream = new MemoryStream(data);
             var targetStream = new MemoryStream();
