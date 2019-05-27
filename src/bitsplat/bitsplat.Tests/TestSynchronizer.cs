@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using bitsplat.Storage;
 using Castle.Core.Resource;
 using static NExpect.Expectations;
 using NExpect;
+using NExpect.Implementations;
+using NExpect.Interfaces;
+using NExpect.MatcherLogic;
 using NSubstitute;
 using NUnit.Framework;
 using PeanutButter.Utils;
@@ -55,130 +59,115 @@ namespace bitsplat.Tests
             public class WhenSourceHasOneFileAndTargetIsEmpty
             {
                 [Test]
-                [Ignore("WIP: need a stream piper")]
                 public void ShouldCopyTheSourceFileToTarget()
                 {
                     // Arrange
-                    var basePath = Path.Combine(GetRandomArray<string>());
-                    var relPath = "some-file.ext";
-                    var data = GetRandomBytes();
-                    var fs1 = CreateFileSystem(
-                        basePath,
-                        CreateFakeResource(
-                            basePath,
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = "some-file.ext";
+                        var data = GetRandomBytes();
+                        CreateResource(
+                            arena.SourcePath,
                             relPath,
-                            data)
-                    );
-                    var fs2 = CreateFileSystem(
-                        GetRandomString());
-                    var sut = Create();
-                    // Act
-                    sut.Synchronize(fs1, fs2);
-                    // Assert
-                    var inTarget = fs2.ListResourcesRecursive();
-                    Expect(inTarget).To.Contain.Only(1).Item();
-                    var copied = inTarget.Single();
-                    Expect(copied.RelativePath).To.Equal(relPath);
+                            data);
+                        var sut = Create();
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        var inTarget = target.ListResourcesRecursive();
+                        Expect(inTarget)
+                            .To.Contain.Only(1)
+                            .Item();
+                        var copied = inTarget.Single();
+                        Expect(copied.RelativePath)
+                            .To.Equal(relPath);
+                        Expect(copied)
+                            .To.Have.Data(data);
+                    }
+                }
+            }
+
+            [TestFixture]
+            public class WhenSourceHasFileAndTargetHasSameFile
+            {
+                [Test]
+                public void ShouldNotReWriteTheFile()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString(2);
+                        var data = GetRandomBytes(100);
+                        var targetFilePath = CreateResource(
+                            arena.TargetPath,
+                            relPath,
+                            data);
+                        CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            data);
+                        var beforeTest = DateTime.Now;
+                        var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
+                        File.SetLastWriteTime(targetFilePath, lastWrite);
+                        
+                        var sut = Create();
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        Expect(targetFilePath).To.Be.A.File();
+                        var targetInfo = new FileInfo(targetFilePath);
+                        Expect(targetInfo.LastWriteTime)
+                            .To.Be.Less.Than(beforeTest);
+                    }
                 }
             }
         }
 
-        private static IFileSystem CreateFileSystem(
-            string basePath,
-            params IFileResource[] resources)
+        public class TestArena : IDisposable
         {
-            var result = Substitute.For<IFileSystem>();
-            var store = new List<IFileResource>(resources);
-            store.ForEach(resource =>
+            public IFileSystem SourceFileSystem { get; }
+            public IFileSystem TargetFileSystem { get; }
+            public string SourcePath => _sourceFolder?.Path;
+            public string TargetPath => _targetFolder?.Path;
+
+            private AutoTempFolder _sourceFolder;
+            private AutoTempFolder _targetFolder;
+
+            public TestArena()
             {
-                var matcher = Arg.Is<string>(
-                    a => a == resource.Path || a == resource.RelativePath);
-                result.Exists(matcher)
-                    .Returns(true);
-                result.BasePath.Returns(basePath);
+                _sourceFolder = new AutoTempFolder();
+                _targetFolder = new AutoTempFolder();
+                SourceFileSystem = new LocalFileSystem(_sourceFolder.Path);
+                TargetFileSystem = new LocalFileSystem(_targetFolder.Path);
+            }
 
-                result.IsDirectory(matcher)
-                    .Returns(false);
-                result.IsFile(matcher)
-                    .Returns(true);
-                result.IsFile(matcher)
-                    .Returns(true);
-            });
-
-            result.Open(Arg.Any<string>(), Arg.Any<FileMode>())
-                .Returns(ci =>
-                {
-                    var relativePath = ci.Arg<string>();
-                    var mode = ci.Arg<FileMode>();
-
-                    var match = store.FirstOrDefault(r => r.RelativePath == relativePath);
-                    if (match == null)
-                    {
-                        // TODO: create new resource
-                        var resource = CreateFakeResource(
-                            basePath,
-                            relativePath,
-                            new byte[0]
-                        );
-                    }
-
-                    switch (mode)
-                    {
-                        case FileMode.CreateNew:
-                            throw new InvalidOperationException($"{relativePath} already exists");
-                        case FileMode.Open:
-                            return match.Read();
-                        case FileMode.OpenOrCreate:
-                        case FileMode.Create:
-                            return match.Write();
-                        case FileMode.Truncate:
-                            var tstream = match.Write() as MemoryStream;
-                            tstream.SetLength(0);
-                            tstream.Rewind();
-                            return tstream;
-                        case FileMode.Append:
-                            var astream = match.Write() as MemoryStream;
-                            astream.Seek(0, SeekOrigin.End);
-                            return astream;
-                        default:
-                            throw new InvalidOperationException($"Unknown file mode: {mode}");
-                    }
-                });
-
-            result.ListResourcesRecursive()
-                .Returns(resources);
-            return result;
+            public void Dispose()
+            {
+                _sourceFolder?.Dispose();
+                _targetFolder?.Dispose();
+                _sourceFolder = null;
+                _targetFolder = null;
+            }
         }
 
-        private static IFileResource CreateFakeResource(
+        private static IFileSystem CreateFileSystem(
+            string basePath)
+        {
+            return new LocalFileSystem(basePath);
+        }
+
+        private static string CreateResource(
             string basePath,
             string relativePath,
             byte[] data)
         {
-            var result = Substitute.For<IFileResource>();
-            result.Path.Returns(Path.Combine(basePath, relativePath));
-            result.RelativePath.Returns(relativePath);
-            MemoryStream memStream = null;
-
-            result.Size.Returns(a => RetrieveData()
-                .Length);
-            result.Read()
-                .Returns(a => GetStream());
-            result.Write()
-                .Returns(a => GetStream());
-            return result;
-
-            byte[] RetrieveData()
-            {
-                return GetStream().ToArray();
-            }
-
-            MemoryStream GetStream()
-            {
-                var stream = memStream ?? (memStream = CreateMemoryStreamContaining(data));
-                memStream.Rewind();
-                return stream;
-            }
+            var fullPath = Path.Combine(basePath, relativePath);
+            File.WriteAllBytes(
+                fullPath,
+                data);
+            return fullPath;
         }
 
         private static MemoryStream CreateMemoryStreamContaining(
@@ -192,6 +181,49 @@ namespace bitsplat.Tests
         private static ISynchronizer Create()
         {
             return new Synchronizer();
+        }
+    }
+
+    public static class FileResourceMatchers
+    {
+        public static void Data(
+            this IHave<IFileResource> have,
+            byte[] expected)
+        {
+            have.AddMatcher(actual =>
+            {
+                if (!File.Exists(actual.Path))
+                {
+                    return new MatcherResult(
+                        false,
+                        () => $"Expected {false.AsNot()}to find file at: {actual.Path}");
+                }
+
+                using (var stream = actual.Read())
+                {
+                    var data = stream.ReadAllBytes();
+                    var passed = expected.Length == data.Length &&
+                                 data.DeepEquals(expected);
+                    return new MatcherResult(
+                        passed,
+                        () =>
+                        {
+                            var actualHash = data.ToMD5String();
+                            var expectedHash = expected.ToMD5String();
+                            return $@"Expected {
+                                    passed.AsNot()
+                                } to find data with hash/length {
+                                    expectedHash
+                                }{
+                                    expected.Length
+                                }, but got {
+                                    actualHash
+                                }/{
+                                    data.Length
+                                }";
+                        });
+                }
+            });
         }
     }
 }

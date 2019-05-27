@@ -48,6 +48,28 @@ namespace bitsplat.Storage
             return File.Open(FullPathFor(path), mode);
         }
 
+        public long FetchSize(string path)
+        {
+            try
+            {
+                return new FileInfo(
+                    FullPathFor(path)
+                ).Length;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private string FullPathFor(
+            string possibleRelativePath)
+        {
+            return possibleRelativePath.StartsWith(_basePath)
+                ? possibleRelativePath
+                : Path.Combine(_basePath, possibleRelativePath);
+        }
+
         public IEnumerable<IFileResource> ListResourcesRecursive()
         {
             return ListResourcesUnder(BasePath);
@@ -56,16 +78,12 @@ namespace bitsplat.Storage
         private IEnumerable<IFileResource> ListResourcesUnder(string path)
         {
             return Directory.GetFiles(path)
-                .Select(p => new LocalFileResource(p, BasePath))
+                .Select(p => new LocalFileResource(p, BasePath, this))
                 .Union(
                     Directory.GetDirectories(path)
                         .SelectMany(dir => ListResourcesUnder(Path.Combine(path, dir)))
                 );
         }
 
-        private string FullPathFor(string path)
-        {
-            return Path.Combine(_basePath, path);
-        }
     }
 }

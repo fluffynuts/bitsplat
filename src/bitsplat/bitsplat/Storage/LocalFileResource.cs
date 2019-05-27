@@ -7,6 +7,7 @@ namespace bitsplat.Storage
         : IFileResource
     {
         private readonly string _basePath;
+        private readonly IFileSystem _fileSystem;
         public string Path { get; }
         public long Size => (_size ?? (_size = FetchSize())).Value;
         public string RelativePath => _relativePath ?? (_relativePath = GetRelativePath());
@@ -17,9 +18,11 @@ namespace bitsplat.Storage
 
         public LocalFileResource(
             string path,
-            string basePath)
+            string basePath,
+            IFileSystem fileSystem)
         {
             _basePath = basePath;
+            _fileSystem = fileSystem;
             Path = path;
         }
 
@@ -30,24 +33,23 @@ namespace bitsplat.Storage
 
         private long FetchSize()
         {
-            try
-            {
-                return new FileInfo(Path).Length;
-            }
-            catch
-            {
-                return -1;
-            }
+            return _fileSystem.FetchSize(RelativePath);
         }
 
         public Stream Read()
         {
-            throw new NotImplementedException();
+            return _fileSystem.Open(
+                RelativePath,
+                FileMode.Open
+            );
         }
 
         public Stream Write()
         {
-            throw new NotImplementedException();
+            return _fileSystem.Open(
+                RelativePath,
+                FileMode.OpenOrCreate
+            );
         }
     }
 }

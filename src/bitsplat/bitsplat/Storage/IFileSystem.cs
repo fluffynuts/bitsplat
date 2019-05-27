@@ -50,5 +50,7 @@ namespace bitsplat.Storage
         /// </summary>
         /// <returns></returns>
         IEnumerable<IFileResource> ListResourcesRecursive();
+
+        long FetchSize(string path);
     }
 }

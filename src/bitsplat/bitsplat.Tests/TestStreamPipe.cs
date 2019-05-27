@@ -19,15 +19,17 @@ namespace bitsplat.Tests
             var data = GetRandomBytes(100);
             var sourceStream = new MemoryStream(data);
             var targetStream = new MemoryStream();
-            var source = new StreamSource(sourceStream);
-            var target = new StreamSink(targetStream);
-            // Act
-            source
-                .Pipe(target)
-                .Drain();
-            // Assert
-            Expect(targetStream)
-                .To.Contain.Only(data);
+            using (var source = new StreamSource(sourceStream, false))
+            using (var target = new StreamSink(targetStream, false))
+            {
+                // Act
+                source
+                    .Pipe(target)
+                    .Drain();
+                // Assert
+                Expect(targetStream)
+                    .To.Contain.Only(data);
+            }
         }
 
         [Test]
@@ -38,16 +40,18 @@ namespace bitsplat.Tests
             var data = GetRandomBytes(100);
             var sourceStream = new MemoryStream(data);
             var targetStream = new MemoryStream();
-            var source = new StreamSource(sourceStream);
-            var target = new StreamSink(targetStream);
-            // Act
-            source
-                .Pipe(intermediate)
-                .Pipe(target)
-                .Drain();
-            // Assert
-            Expect(targetStream)
-                .To.Contain.Only(data);
+            using (var source = new StreamSource(sourceStream, false))
+            using (var target = new StreamSink(targetStream, false))
+            {
+                // Act
+                source
+                    .Pipe(intermediate)
+                    .Pipe(target)
+                    .Drain();
+                // Assert
+                Expect(targetStream)
+                    .To.Contain.Only(data);
+            }
         }
     }
 

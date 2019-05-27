@@ -52,6 +52,10 @@ namespace bitsplat.Pipes
             pipe.SetSource(this);
             return pipe;
         }
+
+        public void Dispose()
+        {
+        }
     }
 
 }
