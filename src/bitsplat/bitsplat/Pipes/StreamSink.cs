@@ -56,9 +56,15 @@ namespace bitsplat.Pipes
 
         public IPassThrough Pipe(IPassThrough pipe)
         {
-            _sinks.Add(pipe);
-            pipe.SetSource(this);
+            Pipe(pipe as ISink);
             return pipe;
+        }
+
+        public ISink Pipe(ISink sink)
+        {
+            _sinks.Add(sink);
+            sink.SetSource(this);
+            return sink;
         }
 
         public void Dispose()

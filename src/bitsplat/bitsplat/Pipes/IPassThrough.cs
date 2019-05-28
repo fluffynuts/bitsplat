@@ -4,5 +4,6 @@ namespace bitsplat.Pipes
         : ISource,
           ISink
     {
+        IPassThrough Pipe(IPassThrough pipe);
     }
 }

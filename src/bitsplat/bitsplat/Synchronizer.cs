@@ -32,7 +32,9 @@ namespace bitsplat
         )
         {
             var sourceResources = source.ListResourcesRecursive();
-            var targetResources = target.ListResourcesRecursive();
+            var targetResourcesCollection = target.ListResourcesRecursive();
+            var targetResources = targetResourcesCollection as IFileResource[]
+                ?? targetResourcesCollection.ToArray();
             sourceResources.ForEach(sourceResource =>
             {
                 var targetResource = targetResources.FirstOrDefault(
@@ -44,10 +46,39 @@ namespace bitsplat
 
                 var sourceStream = sourceResource.Read();
                 var targetStream = target.Open(sourceResource.RelativePath, FileMode.OpenOrCreate);
-                sourceStream
-                    .Pipe(targetStream)
-                    .Drain();
+                
+                targetResource = targetResources.FirstOrDefault(
+                    r => r.RelativePath == sourceResource.RelativePath);
+                if (targetResource != null)
+                {
+                    // TODO: some data checks
+                    // - if the prescribed data checks pass, then this
+                    //   seek strategy is fine
+                    // - if not, then don't do it (:
+                    sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
+                    targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
+                }
+                
+                
+                var composition = ComposePipeline(sourceStream, targetStream);
+                composition.Drain();
             });
+        }
+
+        private ISink ComposePipeline(
+            Stream source,
+            Stream target)
+        {
+            if (!_intermediatePipes.Any())
+            {
+                return source.Pipe(target);
+            }
+
+            var composition = _intermediatePipes.Aggregate(
+                source.Pipe(new NullPassThrough()),
+                (acc, cur) => acc.Pipe(cur)
+            );
+            return composition.Pipe(target);
         }
     }
 
@@ -110,6 +141,23 @@ namespace bitsplat
         {
             return new StreamSource(source)
                 .Pipe(new StreamSink(target, true));
+        }
+
+        public static IPassThrough Pipe(
+            this Stream source,
+            IPassThrough other)
+        {
+            return new StreamSource(source, true)
+                .Pipe(other);
+        }
+
+        public static ISink Pipe(
+            this IPassThrough source,
+            Stream other)
+        {
+            return source.Pipe(
+                new StreamSink(other, true)
+            );
         }
     }
 }

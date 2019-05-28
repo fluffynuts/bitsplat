@@ -7,5 +7,6 @@ namespace bitsplat.Pipes
         void Drain();
         bool Pump();
         IPassThrough Pipe(IPassThrough pipe);
+        ISink Pipe(ISink sink);
     }
 }

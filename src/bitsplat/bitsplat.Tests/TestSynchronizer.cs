@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using bitsplat.Pipes;
 using bitsplat.Storage;
 using Castle.Core.Resource;
 using static NExpect.Expectations;
@@ -111,17 +112,84 @@ namespace bitsplat.Tests
                         var beforeTest = DateTime.Now;
                         var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
                         File.SetLastWriteTime(targetFilePath, lastWrite);
-                        
+
                         var sut = Create();
                         // Act
                         sut.Synchronize(source, target);
                         // Assert
-                        Expect(targetFilePath).To.Be.A.File();
+                        Expect(targetFilePath)
+                            .To.Be.A.File();
                         var targetInfo = new FileInfo(targetFilePath);
                         Expect(targetInfo.LastWriteTime)
                             .To.Be.Less.Than(beforeTest);
                     }
                 }
+            }
+
+            [TestFixture]
+            public class WhenSourceHasFileAndTargetHasPartialFileWithNoErrors
+            {
+                [Test]
+                public void ShouldResume()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString();
+                        var allData = GetRandomBytes(1024);
+                        var partialSize = GetRandomInt(384, 768);
+                        var partialData = allData.Take(partialSize)
+                            .ToArray();
+                        var expected = allData.Skip(partialSize).ToArray();
+                        var targetFilePath = CreateResource(
+                            arena.TargetPath,
+                            relPath,
+                            partialData);
+                        CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            allData);
+                        var captured = new List<byte>();
+                        var ended = false;
+                        var intermediate = new GenericPassThrough(
+                            (data, count) => captured.AddRange(data.Take(count)),
+                            () => ended = true
+                        );
+                        var sut = Create(intermediate);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        var targetData = File.ReadAllBytes(targetFilePath);
+                        Expect(targetData).To.Equal(allData);
+                        var transferred = captured.ToArray();
+                        Expect(transferred).To.Equal(expected, "unexpected transferred data");
+                    }
+                }
+            }
+        }
+
+        public class GenericPassThrough : PassThrough
+        {
+            private readonly Action<byte[], int> _onWrite;
+            private readonly Action _onEnd;
+
+            public GenericPassThrough(
+                Action<byte[], int> onWrite,
+                Action onEnd)
+            {
+                _onWrite = onWrite;
+                _onEnd = onEnd;
+            }
+
+            protected override void OnWrite(byte[] buffer, int count)
+            {
+                _onWrite(buffer, count);
+            }
+
+            protected override void OnEnd()
+            {
+                _onEnd();
             }
         }
 
@@ -178,9 +246,10 @@ namespace bitsplat.Tests
             return result;
         }
 
-        private static ISynchronizer Create()
+        private static ISynchronizer Create(
+            params IPassThrough[] intermediatePipes)
         {
-            return new Synchronizer();
+            return new Synchronizer(intermediatePipes);
         }
     }
 
