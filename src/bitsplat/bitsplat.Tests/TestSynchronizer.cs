@@ -6,14 +6,11 @@ using System.Security.Cryptography;
 using bitsplat.Pipes;
 using bitsplat.Storage;
 using Castle.Core.Resource;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using static NExpect.Expectations;
 using NExpect;
-using NExpect.Implementations;
-using NExpect.Interfaces;
-using NExpect.MatcherLogic;
 using NSubstitute;
 using NUnit.Framework;
-using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests
@@ -68,7 +65,7 @@ namespace bitsplat.Tests
                         var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                         var relPath = "some-file.ext";
                         var data = GetRandomBytes();
-                        CreateResource(
+                        arena.CreateResource(
                             arena.SourcePath,
                             relPath,
                             data);
@@ -101,11 +98,11 @@ namespace bitsplat.Tests
                         var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                         var relPath = GetRandomString(2);
                         var data = GetRandomBytes(100);
-                        var targetFilePath = CreateResource(
+                        var targetFilePath = arena.CreateResource(
                             arena.TargetPath,
                             relPath,
                             data);
-                        CreateResource(
+                        arena.CreateResource(
                             arena.SourcePath,
                             relPath,
                             data);
@@ -130,23 +127,27 @@ namespace bitsplat.Tests
             public class WhenSourceHasFileAndTargetHasPartialFileWithNoErrors
             {
                 [Test]
-                public void ShouldResume()
+                public void ShouldResumeWhenResumeStrategySaysYes()
                 {
                     // Arrange
                     using (var arena = new TestArena())
                     {
+                        var resumeStrategy = Substitute.For<IResumeStrategy>();
+                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            .Returns(true);
                         var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                         var relPath = GetRandomString();
                         var allData = GetRandomBytes(1024);
                         var partialSize = GetRandomInt(384, 768);
                         var partialData = allData.Take(partialSize)
                             .ToArray();
-                        var expected = allData.Skip(partialSize).ToArray();
-                        var targetFilePath = CreateResource(
+                        var expected = allData.Skip(partialSize)
+                            .ToArray();
+                        var targetFilePath = arena.CreateResource(
                             arena.TargetPath,
                             relPath,
                             partialData);
-                        CreateResource(
+                        arena.CreateResource(
                             arena.SourcePath,
                             relPath,
                             allData);
@@ -156,14 +157,58 @@ namespace bitsplat.Tests
                             (data, count) => captured.AddRange(data.Take(count)),
                             () => ended = true
                         );
-                        var sut = Create(intermediate);
+                        var sut = Create(resumeStrategy, intermediate);
                         // Act
                         sut.Synchronize(source, target);
                         // Assert
                         var targetData = File.ReadAllBytes(targetFilePath);
-                        Expect(targetData).To.Equal(allData);
+                        Expect(targetData)
+                            .To.Equal(allData);
                         var transferred = captured.ToArray();
-                        Expect(transferred).To.Equal(expected, "unexpected transferred data");
+                        Expect(transferred)
+                            .To.Equal(expected, "unexpected transferred data");
+                    }
+                }
+
+                [Test]
+                public void ShouldNotResumeIfResumeStrategySaysNo()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var resumeStrategy = Substitute.For<IResumeStrategy>();
+                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            .Returns(false);
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString();
+                        var allData = GetRandomBytes(1024);
+                        var partialSize = GetRandomInt(384, 768);
+                        var partialData = allData.Take(partialSize)
+                            .ToArray();
+                        var targetFilePath = arena.CreateResource(
+                            arena.TargetPath,
+                            relPath,
+                            partialData);
+                        arena.CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            allData);
+                        var captured = new List<byte>();
+                        var ended = false;
+                        var intermediate = new GenericPassThrough(
+                            (data, count) => captured.AddRange(data.Take(count)),
+                            () => ended = true
+                        );
+                        var sut = Create(resumeStrategy, intermediate);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        var targetData = File.ReadAllBytes(targetFilePath);
+                        Expect(targetData)
+                            .To.Equal(allData);
+                        var transferred = captured.ToArray();
+                        Expect(transferred)
+                            .To.Equal(allData, "should have retransferred all data");
                     }
                 }
             }
@@ -193,106 +238,20 @@ namespace bitsplat.Tests
             }
         }
 
-        public class TestArena : IDisposable
-        {
-            public IFileSystem SourceFileSystem { get; }
-            public IFileSystem TargetFileSystem { get; }
-            public string SourcePath => _sourceFolder?.Path;
-            public string TargetPath => _targetFolder?.Path;
-
-            private AutoTempFolder _sourceFolder;
-            private AutoTempFolder _targetFolder;
-
-            public TestArena()
-            {
-                _sourceFolder = new AutoTempFolder();
-                _targetFolder = new AutoTempFolder();
-                SourceFileSystem = new LocalFileSystem(_sourceFolder.Path);
-                TargetFileSystem = new LocalFileSystem(_targetFolder.Path);
-            }
-
-            public void Dispose()
-            {
-                _sourceFolder?.Dispose();
-                _targetFolder?.Dispose();
-                _sourceFolder = null;
-                _targetFolder = null;
-            }
-        }
-
-        private static IFileSystem CreateFileSystem(
-            string basePath)
-        {
-            return new LocalFileSystem(basePath);
-        }
-
-        private static string CreateResource(
-            string basePath,
-            string relativePath,
-            byte[] data)
-        {
-            var fullPath = Path.Combine(basePath, relativePath);
-            File.WriteAllBytes(
-                fullPath,
-                data);
-            return fullPath;
-        }
-
-        private static MemoryStream CreateMemoryStreamContaining(
-            byte[] data)
-        {
-            var result = new MemoryStream();
-            result.Write(data, 0, data.Length);
-            return result;
-        }
-
         private static ISynchronizer Create(
             params IPassThrough[] intermediatePipes)
         {
-            return new Synchronizer(intermediatePipes);
+            return Create(null, intermediatePipes);
         }
-    }
 
-    public static class FileResourceMatchers
-    {
-        public static void Data(
-            this IHave<IFileResource> have,
-            byte[] expected)
+        private static ISynchronizer Create(
+            IResumeStrategy resumeStrategy = null,
+            params IPassThrough[] intermediatePipes)
         {
-            have.AddMatcher(actual =>
-            {
-                if (!File.Exists(actual.Path))
-                {
-                    return new MatcherResult(
-                        false,
-                        () => $"Expected {false.AsNot()}to find file at: {actual.Path}");
-                }
-
-                using (var stream = actual.Read())
-                {
-                    var data = stream.ReadAllBytes();
-                    var passed = expected.Length == data.Length &&
-                                 data.DeepEquals(expected);
-                    return new MatcherResult(
-                        passed,
-                        () =>
-                        {
-                            var actualHash = data.ToMD5String();
-                            var expectedHash = expected.ToMD5String();
-                            return $@"Expected {
-                                    passed.AsNot()
-                                } to find data with hash/length {
-                                    expectedHash
-                                }{
-                                    expected.Length
-                                }, but got {
-                                    actualHash
-                                }/{
-                                    data.Length
-                                }";
-                        });
-                }
-            });
+            return new Synchronizer(
+                resumeStrategy ?? new AlwaysResumeStrategy(),
+                intermediatePipes
+            );
         }
     }
 }
