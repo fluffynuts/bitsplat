@@ -37,8 +37,8 @@ namespace bitsplat.Pipes
 
         public void End()
         {
-            _sinks.ForEach(sink => sink.End());
             OnEnd();
+            _sinks.ForEach(sink => sink.End());
         }
 
         public void SetSource(IPipeElement source)

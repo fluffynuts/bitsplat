@@ -2,16 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using bitsplat.Pipes;
 using bitsplat.Storage;
-using Castle.Core.Resource;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using static NExpect.Expectations;
 using NExpect;
 using NSubstitute;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
+
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace bitsplat.Tests
 {
@@ -167,6 +166,8 @@ namespace bitsplat.Tests
                         var transferred = captured.ToArray();
                         Expect(transferred)
                             .To.Equal(expected, "unexpected transferred data");
+                        Expect(ended)
+                            .To.Be.True();
                     }
                 }
 
@@ -208,7 +209,54 @@ namespace bitsplat.Tests
                             .To.Equal(allData);
                         var transferred = captured.ToArray();
                         Expect(transferred)
-                            .To.Equal(allData, "should have retransferred all data");
+                            .To.Equal(allData, "should have re-transferred all data");
+                        Expect(ended)
+                            .To.Be.True();
+                    }
+                }
+
+                [Test]
+                public void ShouldPassThroughAllProvidedIntermediatesInOrder()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var resumeStrategy = Substitute.For<IResumeStrategy>();
+                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            .Returns(false);
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString();
+                        var allData = GetRandomBytes(100, 200); // small buffer, likely to be read in one pass
+                        arena.CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            allData);
+                        var intermediateCalls = new List<string>();
+                        var endCalls = new List<string>();
+                        var intermediate1 = new GenericPassThrough(
+                            (data, count) => intermediateCalls.Add("first"),
+                            () => endCalls.Add("first")
+                        );
+                        var intermediate2 = new GenericPassThrough(
+                            (data, count) => intermediateCalls.Add("second"),
+                            () => endCalls.Add("second")
+                        );
+                        var intermediate3 = new GenericPassThrough(
+                            (data, count) => intermediateCalls.Add("third"),
+                            () => endCalls.Add("third")
+                        );
+                        var expected = new[]
+                        {
+                            "first",
+                            "second",
+                            "third"
+                        };
+                        var sut = Create(resumeStrategy, intermediate1, intermediate2, intermediate3);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        Expect(intermediateCalls).To.Equal(expected);
+                        Expect(endCalls).To.Equal(expected);
                     }
                 }
             }
