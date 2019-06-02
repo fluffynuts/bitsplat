@@ -9,26 +9,27 @@ namespace bitsplat.Tests
     {
         public IFileSystem SourceFileSystem { get; }
         public IFileSystem TargetFileSystem { get; }
-        public string SourcePath => _sourceFolder?.Path;
-        public string TargetPath => _targetFolder?.Path;
+        public string SourcePath { get; }
+        public string TargetPath { get; }
+        public string ContainerPath => _container.Path;
 
-        private AutoTempFolder _sourceFolder;
-        private AutoTempFolder _targetFolder;
+        private AutoTempFolder _container;
 
         public TestArena()
         {
-            _sourceFolder = new AutoTempFolder();
-            _targetFolder = new AutoTempFolder();
-            SourceFileSystem = new LocalFileSystem(_sourceFolder.Path);
-            TargetFileSystem = new LocalFileSystem(_targetFolder.Path);
+            _container = new AutoTempFolder();
+            SourcePath = Path.Combine(_container.Path, "source");
+            TargetPath = Path.Combine(_container.Path, "target");
+            Directory.CreateDirectory(SourcePath);
+            Directory.CreateDirectory(TargetPath);
+            SourceFileSystem = new LocalFileSystem(SourcePath);
+            TargetFileSystem = new LocalFileSystem(TargetPath);
         }
 
         public void Dispose()
         {
-            _sourceFolder?.Dispose();
-            _targetFolder?.Dispose();
-            _sourceFolder = null;
-            _targetFolder = null;
+            _container?.Dispose();
+            _container = null;
         }
 
         public string CreateResource(

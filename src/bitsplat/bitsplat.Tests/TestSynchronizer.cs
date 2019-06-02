@@ -1,13 +1,18 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using bitsplat.Pipes;
+using bitsplat.ResourceMatchers;
+using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
 using static NExpect.Expectations;
 using NExpect;
 using NSubstitute;
 using NUnit.Framework;
+using PeanutButter.RandomGenerators;
+using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -156,7 +161,10 @@ namespace bitsplat.Tests
                             (data, count) => captured.AddRange(data.Take(count)),
                             () => ended = true
                         );
-                        var sut = Create(resumeStrategy, intermediate);
+                        var sut = Create(
+                            resumeStrategy,
+                            new IPassThrough[] { intermediate }
+                        );
                         // Act
                         sut.Synchronize(source, target);
                         // Assert
@@ -200,7 +208,10 @@ namespace bitsplat.Tests
                             (data, count) => captured.AddRange(data.Take(count)),
                             () => ended = true
                         );
-                        var sut = Create(resumeStrategy, intermediate);
+                        var sut = Create(
+                            resumeStrategy,
+                            new IPassThrough[] { intermediate }
+                        );
                         // Act
                         sut.Synchronize(source, target);
                         // Assert
@@ -251,14 +262,149 @@ namespace bitsplat.Tests
                             "second",
                             "third"
                         };
-                        var sut = Create(resumeStrategy, intermediate1, intermediate2, intermediate3);
+                        var sut = Create(
+                            resumeStrategy,
+                            new IPassThrough[]
+                            {
+                                intermediate1, intermediate2, intermediate3
+                            });
                         // Act
                         sut.Synchronize(source, target);
                         // Assert
-                        Expect(intermediateCalls).To.Equal(expected);
-                        Expect(endCalls).To.Equal(expected);
+                        Expect(intermediateCalls)
+                            .To.Equal(expected);
+                        Expect(endCalls)
+                            .To.Equal(expected);
                     }
                 }
+            }
+        }
+
+        [TestFixture]
+        public class NotifyingNotifiablePipes
+        {
+            [Test]
+            public void ShouldNotifyNotifiablePipesWithPossibleResumeSizes()
+            {
+                // Arrange
+                using (var arena = new TestArena())
+                {
+                    var missingData = GetRandomBytes(100);
+                    arena.CreateSourceResource("missing", missingData);
+                    var partialFileAllData = "hello world".AsBytes();
+                    var partialTargetData = "hello".AsBytes();
+//                    var partialTargetData = partialFileAllData
+//                        .Take(GetRandomInt(50, 70))
+//                        .ToArray();
+                    arena.CreateSourceResource("partial", partialFileAllData);
+                    arena.CreateTargetResource("partial", partialTargetData);
+                    var existingData = GetRandomBytes(100);
+                    arena.CreateSourceResource("existing", existingData);
+                    arena.CreateTargetResource("existing", existingData);
+                    var intermediate1 = new GenericPassThrough(
+                        (data, count) =>
+                        {
+                        },
+                        () =>
+                        {
+                        });
+                    var notifyable = new NotifiableGenericPassThrough(
+                        (data, count) =>
+                        {
+                        },
+                        () =>
+                        {
+                        });
+                    var sut = Create(
+                        new AlwaysResumeStrategy(),
+                        new IPassThrough[] { notifyable, intermediate1 }
+                            .Randomize()
+                            .ToArray(),
+                        _defaultResourceMatchers);
+                    // Act
+                    sut.Synchronize(
+                        arena.SourceFileSystem,
+                        arena.TargetFileSystem);
+                    // Assert
+                    var partialResultData = arena.TargetFileSystem.ReadAllBytes("partial");
+                    Expect(partialResultData)
+                        .To.Equal(partialFileAllData, 
+                            () => $@"Expected {
+                                partialFileAllData.Length
+                                } bytes, but got {
+                                    partialResultData.Length
+                                }: '{partialFileAllData.AsString()}' vs '{partialResultData.AsString()}'");
+                    Expect(arena.TargetFileSystem.ReadAllBytes("existing"))
+                        .To.Equal(existingData);
+                    Expect(arena.TargetFileSystem.ReadAllBytes("missing"))
+                        .To.Equal(missingData);
+                    Expect(notifyable.InitialNotifications)
+                        .To.Contain.Only(1)
+                        .Item(); // should only have one initial notification
+                    var initial = notifyable.InitialNotifications.Single();
+                    Expect(initial)
+                        .To.Contain
+                        .Only(2)
+                        .Items(); // should only have partial and missing in sync queue
+                    Expect(initial)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(
+                            resource => resource.RelativePath == "missing"
+                        );
+                    Expect(initial)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(
+                            resource => resource.RelativePath == "partial"
+                        );
+                    Expect(notifyable.ResourceNotifications)
+                        .To.Contain.Exactly(2).Items();
+                    var missingResource = notifyable.ResourceNotifications.First();
+                    Expect(missingResource.source.RelativePath)
+                        .To.Equal("missing");
+                    Expect(missingResource.source.Size)
+                        .To.Equal(missingData.Length);
+                    Expect(missingResource.target)
+                        .To.Be.Null();
+                    var partialResource = notifyable.ResourceNotifications.Second();
+                    Expect(partialResource.source.RelativePath)
+                        .To.Equal("partial");
+                    Expect(partialResource.source.Size)
+                        .To.Equal(partialFileAllData.Length);
+                    Expect(partialResource.target.RelativePath)
+                        .To.Equal("partial");
+                    Expect(partialResource.target.Size)
+                        .To.Equal(partialTargetData.Length);
+                }
+            }
+        }
+
+        public class NotifiableGenericPassThrough
+            : GenericPassThrough,
+              ISyncQueueNotifiable
+        {
+            public List<IEnumerable<IFileResource>> InitialNotifications { get; }
+                = new List<IEnumerable<IFileResource>>();
+
+            public List<(IFileResource source, IFileResource target)> ResourceNotifications { get; }
+                = new List<(IFileResource source, IFileResource target)>();
+
+            public NotifiableGenericPassThrough(
+                Action<byte[], int> onWrite,
+                Action onEnd)
+                : base(onWrite, onEnd)
+            {
+            }
+
+            public void NotifySyncBatch(IEnumerable<IFileResource> sourceResources)
+            {
+                InitialNotifications.Add(sourceResources);
+            }
+
+            public void NotifyImpendingSync(
+                IFileResource sourceResource,
+                IFileResource targetResource)
+            {
+                ResourceNotifications.Add((sourceResource, targetResource));
             }
         }
 
@@ -294,12 +440,33 @@ namespace bitsplat.Tests
 
         private static ISynchronizer Create(
             IResumeStrategy resumeStrategy = null,
-            params IPassThrough[] intermediatePipes)
+            IPassThrough[] intermediatePipes = null,
+            IResourceMatcher[] resourceMatchers = null)
         {
             return new Synchronizer(
                 resumeStrategy ?? new AlwaysResumeStrategy(),
-                intermediatePipes
+                intermediatePipes ?? new IPassThrough[0],
+                resourceMatchers ?? _defaultResourceMatchers
             );
+        }
+
+        private static readonly IResourceMatcher[] _defaultResourceMatchers =
+        {
+            new SameRelativePathMatcher(),
+            new SameSizeMatcher()
+        };
+    }
+
+    public static class FileSystemExtensionsForTesting
+    {
+        public static byte[] ReadAllBytes(
+            this IFileSystem fileSystem,
+            string name)
+        {
+            using (var stream = fileSystem.Open(name, FileMode.Open))
+            {
+                return stream.ReadAllBytes();
+            }
         }
     }
 }

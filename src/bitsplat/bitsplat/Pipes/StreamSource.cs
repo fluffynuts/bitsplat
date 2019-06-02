@@ -50,6 +50,12 @@ namespace bitsplat.Pipes
             return sink;
         }
 
+        public void Detach()
+        {
+            // should this rewind, or do anything with the source stream?
+            _sinks.Clear();
+        }
+
         public IPassThrough Pipe(IPassThrough pipe)
         {
             _sinks.Add(pipe);

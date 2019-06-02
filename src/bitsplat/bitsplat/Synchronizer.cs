@@ -1,8 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using bitsplat.Pipes;
+using bitsplat.ResourceMatchers;
+using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
 
 namespace bitsplat
@@ -19,13 +20,20 @@ namespace bitsplat
     {
         private readonly IResumeStrategy _resumeStrategy;
         private readonly IPassThrough[] _intermediatePipes;
+        private readonly IResourceMatcher[] _resourceMatchers;
+        private readonly ISyncQueueNotifiable[] _notifiables;
 
         public Synchronizer(
             IResumeStrategy resumeStrategy,
-            params IPassThrough[] intermediatePipes)
+            IPassThrough[] intermediatePipes,
+            IResourceMatcher[] resourceMatchers)
         {
             _resumeStrategy = resumeStrategy;
             _intermediatePipes = intermediatePipes;
+            _notifiables = intermediatePipes
+                .OfType<ISyncQueueNotifiable>()
+                .ToArray();
+            _resourceMatchers = resourceMatchers;
         }
 
         public void Synchronize(
@@ -35,34 +43,47 @@ namespace bitsplat
         {
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
-            var targetResources = targetResourcesCollection as IFileResource[]
-                ?? targetResourcesCollection.ToArray();
-            sourceResources.ForEach(sourceResource =>
+            var targetResources = targetResourcesCollection as IFileResource[] ?? targetResourcesCollection.ToArray();
+            var syncQueue = sourceResources
+                .Where(sourceResource =>
+                    !targetResources.Any(
+                        targetResource => _resourceMatchers.Aggregate(
+                            true,
+                            (acc, cur) => acc && cur.AreMatched(sourceResource, targetResource)
+                        )
+                    )
+                )
+                .OrderBy(resource => resource.RelativePath);
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncBatch(syncQueue)
+            );
+            syncQueue.ForEach(sourceResource =>
             {
-                var targetResource = targetResources.FirstOrDefault(
-                    r => r.Matches(sourceResource));
-                if (targetResource != null)
-                {
-                    return;
-                }
-
                 var sourceStream = sourceResource.Read();
                 var targetStream = target.Open(sourceResource.RelativePath, FileMode.OpenOrCreate);
-                
-                targetResource = targetResources.FirstOrDefault(
+
+                var targetResource = targetResources.FirstOrDefault(
                     r => r.RelativePath == sourceResource.RelativePath);
-                if (targetResource != null)
+
+                var canResume = targetResource != null &&
+                                _resumeStrategy.CanResume(
+                                    sourceStream,
+                                    targetStream);
+                if (canResume)
                 {
-                    if (_resumeStrategy.CanResume(
-                        sourceStream,
-                        targetStream))
-                    {
-                        sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
-                        targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
-                    }
+                    sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
+                    targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
                 }
-                
-                
+
+                _notifiables.ForEach(
+                    notifiable => notifiable.NotifyImpendingSync(
+                        sourceResource,
+                        canResume
+                            ? targetResource
+                            : null
+                    )
+                );
+
                 var composition = ComposePipeline(sourceStream, targetStream);
                 composition.Drain();
             });
@@ -77,6 +98,7 @@ namespace bitsplat
                 return source.Pipe(target);
             }
 
+            _intermediatePipes.ForEach(intermediate => intermediate.Detach());
             var composition = _intermediatePipes.Aggregate(
                 source.Pipe(new NullPassThrough()),
                 (acc, cur) => acc.Pipe(cur)

@@ -24,6 +24,12 @@ namespace bitsplat.Pipes
             return sink;
         }
 
+        public void Detach()
+        {
+            _source = null;
+            _sinks.Clear();
+        }
+
         public void Write(
             byte[] buffer,
             int count)
