@@ -51,7 +51,7 @@ namespace bitsplat.Tests
                         .Item();
                     var builder = new SQLiteConnectionStringBuilder()
                     {
-                        Uri = Path.Combine(folder.Path, files.First())
+                        FullUri = new Uri(Path.Combine(folder.Path, files.First())).ToString()
                     };
                     var conn = new SQLiteConnection(builder.ToString());
                     Expect(() => conn.Open())
@@ -72,15 +72,11 @@ namespace bitsplat.Tests
                     // Assert
                     Expect(folder)
                         .To.Have.Contents();
-                    var builder = new SQLiteConnectionStringBuilder()
-                    {
-                        Uri = Path.Combine(folder.Path, TargetHistoryRepository.DB_NAME)
-                    };
-                    using (var conn = new SQLiteConnection(builder.ToString())
-                        .OpenAndReturn())
+                    var dataLayer = new SqLiteDatabase(folder.Path);
+                    using (var conn = dataLayer.Connect())
                     {
                         Expect(() =>
-                                conn.Query<History.History>($"select * from {Table.NAME};")
+                                conn.Query<History.HistoryItem>($"select * from {Table.NAME};")
                             )
                             .Not.To.Throw();
                     }
@@ -131,7 +127,7 @@ namespace bitsplat.Tests
             public void ShouldAddANewHistoryItem()
             {
                 // Arrange
-                var item = GetRandom<History.History>();
+                var item = GetRandom<History.HistoryItem>();
                 var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
                 {
@@ -140,7 +136,7 @@ namespace bitsplat.Tests
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
-                        var result = conn.Query<History.History>($"select * from {Table.NAME};")
+                        var result = conn.Query<History.HistoryItem>($"select * from {Table.NAME};")
                             .ToArray();
                         Expect(result)
                             .To.Contain.Exactly(1)
@@ -148,8 +144,8 @@ namespace bitsplat.Tests
                         Expect(result)
                             .To.Contain.Exactly(1)
                             .Matched.By(inDb => inDb.Path == item.Path &&
-                                                inDb.Size == item.Size &&
-                                                inDb.Created >= beforeTest,
+                                    inDb.Size == item.Size &&
+                                    inDb.Created >= beforeTest,
                                 () =>
                                     $"Single result should match input\n{item.Stringify()}\nvs\n{result[0].Stringify()}\nbeforeTest:{beforeTest}");
                     }
@@ -160,8 +156,8 @@ namespace bitsplat.Tests
             public void ShouldNotAddRepeatedPath()
             {
                 // Arrange
-                var item = GetRandom<History.History>();
-                var second = GetRandom<History.History>();
+                var item = GetRandom<History.HistoryItem>();
+                var second = GetRandom<History.HistoryItem>();
                 second.Path = item.Path;
                 var beforeTest = DateTime.UtcNow.TruncateMilliseconds();
                 using (var arena = Create())
@@ -172,7 +168,7 @@ namespace bitsplat.Tests
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
-                        var result = conn.Query<History.History>($"select * from {Table.NAME};")
+                        var result = conn.Query<History.HistoryItem>($"select * from {Table.NAME};")
                             .ToArray();
                         Expect(result)
                             .To.Contain.Exactly(1)
@@ -180,8 +176,8 @@ namespace bitsplat.Tests
                         Expect(result)
                             .To.Contain.Exactly(1)
                             .Matched.By(inDb => inDb.Path == item.Path &&
-                                                inDb.Size == item.Size &&
-                                                inDb.Created >= beforeTest,
+                                    inDb.Size == item.Size &&
+                                    inDb.Created >= beforeTest,
                                 () =>
                                     $"Single result should match input\n{item.Stringify()}\nvs\n{result[0].Stringify()}\nbeforeTest:{beforeTest}");
                     }
@@ -211,8 +207,8 @@ namespace bitsplat.Tests
             public void WhenItemDoesExist_ShouldReturnIt()
             {
                 // Arrange
-                var item = GetRandom<History.History>();
-                
+                var item = GetRandom<History.HistoryItem>();
+
                 using (var arena = Create())
                 {
                     // Act
@@ -242,12 +238,12 @@ namespace bitsplat.Tests
                     Expect(result).To.Be.False();
                 }
             }
-            
+
             [Test]
             public void WhenPathIsKnown_ShouldReturnFalse()
             {
                 // Arrange
-                var item = GetRandom<History.History>();
+                var item = GetRandom<History.HistoryItem>();
                 using (var arena = Create())
                 {
                     // Act
@@ -261,21 +257,16 @@ namespace bitsplat.Tests
 
         private class TestArena : IDisposable
         {
-            public IDbConnection OpenConnection() =>
-                new SQLiteConnection(
-                    new SQLiteConnectionStringBuilder()
-                    {
-                        Uri = Path.Combine(Folder, TargetHistoryRepository.DB_NAME)
-                    }.ToString()
-                ).OpenAndReturn();
-
+            public IDbConnection OpenConnection() => _dbDatabase.Connect();
             public string Folder => _folder.Path;
             private AutoTempFolder _folder;
+            private SqLiteDatabase _dbDatabase;
             public ITargetHistoryRepository SUT { get; }
 
             public TestArena()
             {
                 _folder = new AutoTempFolder();
+                _dbDatabase = new SqLiteDatabase(_folder.Path);
                 SUT = Create(_folder);
             }
 
@@ -300,12 +291,8 @@ namespace bitsplat.Tests
         private static IDbConnection OpenBitsplatConnectionIn(
             string folderPath)
         {
-            return new SQLiteConnection(
-                new SQLiteConnectionStringBuilder()
-                {
-                    Uri = Path.Combine(folderPath, TargetHistoryRepository.DB_NAME)
-                }.ToString()
-            ).OpenAndReturn();
+            var factory = new SqLiteDatabase(folderPath);
+            return factory.Connect();
         }
 
         private static ITargetHistoryRepository Create(
@@ -316,10 +303,13 @@ namespace bitsplat.Tests
         }
 
         private static ITargetHistoryRepository Create(
-            string folder
+            string targetFolder
         )
         {
-            return new TargetHistoryRepository(folder);
+            return new TargetHistoryRepository(
+                new SqLiteDatabase(targetFolder),
+                targetFolder
+            );
         }
     }
 

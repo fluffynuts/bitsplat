@@ -1,12 +1,15 @@
 using System.IO;
 using System.Linq;
+using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
 using NExpect;
+using NSubstitute;
 using NUnit.Framework;
-using PeanutButter.RandomGenerators;
 using PeanutButter.Utils;
+using static NExpect.Expectations;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests
 {
@@ -19,12 +22,12 @@ namespace bitsplat.Tests
             // Arrange
             using (var arena = new TestArena())
             {
-                var sourceData = RandomValueGen.GetRandomBytes(150, 200);
-                var relPath = RandomValueGen.GetRandomString(10);
+                var sourceData = GetRandomBytes(150, 200);
+                var relPath = GetRandomString(10);
                 arena.CreateSourceResource(
                     relPath,
                     sourceData);
-                var targetData = RandomValueGen.GetRandomBytes(50, 100);
+                var targetData = GetRandomBytes(50, 100);
                 var targetPath = arena.CreateTargetResource(
                     relPath,
                     targetData);
@@ -37,7 +40,7 @@ namespace bitsplat.Tests
                 sut.Synchronize(source, target);
                 // Assert
                 var result = File.ReadAllBytes(targetPath);
-                Expectations.Expect(result)
+                Expect(result)
                     .To.Equal(
                         expected,
                         "Should concatenated new data onto existing data, skipping existing bytes");
@@ -49,6 +52,7 @@ namespace bitsplat.Tests
             params IPassThrough[] intermediatePipes)
         {
             return new Synchronizer(
+                Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes,
                 new IResourceMatcher[]

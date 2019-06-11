@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
@@ -18,16 +19,19 @@ namespace bitsplat
     public class Synchronizer
         : ISynchronizer
     {
+        private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IResumeStrategy _resumeStrategy;
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IResourceMatcher[] _resourceMatchers;
         private readonly ISyncQueueNotifiable[] _notifiables;
 
         public Synchronizer(
+            ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
             IPassThrough[] intermediatePipes,
             IResourceMatcher[] resourceMatchers)
         {
+            _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
             _intermediatePipes = intermediatePipes;
             _notifiables = intermediatePipes

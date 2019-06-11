@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
@@ -54,6 +55,21 @@ namespace bitsplat.Tests
                     Expect(fs2)
                         .To.Have.Received(1)
                         .ListResourcesRecursive();
+                }
+                
+                [Test]
+                public void ShouldNotRecordAnyHistory()
+                {
+                    // Arrange
+                    var fs1 = Substitute.For<IFileSystem>();
+                    var fs2 = Substitute.For<IFileSystem>();
+                    var history = Substitute.For<ITargetHistoryRepository>();
+                    var sut = Create(targetHistoryRepository: history);
+                    // Act
+                    sut.Synchronize(fs1, fs2);
+                    // Assert
+                    Expect(history).Not.To.Have.Received()
+                        .Add(Arg.Any<HistoryItem>());
                 }
             }
 
@@ -293,9 +309,6 @@ namespace bitsplat.Tests
                     arena.CreateSourceResource("missing", missingData);
                     var partialFileAllData = "hello world".AsBytes();
                     var partialTargetData = "hello".AsBytes();
-//                    var partialTargetData = partialFileAllData
-//                        .Take(GetRandomInt(50, 70))
-//                        .ToArray();
                     arena.CreateSourceResource("partial", partialFileAllData);
                     arena.CreateTargetResource("partial", partialTargetData);
                     var existingData = GetRandomBytes(100);
@@ -320,7 +333,7 @@ namespace bitsplat.Tests
                         new IPassThrough[] { notifyable, intermediate1 }
                             .Randomize()
                             .ToArray(),
-                        _defaultResourceMatchers);
+                        DefaultResourceMatchers);
                     // Act
                     sut.Synchronize(
                         arena.SourceFileSystem,
@@ -441,16 +454,18 @@ namespace bitsplat.Tests
         private static ISynchronizer Create(
             IResumeStrategy resumeStrategy = null,
             IPassThrough[] intermediatePipes = null,
-            IResourceMatcher[] resourceMatchers = null)
+            IResourceMatcher[] resourceMatchers = null,
+            ITargetHistoryRepository targetHistoryRepository = null)
         {
             return new Synchronizer(
+                targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
-                resourceMatchers ?? _defaultResourceMatchers
+                resourceMatchers ?? DefaultResourceMatchers
             );
         }
 
-        private static readonly IResourceMatcher[] _defaultResourceMatchers =
+        private static readonly IResourceMatcher[] DefaultResourceMatchers =
         {
             new SameRelativePathMatcher(),
             new SameSizeMatcher()

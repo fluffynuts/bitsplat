@@ -2,7 +2,7 @@ using System;
 
 namespace bitsplat.History
 {
-    public class History
+    public class HistoryItem
     {
         public int Id { get; set; }
         public string Path { get; set; }
