@@ -4,7 +4,7 @@ using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 using PeanutButter.Utils;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.TestingSupport
 {
     public static class Matchers
     {

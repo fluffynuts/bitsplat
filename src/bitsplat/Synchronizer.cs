@@ -21,7 +21,6 @@ namespace bitsplat
     {
         private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IResumeStrategy _resumeStrategy;
-        private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IResourceMatcher[] _resourceMatchers;
         private readonly ISyncQueueNotifiable[] _notifiables;
@@ -29,13 +28,11 @@ namespace bitsplat
         public Synchronizer(
             ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
-            ITargetHistoryRepository targetHistoryRepository,
             IPassThrough[] intermediatePipes,
             IResourceMatcher[] resourceMatchers)
         {
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
-            _targetHistoryRepository = targetHistoryRepository;
             _intermediatePipes = intermediatePipes;
             _notifiables = intermediatePipes
                 .OfType<ISyncQueueNotifiable>()
@@ -206,7 +203,7 @@ namespace bitsplat
         private void RecordHistory(IFileResource fileResource)
         {
             _targetHistoryRepository.Upsert(
-                new HistoryResource(fileResource)
+                new HistoryItem(fileResource)
             );
         }
 
@@ -227,12 +224,12 @@ namespace bitsplat
             return composition.Pipe(target);
         }
 
-        private class HistoryResource : IHistoryResource
+        private class HistoryItem : IHistoryItem
         {
             public string Path { get; set; }
             public long Size { get; set; }
 
-            public HistoryResource(IFileResource resource)
+            public HistoryItem(IFileResource resource)
             {
                 Path = resource.RelativePath;
                 Size = resource.Size;

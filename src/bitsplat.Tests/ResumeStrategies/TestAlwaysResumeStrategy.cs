@@ -4,14 +4,14 @@ using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
+using bitsplat.Tests.TestingSupport;
 using NExpect;
 using NSubstitute;
 using NUnit.Framework;
+using PeanutButter.RandomGenerators;
 using PeanutButter.Utils;
-using static NExpect.Expectations;
-using static PeanutButter.RandomGenerators.RandomValueGen;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.ResumeStrategies
 {
     [TestFixture]
     public class TestAlwaysResumeStrategy
@@ -22,12 +22,12 @@ namespace bitsplat.Tests
             // Arrange
             using (var arena = new TestArena())
             {
-                var sourceData = GetRandomBytes(150, 200);
-                var relPath = GetRandomString(10);
+                var sourceData = RandomValueGen.GetRandomBytes(150, 200);
+                var relPath = RandomValueGen.GetRandomString(10);
                 arena.CreateSourceResource(
                     relPath,
                     sourceData);
-                var targetData = GetRandomBytes(50, 100);
+                var targetData = RandomValueGen.GetRandomBytes(50, 100);
                 var targetPath = arena.CreateTargetResource(
                     relPath,
                     targetData);
@@ -40,7 +40,7 @@ namespace bitsplat.Tests
                 sut.Synchronize(source, target);
                 // Assert
                 var result = File.ReadAllBytes(targetPath);
-                Expect(result)
+                Expectations.Expect(result)
                     .To.Equal(
                         expected,
                         "Should concatenated new data onto existing data, skipping existing bytes");
@@ -55,7 +55,6 @@ namespace bitsplat.Tests
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
-                targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 intermediatePipes,
                 new IResourceMatcher[]
                 {

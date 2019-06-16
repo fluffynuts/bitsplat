@@ -2,13 +2,13 @@ using NExpect.Implementations;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.TestingSupport
 {
     public static class HistoryMatchers
     {
         public static void Match(
-            this ITo<History.HistoryItem> to,
-            History.HistoryItem expected)
+            this ITo<bitsplat.History.HistoryItem> to,
+            bitsplat.History.HistoryItem expected)
         {
             to.AddMatcher(actual =>
             {

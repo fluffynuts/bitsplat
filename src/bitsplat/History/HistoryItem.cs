@@ -2,13 +2,13 @@ using System;
 
 namespace bitsplat.History
 {
-    public interface IHistoryResource
+    public interface IHistoryItem
     {
         string Path { get; set; }
         long Size { get; set; }
     }
 
-    public class History: IHistoryResource
+    public class HistoryItem: IHistoryItem
     {
         public int Id { get; set; }
 
@@ -29,11 +29,11 @@ namespace bitsplat.History
         public DateTime Created { get; set; }
         public DateTime? Modified { get; set; }
 
-        public History()
+        public HistoryItem()
         {
         }
 
-        public History(
+        public HistoryItem(
             string path,
             long size)
         {

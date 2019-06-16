@@ -3,7 +3,7 @@ using System.IO;
 using bitsplat.Storage;
 using PeanutButter.Utils;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.TestingSupport
 {
     public class TestArena : IDisposable
     {

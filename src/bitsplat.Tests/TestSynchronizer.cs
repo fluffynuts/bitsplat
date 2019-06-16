@@ -8,6 +8,7 @@ using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
+using bitsplat.Tests.TestingSupport;
 using static NExpect.Expectations;
 using NExpect;
 using NSubstitute;
@@ -69,7 +70,7 @@ namespace bitsplat.Tests
                     sut.Synchronize(fs1, fs2);
                     // Assert
                     Expect(history).Not.To.Have.Received()
-                        .Add(Arg.Any<HistoryItem>());
+                        .Upsert(Arg.Any<IHistoryItem>());
                 }
             }
 
@@ -125,7 +126,7 @@ namespace bitsplat.Tests
                         // Assert
                         Expect(historyRepo)
                             .To.Have.Received(1)
-                            .Upsert(Arg.Is<IHistoryResource>(
+                            .Upsert(Arg.Is<IHistoryItem>(
                                 o => o.Path == relPath &&
                                      o.Size == data.Length
                             ));
@@ -197,7 +198,7 @@ namespace bitsplat.Tests
                         // Assert
                         Expect(historyRepo)
                             .To.Have.Received(1)
-                            .Upsert(Arg.Is<IHistoryResource>(
+                            .Upsert(Arg.Is<IHistoryItem>(
                                 o => o.Path == relPath &&
                                      o.Size == data.Length
                             ));
@@ -588,7 +589,6 @@ namespace bitsplat.Tests
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
-                targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 intermediatePipes ?? new IPassThrough[0],
                 resourceMatchers ?? DefaultResourceMatchers
             );

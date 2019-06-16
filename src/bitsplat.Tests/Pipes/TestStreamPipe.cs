@@ -1,13 +1,13 @@
 using System.IO;
 using bitsplat.Pipes;
-using NUnit.Framework;
-using static PeanutButter.RandomGenerators.RandomValueGen;
-using static NExpect.Expectations;
+using NExpect;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
+using NUnit.Framework;
+using PeanutButter.RandomGenerators;
 using PeanutButter.Utils;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.Pipes
 {
     [TestFixture]
     public class TestPipeline
@@ -16,7 +16,7 @@ namespace bitsplat.Tests
         public void SimplePipeline()
         {
             // Arrange
-            var data = GetRandomBytes(100);
+            var data = RandomValueGen.GetRandomBytes(100);
             var sourceStream = new MemoryStream(data);
             var targetStream = new MemoryStream();
             using (var source = new StreamSource(sourceStream, false))
@@ -27,7 +27,7 @@ namespace bitsplat.Tests
                     .Pipe(target)
                     .Drain();
                 // Assert
-                Expect(targetStream)
+                Expectations.Expect(targetStream)
                     .To.Contain.Only(data);
             }
         }
@@ -37,7 +37,7 @@ namespace bitsplat.Tests
         {
             // Arrange
             var intermediate = new NullPassThrough();
-            var data = GetRandomBytes(100);
+            var data = RandomValueGen.GetRandomBytes(100);
             var sourceStream = new MemoryStream(data);
             var targetStream = new MemoryStream();
             using (var source = new StreamSource(sourceStream, false))
@@ -49,7 +49,7 @@ namespace bitsplat.Tests
                     .Pipe(target)
                     .Drain();
                 // Assert
-                Expect(targetStream)
+                Expectations.Expect(targetStream)
                     .To.Contain.Only(data);
             }
         }

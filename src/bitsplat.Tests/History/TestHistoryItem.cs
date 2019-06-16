@@ -1,18 +1,16 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using static NExpect.Expectations;
 using NExpect;
 using NExpect.Implementations;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 using NUnit.Framework;
-using static PeanutButter.RandomGenerators.RandomValueGen;
 
-namespace bitsplat.Tests
+namespace bitsplat.Tests.History
 {
     [TestFixture]
-    public class TestHistory
+    public class TestHistoryItem
     {
         [TestCase("Id", typeof(int))]
         [TestCase("Path", typeof(string))]
@@ -22,9 +20,9 @@ namespace bitsplat.Tests
         public void ShouldHaveProperty_(string name, Type type)
         {
             // Arrange
-            var sut = typeof(History.History);
+            var sut = typeof(bitsplat.History.HistoryItem);
             // Act
-            Expect(sut)
+            Expectations.Expect(sut)
                 .To.Have.Property(name)
                 .With.Type(type);
             // Assert
@@ -40,12 +38,12 @@ namespace bitsplat.Tests
             // Act
             sut.Path = windowsPath;
             // Assert
-            Expect(sut.Path).To.Equal(unixPath);
+            Expectations.Expect(sut.Path).To.Equal(unixPath);
         }
 
-        private History.History Create()
+        private bitsplat.History.HistoryItem Create()
         {
-            return new History.History();
+            return new bitsplat.History.HistoryItem();
         }
     }
 
@@ -62,7 +60,7 @@ namespace bitsplat.Tests
             this WithType wt,
             Type expected)
         {
-            Expect(wt.PropertyInfo.PropertyType)
+            Expectations.Expect(wt.PropertyInfo.PropertyType)
                 .To.Equal(expected,
                     () => $"Expected {wt.ParentType}.{wt.PropertyInfo.Name} to have type {expected}");
         }
