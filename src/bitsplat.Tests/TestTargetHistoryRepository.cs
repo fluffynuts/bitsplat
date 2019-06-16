@@ -121,7 +121,7 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
-        public class Add
+        public class Upsert
         {
             [Test]
             public void ShouldAddANewHistoryItem()
@@ -132,7 +132,7 @@ namespace bitsplat.Tests
                 using (var arena = Create())
                 {
                     // Act
-                    arena.SUT.Add(item);
+                    arena.SUT.Upsert(item);
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
@@ -153,7 +153,7 @@ namespace bitsplat.Tests
             }
 
             [Test]
-            public void ShouldNotAddRepeatedPath()
+            public void ShouldUpdateSizeAndSetLastModifiedOnRepeatedPath()
             {
                 // Arrange
                 var item = GetRandom<History.HistoryItem>();
@@ -163,8 +163,9 @@ namespace bitsplat.Tests
                 using (var arena = Create())
                 {
                     // Act
-                    arena.SUT.Add(item);
-                    arena.SUT.Add(second);
+                    arena.SUT.Upsert(item);
+                    var beforeUpsert = DateTime.UtcNow;
+                    arena.SUT.Upsert(second);
                     // Assert
                     using (var conn = arena.OpenConnection())
                     {
@@ -176,10 +177,12 @@ namespace bitsplat.Tests
                         Expect(result)
                             .To.Contain.Exactly(1)
                             .Matched.By(inDb => inDb.Path == item.Path &&
-                                    inDb.Size == item.Size &&
-                                    inDb.Created >= beforeTest,
+                                    inDb.Size == second.Size &&
+                                    inDb.Created >= beforeTest &&
+                                                inDb.Modified != null && 
+                                                inDb.Modified.Value.TruncateSeconds() >= beforeUpsert.TruncateSeconds() ,
                                 () =>
-                                    $"Single result should match input\n{item.Stringify()}\nvs\n{result[0].Stringify()}\nbeforeTest:{beforeTest}");
+                                    $"Single result should match input\n{second.Stringify()}\nvs\n{result[0].Stringify()}\nbeforeTest:{beforeTest}");
                     }
                 }
             }
@@ -212,7 +215,7 @@ namespace bitsplat.Tests
                 using (var arena = Create())
                 {
                     // Act
-                    arena.SUT.Add(item);
+                    arena.SUT.Upsert(item);
                     var result = arena.SUT.Find(item.Path);
                     // Assert
                     Expect(result)
@@ -247,7 +250,7 @@ namespace bitsplat.Tests
                 using (var arena = Create())
                 {
                     // Act
-                    arena.SUT.Add(item);
+                    arena.SUT.Upsert(item);
                     var result = arena.SUT.Exists(item.Path);
                     // Assert
                     Expect(result).To.Be.True();
