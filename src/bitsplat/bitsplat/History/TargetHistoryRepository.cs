@@ -24,7 +24,7 @@ namespace bitsplat.History
             MigrateUp();
         }
 
-        public void Upsert(History item)
+        public void Upsert(IHistoryResource item)
         {
             using (var conn = OpenConnection())
             {

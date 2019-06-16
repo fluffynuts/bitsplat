@@ -49,11 +49,13 @@ namespace bitsplat.Tests
 
         private static ISynchronizer Create(
             IResumeStrategy resumeStrategy = null,
+            ITargetHistoryRepository targetHistoryRepository = null,
             params IPassThrough[] intermediatePipes)
         {
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
+                targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 intermediatePipes,
                 new IResourceMatcher[]
                 {

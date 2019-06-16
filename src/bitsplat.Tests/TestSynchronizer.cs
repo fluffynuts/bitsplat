@@ -104,6 +104,33 @@ namespace bitsplat.Tests
                             .To.Have.Data(data);
                     }
                 }
+
+                [Test]
+                public void ShouldUpsertHistory()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = "some-file.ext";
+                        var data = GetRandomBytes();
+                        arena.CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            data);
+                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
+                        var sut = Create(targetHistoryRepository: historyRepo);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        Expect(historyRepo)
+                            .To.Have.Received(1)
+                            .Upsert(Arg.Is<IHistoryResource>(
+                                o => o.Path == relPath &&
+                                     o.Size == data.Length
+                            ));
+                    }
+                }
             }
 
             [TestFixture]
@@ -139,6 +166,41 @@ namespace bitsplat.Tests
                         var targetInfo = new FileInfo(targetFilePath);
                         Expect(targetInfo.LastWriteTime)
                             .To.Be.Less.Than(beforeTest);
+                    }
+                }
+
+                [Test]
+                public void ShouldUpsertHistory()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString(2);
+                        var data = GetRandomBytes(100);
+                        var targetFilePath = arena.CreateResource(
+                            arena.TargetPath,
+                            relPath,
+                            data);
+                        arena.CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            data);
+                        var beforeTest = DateTime.Now;
+                        var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
+                        File.SetLastWriteTime(targetFilePath, lastWrite);
+                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
+
+                        var sut = Create(targetHistoryRepository: historyRepo);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        Expect(historyRepo)
+                            .To.Have.Received(1)
+                            .Upsert(Arg.Is<IHistoryResource>(
+                                o => o.Path == relPath &&
+                                     o.Size == data.Length
+                            ));
                     }
                 }
             }
@@ -341,20 +403,24 @@ namespace bitsplat.Tests
                     // Assert
                     var partialResultData = arena.TargetFileSystem.ReadAllBytes("partial");
                     Expect(partialResultData)
-                        .To.Equal(partialFileAllData, 
+                        .To.Equal(partialFileAllData,
                             () => $@"Expected {
-                                partialFileAllData.Length
+                                    partialFileAllData.Length
                                 } bytes, but got {
                                     partialResultData.Length
-                                }: '{partialFileAllData.AsString()}' vs '{partialResultData.AsString()}'");
+                                }: '{
+                                    partialFileAllData.AsString()
+                                }' vs '{
+                                    partialResultData.AsString()
+                                }'");
                     Expect(arena.TargetFileSystem.ReadAllBytes("existing"))
                         .To.Equal(existingData);
                     Expect(arena.TargetFileSystem.ReadAllBytes("missing"))
                         .To.Equal(missingData);
-                    Expect(notifyable.InitialNotifications)
+                    Expect(notifyable.BatchStartedNotifications)
                         .To.Contain.Only(1)
                         .Item(); // should only have one initial notification
-                    var initial = notifyable.InitialNotifications.Single();
+                    var initial = notifyable.BatchStartedNotifications.Single();
                     Expect(initial)
                         .To.Contain
                         .Only(2)
@@ -369,8 +435,28 @@ namespace bitsplat.Tests
                         .Matched.By(
                             resource => resource.RelativePath == "partial"
                         );
+                    
+                    var batchComplete = notifyable.BatchCompletedNotifications.Single();
+                    Expect(batchComplete)
+                        .To.Contain
+                        .Only(2)
+                        .Items(); // should only have partial and missing in sync queue
+                    Expect(batchComplete)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(
+                            resource => resource.RelativePath == "missing"
+                        );
+                    Expect(batchComplete)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(
+                            resource => resource.RelativePath == "partial"
+                        );
+                    
+                    
+                    
                     Expect(notifyable.ResourceNotifications)
-                        .To.Contain.Exactly(2).Items();
+                        .To.Contain.Exactly(2)
+                        .Items();
                     var missingResource = notifyable.ResourceNotifications.First();
                     Expect(missingResource.source.RelativePath)
                         .To.Equal("missing");
@@ -387,6 +473,30 @@ namespace bitsplat.Tests
                         .To.Equal("partial");
                     Expect(partialResource.target.Size)
                         .To.Equal(partialTargetData.Length);
+                    
+                    Expect(notifyable.CompletedNotifications)
+                        .To.Contain.Exactly(2)
+                        .Items();
+                    missingResource = notifyable.CompletedNotifications.First();
+                    Expect(missingResource.source.RelativePath)
+                        .To.Equal("missing");
+                    Expect(missingResource.source.Size)
+                        .To.Equal(missingData.Length);
+                    Expect(missingResource.target)
+                        .Not.To.Be.Null();
+                    Expect(missingResource.target.RelativePath)
+                        .To.Equal("missing");
+                    Expect(missingResource.target.Size)
+                        .To.Equal(missingData.Length);
+                    partialResource = notifyable.CompletedNotifications.Second();
+                    Expect(partialResource.source.RelativePath)
+                        .To.Equal("partial");
+                    Expect(partialResource.source.Size)
+                        .To.Equal(partialFileAllData.Length);
+                    Expect(partialResource.target.RelativePath)
+                        .To.Equal("partial");
+                    Expect(partialResource.target.Size)
+                        .To.Equal(partialTargetData.Length);
                 }
             }
         }
@@ -395,11 +505,16 @@ namespace bitsplat.Tests
             : GenericPassThrough,
               ISyncQueueNotifiable
         {
-            public List<IEnumerable<IFileResource>> InitialNotifications { get; }
-                = new List<IEnumerable<IFileResource>>();
+            public List<IEnumerable<IFileResourceProperties>> BatchStartedNotifications { get; }
+                = new List<IEnumerable<IFileResourceProperties>>();
+            public List<IEnumerable<IFileResourceProperties>> BatchCompletedNotifications { get; }
+                = new List<IEnumerable<IFileResourceProperties>>();
 
-            public List<(IFileResource source, IFileResource target)> ResourceNotifications { get; }
-                = new List<(IFileResource source, IFileResource target)>();
+            public List<(IFileResourceProperties source, IFileResourceProperties target)> ResourceNotifications { get; }
+                = new List<(IFileResourceProperties source, IFileResourceProperties target)>();
+
+            public List<(IFileResourceProperties source, IFileResourceProperties target)> CompletedNotifications { get; }
+                = new List<(IFileResourceProperties source, IFileResourceProperties target)>();
 
             public NotifiableGenericPassThrough(
                 Action<byte[], int> onWrite,
@@ -408,16 +523,29 @@ namespace bitsplat.Tests
             {
             }
 
-            public void NotifySyncBatch(IEnumerable<IFileResource> sourceResources)
+            public void NotifySyncBatchStart(
+                IEnumerable<IFileResourceProperties> sourceResources)
             {
-                InitialNotifications.Add(sourceResources);
+                BatchStartedNotifications.Add(sourceResources);
+            }
+            public void NotifySyncBatchComplete(
+                IEnumerable<IFileResourceProperties> sourceResources)
+            {
+                BatchCompletedNotifications.Add(sourceResources);
             }
 
-            public void NotifyImpendingSync(
-                IFileResource sourceResource,
-                IFileResource targetResource)
+            public void NotifySyncStart(
+                IFileResourceProperties sourceResource,
+                IFileResourceProperties targetResource)
             {
                 ResourceNotifications.Add((sourceResource, targetResource));
+            }
+
+            public void NotifySyncComplete(
+                IFileResourceProperties sourceResource, 
+                IFileResourceProperties targetResource)
+            {
+                CompletedNotifications.Add((sourceResource, targetResource));
             }
         }
 
@@ -460,6 +588,7 @@ namespace bitsplat.Tests
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
+                targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 intermediatePipes ?? new IPassThrough[0],
                 resourceMatchers ?? DefaultResourceMatchers
             );

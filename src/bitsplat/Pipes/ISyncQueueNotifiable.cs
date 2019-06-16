@@ -5,12 +5,18 @@ namespace bitsplat.Pipes
 {
     public interface ISyncQueueNotifiable
     {
-        void NotifySyncBatch(
-            IEnumerable<IFileResource> sourceResources
-        );
+        void NotifySyncBatchStart(
+            IEnumerable<IFileResourceProperties> sourceResources);
 
-        void NotifyImpendingSync(
-            IFileResource sourceResource,
-            IFileResource targetResource);
+        void NotifySyncBatchComplete(
+            IEnumerable<IFileResourceProperties> sourceResources);
+
+        void NotifySyncStart(
+            IFileResourceProperties sourceResource,
+            IFileResourceProperties targetResource);
+
+        void NotifySyncComplete(
+            IFileResourceProperties sourceResource,
+            IFileResourceProperties targetResource);
     }
 }

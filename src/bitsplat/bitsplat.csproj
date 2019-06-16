@@ -9,7 +9,7 @@
       <PackageReference Include="Dapper" Version="1.60.6" />
       <PackageReference Include="FluentMigrator" Version="3.2.1" />
       <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
-      <PackageReference Include="PeanutButter.Utils" Version="1.2.282" />
+      <PackageReference Include="PeanutButter.Utils" Version="1.2.288" />
       <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
     </ItemGroup>
 

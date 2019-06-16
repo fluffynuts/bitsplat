@@ -21,6 +21,7 @@ namespace bitsplat
     {
         private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IResumeStrategy _resumeStrategy;
+        private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IResourceMatcher[] _resourceMatchers;
         private readonly ISyncQueueNotifiable[] _notifiables;
@@ -28,16 +29,42 @@ namespace bitsplat
         public Synchronizer(
             ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
+            ITargetHistoryRepository targetHistoryRepository,
             IPassThrough[] intermediatePipes,
             IResourceMatcher[] resourceMatchers)
         {
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
+            _targetHistoryRepository = targetHistoryRepository;
             _intermediatePipes = intermediatePipes;
             _notifiables = intermediatePipes
                 .OfType<ISyncQueueNotifiable>()
                 .ToArray();
             _resourceMatchers = resourceMatchers;
+        }
+
+        private class FileSystemComparison
+        {
+            public List<IFileResource> SyncQueue { get; } = new List<IFileResource>();
+            public List<IFileResource> Skipped { get; } = new List<IFileResource>();
+        }
+
+        private class FileResourceProperties : IFileResourceProperties
+        {
+            public string Path { get; }
+            public long Size { get; }
+            public string RelativePath { get; }
+
+            public FileResourceProperties(
+                IFileSystem targetFileSystem,
+                IFileResource sourceResource)
+            {
+                Path = System.IO.Path.Combine(
+                    targetFileSystem.BasePath,
+                    sourceResource.RelativePath);
+                RelativePath = sourceResource.RelativePath;
+                Size = sourceResource.Size;
+            }
         }
 
         public void Synchronize(
@@ -48,49 +75,139 @@ namespace bitsplat
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IFileResource[] ?? targetResourcesCollection.ToArray();
-            var syncQueue = sourceResources
-                .Where(sourceResource =>
-                    !targetResources.Any(
-                        targetResource => _resourceMatchers.Aggregate(
-                            true,
-                            (acc, cur) => acc && cur.AreMatched(sourceResource, targetResource)
-                        )
-                    )
-                )
-                .OrderBy(resource => resource.RelativePath);
-            _notifiables.ForEach(
-                notifiable => notifiable.NotifySyncBatch(syncQueue)
-            );
+            var comparison = CompareResources(sourceResources, targetResources);
+            comparison.Skipped.ForEach(RecordHistory);
+
+            var syncQueue = comparison.SyncQueue
+                .OrderBy(resource => resource.RelativePath)
+                .ToArray();
+
+            NotifySyncBatchStart(syncQueue);
+
             syncQueue.ForEach(sourceResource =>
             {
-                var sourceStream = sourceResource.Read();
-                var targetStream = target.Open(sourceResource.RelativePath, FileMode.OpenOrCreate);
-
                 var targetResource = targetResources.FirstOrDefault(
                     r => r.RelativePath == sourceResource.RelativePath);
 
-                var canResume = targetResource != null &&
-                                _resumeStrategy.CanResume(
-                                    sourceStream,
-                                    targetStream);
-                if (canResume)
-                {
-                    sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
-                    targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
-                }
+                var sourceStream = sourceResource.Read();
+                var targetStream = target.Open(
+                    sourceResource.RelativePath,
+                    FileMode.OpenOrCreate);
 
-                _notifiables.ForEach(
-                    notifiable => notifiable.NotifyImpendingSync(
-                        sourceResource,
-                        canResume
-                            ? targetResource
-                            : null
-                    )
-                );
+                var resuming = ResumeIfPossible(
+                    targetResource,
+                    sourceStream,
+                    targetStream);
+
+                NotifySyncStart(
+                    sourceResource,
+                    resuming
+                        ? targetResource
+                        : null);
 
                 var composition = ComposePipeline(sourceStream, targetStream);
                 composition.Drain();
+                NotifySyncComplete(
+                    sourceResource,
+                    targetResource ??
+                    CreateFileResourcePropertiesFor(
+                        target,
+                        sourceResource)
+                );
+                RecordHistory(sourceResource);
             });
+
+            NotifySyncBatchComplete(syncQueue);
+        }
+
+        private IFileResourceProperties CreateFileResourcePropertiesFor(
+            IFileSystem target,
+            IFileResource sourceResource)
+        {
+            return new FileResourceProperties(
+                target,
+                sourceResource);
+        }
+
+        private void NotifySyncBatchComplete(IFileResource[] syncQueue)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncBatchComplete(syncQueue)
+            );
+        }
+
+        private void NotifySyncComplete(
+            IFileResourceProperties sourceResource,
+            IFileResourceProperties targetResource)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncComplete(
+                    sourceResource,
+                    targetResource)
+            );
+        }
+
+        private void NotifySyncStart(
+            IFileResource source,
+            IFileResource target)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncStart(
+                    source,
+                    target)
+            );
+        }
+
+        private void NotifySyncBatchStart(IEnumerable<IFileResource> resources)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncBatchStart(resources)
+            );
+        }
+
+        private bool ResumeIfPossible(IFileResource targetResource,
+            Stream sourceStream,
+            Stream targetStream)
+        {
+            var canResume = targetResource != null &&
+                            _resumeStrategy.CanResume(
+                                sourceStream,
+                                targetStream);
+            if (canResume)
+            {
+                sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
+                targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
+            }
+
+            return canResume;
+        }
+
+        private FileSystemComparison CompareResources(
+            IEnumerable<IFileResource> sourceResources,
+            IEnumerable<IFileResource> targetResources)
+        {
+            var comparison = sourceResources.Aggregate(
+                new FileSystemComparison(),
+                (acc, sourceResource) =>
+                {
+                    var list = targetResources.Any(
+                                   targetResource => _resourceMatchers.Aggregate(
+                                       true,
+                                       (matched, cur) => matched && cur.AreMatched(sourceResource, targetResource)
+                                   ))
+                                   ? acc.Skipped
+                                   : acc.SyncQueue;
+                    list.Add(sourceResource);
+                    return acc;
+                });
+            return comparison;
+        }
+
+        private void RecordHistory(IFileResource fileResource)
+        {
+            _targetHistoryRepository.Upsert(
+                new HistoryResource(fileResource)
+            );
         }
 
         private ISink ComposePipeline(
@@ -108,6 +225,18 @@ namespace bitsplat
                 (acc, cur) => acc.Pipe(cur)
             );
             return composition.Pipe(target);
+        }
+
+        private class HistoryResource : IHistoryResource
+        {
+            public string Path { get; set; }
+            public long Size { get; set; }
+
+            public HistoryResource(IFileResource resource)
+            {
+                Path = resource.RelativePath;
+                Size = resource.Size;
+            }
         }
     }
 }
