@@ -169,6 +169,38 @@ namespace bitsplat.Tests
                             .To.Be.Less.Than(beforeTest);
                     }
                 }
+                
+                [Test]
+                public void ShouldNotReWriteTheFileWhenInHistoryButNotOnDisk()
+                {
+                    // Arrange
+                    using (var arena = new TestArena())
+                    {
+                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                        var relPath = GetRandomString(2);
+                        var data = GetRandomBytes(100);
+                        arena.CreateResource(
+                            arena.SourcePath,
+                            relPath,
+                            data);
+                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
+                        historyRepo.Exists(relPath).Returns(true);
+                        var targetFilePath = Path.Combine(arena.TargetPath, relPath);
+                        var historyItem = new HistoryItem(
+                            relPath, data.Length);
+                        historyRepo.Find(relPath).Returns(historyItem);
+
+                        var sut = Create(targetHistoryRepository: historyRepo);
+                        // Act
+                        sut.Synchronize(source, target);
+                        // Assert
+                        Expect(historyRepo)
+                            .To.Have.Received(1)
+                            .Find(relPath);
+                        Expect(targetFilePath)
+                            .Not.To.Be.A.File();
+                    }
+                }
 
                 [Test]
                 public void ShouldUpsertHistory()

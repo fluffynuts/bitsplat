@@ -187,17 +187,28 @@ namespace bitsplat
                 new FileSystemComparison(),
                 (acc, sourceResource) =>
                 {
-                    var list = targetResources.Any(
+                    var shouldSkip = 
+                        ExistsInHistory(sourceResource) ||
+                        targetResources.Any(
                                    targetResource => _resourceMatchers.Aggregate(
                                        true,
                                        (matched, cur) => matched && cur.AreMatched(sourceResource, targetResource)
-                                   ))
+                                   ));
+                    var list = shouldSkip
                                    ? acc.Skipped
                                    : acc.SyncQueue;
                     list.Add(sourceResource);
                     return acc;
                 });
             return comparison;
+        }
+
+        private bool ExistsInHistory(
+            IFileResource resource)
+        {
+            var historyItem = _targetHistoryRepository.Find(resource.RelativePath);
+            return historyItem != null &&
+                   historyItem.Size == resource.Size;
         }
 
         private void RecordHistory(IFileResource fileResource)
