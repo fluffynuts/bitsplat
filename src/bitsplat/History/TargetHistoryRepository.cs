@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
@@ -62,18 +63,36 @@ namespace bitsplat.History
             using (var conn = OpenConnection())
             {
                 return conn.QueryFirstOrDefault<int>(
-                    $"select id from {Table.NAME} where path = @path;",
+                           $"select id from {Table.NAME} where path = @path;",
+                           new
+                           {
+                               path
+                           }
+                       ) >
+                       0;
+            }
+        }
+
+        public IEnumerable<HistoryItem> FindAll(string match)
+        {
+            using (var conn = OpenConnection())
+            {
+                return conn.Query<HistoryItem>(
+                    $"select * from {Table.NAME} where path like @path ESCAPE '\\';",
                     new
                     {
-                        path
-                    }
-                ) > 0;
+                        path = match
+                            .Replace("%", "\\%")
+                            .Replace("*", "%")
+                    });
             }
         }
 
         private void MigrateUp()
         {
-            var runner = new EasyRunner(ConnectionString, GetType().Assembly);
+            var runner = new EasyRunner(ConnectionString,
+                GetType()
+                    .Assembly);
             runner.MigrateUp();
         }
 
