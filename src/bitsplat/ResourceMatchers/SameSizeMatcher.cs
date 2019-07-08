@@ -5,8 +5,8 @@ namespace bitsplat.ResourceMatchers
     public class SameSizeMatcher : IResourceMatcher
     {
         public bool AreMatched(
-            IFileResource left, 
-            IFileResource right)
+            IReadWriteFileResource left, 
+            IReadWriteFileResource right)
         {
             return left.Size == right.Size;
         }

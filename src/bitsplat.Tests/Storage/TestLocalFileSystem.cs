@@ -5,8 +5,9 @@ using bitsplat.Storage;
 using bitsplat.Tests.TestingSupport;
 using NExpect;
 using NUnit.Framework;
-using PeanutButter.RandomGenerators;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 using PeanutButter.Utils;
+using static NExpect.Expectations;
 
 // ReSharper disable PossibleMultipleEnumeration
 
@@ -20,7 +21,7 @@ namespace bitsplat.Tests.Storage
         {
             // Arrange
             // Act
-            Expectations.Expect(typeof(LocalFileSystem))
+            Expect(typeof(LocalFileSystem))
                 .To.Implement<IFileSystem>();
             // Assert
         }
@@ -34,10 +35,10 @@ namespace bitsplat.Tests.Storage
                 var baseFolder = Path.Combine(folder.Path,
                     Guid.NewGuid()
                         .ToString());
-                Expectations.Expect(baseFolder)
+                Expect(baseFolder)
                     .Not.To.Exist();
                 // Act
-                Expectations.Expect(() => Create(baseFolder))
+                Expect(() => Create(baseFolder))
                     .To.Throw<DirectoryNotFoundException>();
                 // Assert
             }
@@ -57,7 +58,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var result = sut.IsFile(tempFile.Path);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.True();
                 }
             }
@@ -75,7 +76,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var result = sut.IsFile(test);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.False();
                 }
             }
@@ -94,13 +95,13 @@ namespace bitsplat.Tests.Storage
                         .ToString();
                     var sub = Path.Combine(tempDir.Path, test);
                     Directory.CreateDirectory(sub);
-                    Expectations.Expect(sub)
+                    Expect(sub)
                         .To.Be.A.Directory();
                     var sut = Create(tempDir.Path);
                     // Act
                     var result = sut.IsDirectory(test);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.True();
                 }
             }
@@ -114,13 +115,13 @@ namespace bitsplat.Tests.Storage
                     var test = Guid.NewGuid()
                         .ToString();
                     var sub = Path.Combine(tempDir.Path, test);
-                    Expectations.Expect(sub)
+                    Expect(sub)
                         .Not.To.Exist();
                     var sut = Create(tempDir.Path);
                     // Act
                     var result = sut.IsDirectory(test);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.False();
                 }
             }
@@ -139,7 +140,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var result = sut.Exists(tempFile.Path);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.True();
                 }
             }
@@ -154,7 +155,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var result = sut.Exists(tempFolder.Path);
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.True();
                 }
             }
@@ -170,7 +171,7 @@ namespace bitsplat.Tests.Storage
                     var result = sut.Exists(Guid.NewGuid()
                         .ToString());
                     // Assert
-                    Expectations.Expect(result)
+                    Expect(result)
                         .To.Be.False();
                 }
             }
@@ -187,9 +188,9 @@ namespace bitsplat.Tests.Storage
                 {
                     var fileName = Guid.NewGuid()
                         .ToString();
-                    Expectations.Expect(Path.Combine(tempFolder.Path, fileName))
+                    Expect(Path.Combine(tempFolder.Path, fileName))
                         .Not.To.Exist();
-                    var expected = RandomValueGen.GetRandomBytes(1024);
+                    var expected = GetRandomBytes(1024);
                     var sut = Create(tempFolder);
                     // Act
                     using (var stream = sut.Open(fileName, FileMode.OpenOrCreate))
@@ -204,7 +205,7 @@ namespace bitsplat.Tests.Storage
                             fileName
                         )
                     );
-                    Expectations.Expect(written)
+                    Expect(written)
                         .To.Equal(expected);
                 }
             }
@@ -217,9 +218,9 @@ namespace bitsplat.Tests.Storage
                 {
                     var fileName = Guid.NewGuid()
                         .ToString();
-                    Expectations.Expect(Path.Combine(tempFolder.Path, fileName))
+                    Expect(Path.Combine(tempFolder.Path, fileName))
                         .Not.To.Exist();
-                    var expected = RandomValueGen.GetRandomBytes(1024);
+                    var expected = GetRandomBytes(1024);
                     var sut = Create(tempFolder);
                     // Act
                     using (var stream = sut.Open(fileName, FileMode.Append))
@@ -234,7 +235,7 @@ namespace bitsplat.Tests.Storage
                             fileName
                         )
                     );
-                    Expectations.Expect(written)
+                    Expect(written)
                         .To.Equal(expected);
                 }
             }
@@ -253,9 +254,9 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var results = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(results)
+                    Expect(results)
                         .Not.To.Be.Null();
-                    Expectations.Expect(results)
+                    Expect(results)
                         .To.Be.Empty();
                 }
             }
@@ -271,7 +272,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var results = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(results)
+                    Expect(results)
                         .To.Contain.Exactly(1)
                         .Matched.By(r => r.Path == filePath);
                 }
@@ -289,7 +290,7 @@ namespace bitsplat.Tests.Storage
                     // Act
                     var results = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(results)
+                    Expect(results)
                         .To.Contain.Exactly(1)
                         .Matched.By(r => r.RelativePath == expected);
                 }
@@ -303,12 +304,12 @@ namespace bitsplat.Tests.Storage
                 {
                     var path = tempFolder.CreateRandomFolder();
                     var sut = Create(tempFolder);
-                    Expectations.Expect(path)
+                    Expect(path)
                         .To.Exist();
                     // Act
                     var results = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(results)
+                    Expect(results)
                         .To.Be.Empty();
                 }
             }
@@ -321,10 +322,10 @@ namespace bitsplat.Tests.Storage
                 {
                     var file1 = tempFolder.CreateRandomFile();
                     var sub1 = tempFolder.CreateRandomFolder();
-                    var file2 = Path.Combine(sub1, RandomValueGen.CreateRandomFileIn(sub1));
-                    var file3 = Path.Combine(sub1, RandomValueGen.CreateRandomFileIn(sub1));
-                    var sub2 = Path.Combine(sub1, RandomValueGen.CreateRandomFolderIn(sub1));
-                    var file4 = Path.Combine(sub2, RandomValueGen.CreateRandomFileIn(sub2));
+                    var file2 = Path.Combine(sub1, CreateRandomFileIn(sub1));
+                    var file3 = Path.Combine(sub1, CreateRandomFileIn(sub1));
+                    var sub2 = Path.Combine(sub1, CreateRandomFolderIn(sub1));
+                    var file4 = Path.Combine(sub2, CreateRandomFileIn(sub2));
 
                     new[]
                     {
@@ -334,20 +335,20 @@ namespace bitsplat.Tests.Storage
                         file3,
                         sub2,
                         file4
-                    }.ForEach(o => Expectations.Expect(o)
+                    }.ForEach(o => Expect(o)
                         .To.Exist());
                     var sut = Create(tempFolder);
                     // Act
                     var result = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(result).To.Contain.Only(4).Items();
-                    Expectations.Expect(result).To.Contain.Exactly(1)
+                    Expect(result).To.Contain.Only(4).Items();
+                    Expect(result).To.Contain.Exactly(1)
                         .Matched.By(o => o.Path == file1);
-                    Expectations.Expect(result).To.Contain.Exactly(1)
+                    Expect(result).To.Contain.Exactly(1)
                         .Matched.By(o => o.Path == file2);
-                    Expectations.Expect(result).To.Contain.Exactly(1)
+                    Expect(result).To.Contain.Exactly(1)
                         .Matched.By(o => o.Path == file3);
-                    Expectations.Expect(result).To.Contain.Exactly(1)
+                    Expect(result).To.Contain.Exactly(1)
                         .Matched.By(o => o.Path == file4);
                 }
             }
@@ -360,18 +361,18 @@ namespace bitsplat.Tests.Storage
                 {
                     var file1 = tempFolder.CreateRandomFile();
                     var sub = tempFolder.CreateRandomFolder();
-                    var file2 = Path.Combine(sub, RandomValueGen.CreateRandomFileIn(sub));
+                    var file2 = Path.Combine(sub, CreateRandomFileIn(sub));
                     var expected1 = Path.GetRelativePath(tempFolder.Path, file1);
                     var expected2 = Path.GetRelativePath(tempFolder.Path, file2);
                     var sut = Create(tempFolder);
                     // Act
                     var results = sut.ListResourcesRecursive();
                     // Assert
-                    Expectations.Expect(results).To.Contain.Only(2).Items();
-                    Expectations.Expect(results).To.Contain.Exactly(1)
+                    Expect(results).To.Contain.Only(2).Items();
+                    Expect(results).To.Contain.Exactly(1)
                         .Matched.By(o => o.RelativePath == expected1 &&
                                          o.Path == file1);
-                    Expectations.Expect(results).To.Contain.Exactly(1)
+                    Expect(results).To.Contain.Exactly(1)
                         .Matched.By(o => o.RelativePath == expected2 &&
                                          o.Path == file2);
                 }
@@ -385,13 +386,13 @@ namespace bitsplat.Tests.Storage
                 {
                     var file = tempFolder.CreateRandomFile();
                     var stat = new FileInfo(file);
-                    var newData = RandomValueGen.GetRandomBytes((int)stat.Length + 1, (int)stat.Length + 100);
+                    var newData = GetRandomBytes((int)stat.Length + 1, (int)stat.Length + 100);
                     var sut = Create(tempFolder);
                     // Act
                     var results = sut.ListResourcesRecursive();
                     File.WriteAllBytes(file, newData);
                     // Assert
-                    Expectations.Expect(results.Single().Size)
+                    Expect(results.Single().Size)
                         .To.Equal(newData.Length);
                 }
             }
@@ -409,7 +410,7 @@ namespace bitsplat.Tests.Storage
                     var results = sut.ListResourcesRecursive();
                     File.Delete(file);
                     // Assert
-                    Expectations.Expect(results.Single().Size)
+                    Expect(results.Single().Size)
                         .To.Equal(-1);
                 }
             }

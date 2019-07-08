@@ -10,7 +10,7 @@ namespace bitsplat.Tests.TestingSupport
     public static class FileResourceMatchers
     {
         public static void Data(
-            this IHave<IFileResource> have,
+            this IHave<IReadWriteFileResource> have,
             byte[] expected)
         {
             have.AddMatcher(actual =>

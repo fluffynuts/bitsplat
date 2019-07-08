@@ -3,8 +3,8 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
-    public class LocalFileResource
-        : IFileResource
+    public class LocalReadWriteFileResource
+        : IReadWriteFileResource
     {
         private readonly string _basePath;
         private readonly IFileSystem _fileSystem;
@@ -16,7 +16,7 @@ namespace bitsplat.Storage
 
         private string _relativePath;
 
-        public LocalFileResource(
+        public LocalReadWriteFileResource(
             string path,
             string basePath,
             IFileSystem fileSystem)

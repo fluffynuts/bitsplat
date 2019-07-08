@@ -2,14 +2,14 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
-    public interface IFileResourceProperties
+    public interface IFileResource
     {
         string Path { get; }
         long Size { get; }
         string RelativePath { get; }
     }
 
-    public interface IFileResource: IFileResourceProperties
+    public interface IReadWriteFileResource: IFileResource
     {
         Stream Read();
         Stream Write();

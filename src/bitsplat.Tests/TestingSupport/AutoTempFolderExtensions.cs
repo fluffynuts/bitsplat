@@ -1,5 +1,5 @@
 using System.IO;
-using PeanutButter.RandomGenerators;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 using PeanutButter.Utils;
 
 namespace bitsplat.Tests.TestingSupport
@@ -10,13 +10,13 @@ namespace bitsplat.Tests.TestingSupport
         {
             return Path.Combine(
                 folder.Path,
-                RandomValueGen.CreateRandomFileIn(folder.Path)
+                CreateRandomFileIn(folder.Path)
             );
         }
 
         public static string CreateRandomFolder(this AutoTempFolder folder)
         {
-            return Path.Combine(folder.Path, RandomValueGen.CreateRandomFolderIn(folder.Path));
+            return Path.Combine(folder.Path, CreateRandomFolderIn(folder.Path));
         }
     }
 }

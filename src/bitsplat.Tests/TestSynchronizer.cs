@@ -538,16 +538,16 @@ namespace bitsplat.Tests
             : GenericPassThrough,
               ISyncQueueNotifiable
         {
-            public List<IEnumerable<IFileResourceProperties>> BatchStartedNotifications { get; }
-                = new List<IEnumerable<IFileResourceProperties>>();
-            public List<IEnumerable<IFileResourceProperties>> BatchCompletedNotifications { get; }
-                = new List<IEnumerable<IFileResourceProperties>>();
+            public List<IEnumerable<IFileResource>> BatchStartedNotifications { get; }
+                = new List<IEnumerable<IFileResource>>();
+            public List<IEnumerable<IFileResource>> BatchCompletedNotifications { get; }
+                = new List<IEnumerable<IFileResource>>();
 
-            public List<(IFileResourceProperties source, IFileResourceProperties target)> ResourceNotifications { get; }
-                = new List<(IFileResourceProperties source, IFileResourceProperties target)>();
+            public List<(IFileResource source, IFileResource target)> ResourceNotifications { get; }
+                = new List<(IFileResource source, IFileResource target)>();
 
-            public List<(IFileResourceProperties source, IFileResourceProperties target)> CompletedNotifications { get; }
-                = new List<(IFileResourceProperties source, IFileResourceProperties target)>();
+            public List<(IFileResource source, IFileResource target)> CompletedNotifications { get; }
+                = new List<(IFileResource source, IFileResource target)>();
 
             public NotifiableGenericPassThrough(
                 Action<byte[], int> onWrite,
@@ -557,26 +557,26 @@ namespace bitsplat.Tests
             }
 
             public void NotifySyncBatchStart(
-                IEnumerable<IFileResourceProperties> sourceResources)
+                IEnumerable<IFileResource> sourceResources)
             {
                 BatchStartedNotifications.Add(sourceResources);
             }
             public void NotifySyncBatchComplete(
-                IEnumerable<IFileResourceProperties> sourceResources)
+                IEnumerable<IFileResource> sourceResources)
             {
                 BatchCompletedNotifications.Add(sourceResources);
             }
 
             public void NotifySyncStart(
-                IFileResourceProperties sourceResource,
-                IFileResourceProperties targetResource)
+                IFileResource sourceResource,
+                IFileResource targetResource)
             {
                 ResourceNotifications.Add((sourceResource, targetResource));
             }
 
             public void NotifySyncComplete(
-                IFileResourceProperties sourceResource, 
-                IFileResourceProperties targetResource)
+                IFileResource sourceResource, 
+                IFileResource targetResource)
             {
                 CompletedNotifications.Add((sourceResource, targetResource));
             }

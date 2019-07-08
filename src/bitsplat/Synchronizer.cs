@@ -42,19 +42,19 @@ namespace bitsplat
 
         private class FileSystemComparison
         {
-            public List<IFileResource> SyncQueue { get; } = new List<IFileResource>();
-            public List<IFileResource> Skipped { get; } = new List<IFileResource>();
+            public List<IReadWriteFileResource> SyncQueue { get; } = new List<IReadWriteFileResource>();
+            public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
         }
 
-        private class FileResourceProperties : IFileResourceProperties
+        private class FileResource : IFileResource
         {
             public string Path { get; }
             public long Size { get; }
             public string RelativePath { get; }
 
-            public FileResourceProperties(
+            public FileResource(
                 IFileSystem targetFileSystem,
-                IFileResource sourceResource)
+                IReadWriteFileResource sourceResource)
             {
                 Path = System.IO.Path.Combine(
                     targetFileSystem.BasePath,
@@ -71,7 +71,7 @@ namespace bitsplat
         {
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
-            var targetResources = targetResourcesCollection as IFileResource[] ?? targetResourcesCollection.ToArray();
+            var targetResources = targetResourcesCollection as IReadWriteFileResource[] ?? targetResourcesCollection.ToArray();
             var comparison = CompareResources(sourceResources, targetResources);
             comparison.Skipped.ForEach(RecordHistory);
 
@@ -117,16 +117,16 @@ namespace bitsplat
             NotifySyncBatchComplete(syncQueue);
         }
 
-        private IFileResourceProperties CreateFileResourcePropertiesFor(
+        private IFileResource CreateFileResourcePropertiesFor(
             IFileSystem target,
-            IFileResource sourceResource)
+            IReadWriteFileResource sourceResource)
         {
-            return new FileResourceProperties(
+            return new FileResource(
                 target,
                 sourceResource);
         }
 
-        private void NotifySyncBatchComplete(IFileResource[] syncQueue)
+        private void NotifySyncBatchComplete(IReadWriteFileResource[] syncQueue)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncBatchComplete(syncQueue)
@@ -134,8 +134,8 @@ namespace bitsplat
         }
 
         private void NotifySyncComplete(
-            IFileResourceProperties sourceResource,
-            IFileResourceProperties targetResource)
+            IFileResource sourceResource,
+            IFileResource targetResource)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncComplete(
@@ -145,8 +145,8 @@ namespace bitsplat
         }
 
         private void NotifySyncStart(
-            IFileResource source,
-            IFileResource target)
+            IReadWriteFileResource source,
+            IReadWriteFileResource target)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncStart(
@@ -155,14 +155,14 @@ namespace bitsplat
             );
         }
 
-        private void NotifySyncBatchStart(IEnumerable<IFileResource> resources)
+        private void NotifySyncBatchStart(IEnumerable<IReadWriteFileResource> resources)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncBatchStart(resources)
             );
         }
 
-        private bool ResumeIfPossible(IFileResource targetResource,
+        private bool ResumeIfPossible(IReadWriteFileResource targetResource,
             Stream sourceStream,
             Stream targetStream)
         {
@@ -180,8 +180,8 @@ namespace bitsplat
         }
 
         private FileSystemComparison CompareResources(
-            IEnumerable<IFileResource> sourceResources,
-            IEnumerable<IFileResource> targetResources)
+            IEnumerable<IReadWriteFileResource> sourceResources,
+            IEnumerable<IReadWriteFileResource> targetResources)
         {
             var comparison = sourceResources.Aggregate(
                 new FileSystemComparison(),
@@ -204,17 +204,17 @@ namespace bitsplat
         }
 
         private bool ExistsInHistory(
-            IFileResource resource)
+            IReadWriteFileResource resource)
         {
             var historyItem = _targetHistoryRepository.Find(resource.RelativePath);
             return historyItem != null &&
                    historyItem.Size == resource.Size;
         }
 
-        private void RecordHistory(IFileResource fileResource)
+        private void RecordHistory(IReadWriteFileResource readWriteFileResource)
         {
             _targetHistoryRepository.Upsert(
-                new HistoryItem(fileResource)
+                new HistoryItem(readWriteFileResource)
             );
         }
 
@@ -240,7 +240,7 @@ namespace bitsplat
             public string Path { get; set; }
             public long Size { get; set; }
 
-            public HistoryItem(IFileResource resource)
+            public HistoryItem(IReadWriteFileResource resource)
             {
                 Path = resource.RelativePath;
                 Size = resource.Size;

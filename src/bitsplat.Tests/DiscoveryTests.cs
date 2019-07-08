@@ -1,7 +1,7 @@
 using System.IO;
 using NExpect;
 using NUnit.Framework;
-using PeanutButter.RandomGenerators;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests
 {
@@ -14,7 +14,7 @@ namespace bitsplat.Tests
         {
             // Arrange
             var memStream = CreateMemoryStreamContaining(new byte[0]);
-            var expected = RandomValueGen.GetRandomBytes(10);
+            var expected = GetRandomBytes(10);
             // Act
             memStream.Write(expected, 0, expected.Length);
             // Assert

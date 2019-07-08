@@ -49,7 +49,7 @@ namespace bitsplat.Storage
         /// Lists all Files under the base path
         /// </summary>
         /// <returns></returns>
-        IEnumerable<IFileResource> ListResourcesRecursive();
+        IEnumerable<IReadWriteFileResource> ListResourcesRecursive();
 
         long FetchSize(string path);
     }

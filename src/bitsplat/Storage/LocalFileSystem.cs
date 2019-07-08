@@ -70,15 +70,15 @@ namespace bitsplat.Storage
                 : Path.Combine(_basePath, possibleRelativePath);
         }
 
-        public IEnumerable<IFileResource> ListResourcesRecursive()
+        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
         {
             return ListResourcesUnder(BasePath);
         }
 
-        private IEnumerable<IFileResource> ListResourcesUnder(string path)
+        private IEnumerable<IReadWriteFileResource> ListResourcesUnder(string path)
         {
             return Directory.GetFiles(path)
-                .Select(p => new LocalFileResource(p, BasePath, this))
+                .Select(p => new LocalReadWriteFileResource(p, BasePath, this))
                 .Union(
                     Directory.GetDirectories(path)
                         .SelectMany(dir => ListResourcesUnder(Path.Combine(path, dir)))

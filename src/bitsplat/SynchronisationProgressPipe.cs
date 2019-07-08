@@ -35,7 +35,7 @@ namespace bitsplat
         }
 
         public void NotifySyncBatchStart(
-            IEnumerable<IFileResourceProperties> sourceResources
+            IEnumerable<IFileResource> sourceResources
         )
         {
             _current = 0;
@@ -47,7 +47,7 @@ namespace bitsplat
         }
 
         public void NotifySyncBatchComplete(
-            IEnumerable<IFileResourceProperties> sourceResources
+            IEnumerable<IFileResource> sourceResources
         )
         {
             var total = sourceResources.Count();
@@ -58,8 +58,8 @@ namespace bitsplat
         }
 
         public void NotifySyncStart(
-            IFileResourceProperties sourceResource,
-            IFileResourceProperties targetResource
+            IFileResource sourceResource,
+            IFileResource targetResource
         )
         {
             _reporter.NotifyOverall(++_current, _total);
@@ -70,8 +70,8 @@ namespace bitsplat
         }
 
         public void NotifySyncComplete(
-            IFileResourceProperties sourceResource,
-            IFileResourceProperties targetResource)
+            IFileResource sourceResource,
+            IFileResource targetResource)
         {
             _reporter.NotifyCurrent(
                 sourceResource.RelativePath,

@@ -8,8 +8,9 @@ using bitsplat.Tests.TestingSupport;
 using NExpect;
 using NSubstitute;
 using NUnit.Framework;
-using PeanutButter.RandomGenerators;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 using PeanutButter.Utils;
+using static NExpect.Expectations;
 
 namespace bitsplat.Tests.ResumeStrategies
 {
@@ -22,12 +23,12 @@ namespace bitsplat.Tests.ResumeStrategies
             // Arrange
             using (var arena = new TestArena())
             {
-                var sourceData = RandomValueGen.GetRandomBytes(150, 200);
-                var relPath = RandomValueGen.GetRandomString(10);
+                var sourceData = GetRandomBytes(150, 200);
+                var relPath = GetRandomString(10);
                 arena.CreateSourceResource(
                     relPath,
                     sourceData);
-                var targetData = RandomValueGen.GetRandomBytes(50, 100);
+                var targetData = GetRandomBytes(50, 100);
                 var targetPath = arena.CreateTargetResource(
                     relPath,
                     targetData);
@@ -40,7 +41,7 @@ namespace bitsplat.Tests.ResumeStrategies
                 sut.Synchronize(source, target);
                 // Assert
                 var result = File.ReadAllBytes(targetPath);
-                Expectations.Expect(result)
+                Expect(result)
                     .To.Equal(
                         expected,
                         "Should concatenated new data onto existing data, skipping existing bytes");
