@@ -55,11 +55,23 @@ namespace bitsplat.Tests
             // Assert
         }
 
-        [Test]
-        public void ShouldHaveArchiveOption()
+        [TestCase("-a")]
+        [TestCase("--archive")]
+        public void ShouldHaveArchiveFlagOption(string opt)
         {
             // Arrange
+            var expected = GetRandomString(1);
+            var args = ArgsBuilder.Create()
+                .WithOption(opt, expected)
+                .WithMissingRequiredArgs()
+                .Build();
             // Act
+            Expect(typeof(Options))
+                .To.Have.Property(nameof(Options.Archive))
+                .Optional();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(o => Expect(o.Archive).To.Equal(expected))
+                .ThrowOnParseError();
             // Assert
         }
     }
@@ -89,7 +101,19 @@ namespace bitsplat.Tests
                 $"No [Option] attribute on property {t.PropertyInfo.Name}"
             );
             Expect(attrib.Required).To.Be.True(
-                $"-{attrib.ShortName}|--{attrib.LongName} shold be required"
+                $"-{attrib.ShortName}|--{attrib.LongName} should be required"
+            );
+        }
+        public static void Optional(this WithType t)
+        {
+            var attrib = t.PropertyInfo.GetCustomAttributes()
+                .OfType<OptionAttribute>()
+                .FirstOrDefault();
+            Expect(attrib).Not.To.Be.Null(
+                $"No [Option] attribute on property {t.PropertyInfo.Name}"
+            );
+            Expect(attrib.Required).To.Be.False(
+                $"-{attrib.ShortName}|--{attrib.LongName} should be optional"
             );
         }
     }

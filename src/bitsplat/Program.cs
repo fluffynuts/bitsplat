@@ -25,12 +25,11 @@ namespace bitsplat
             HelpText = "Target folder")]
         public string Target { get; set; }
 
-        // TODO
-//        [Option(
-//            'a', "archive",
-//            Required = false,
-//            HelpText = "Archive folder")]
-//        public string Archive { get; set; }
+        [Option(
+            'a', "archive",
+            Required = false,
+            HelpText = "Archive folder")]
+        public string Archive { get; set; }
 
         [Option(
             'n', "no-history",
