@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using bitsplat.Tests.History;
 using CommandLine;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
@@ -16,7 +17,7 @@ namespace bitsplat.Tests
     {
         [TestCase("-s")]
         [TestCase("--source")]
-        public void ShouldHaveSourceOption(string opt)
+        public void ShouldHaveRequiredSourceOption(string opt)
         {
             // Arrange
             var expected = GetRandomString(1);
@@ -25,11 +26,71 @@ namespace bitsplat.Tests
                 .WithMissingRequiredArgs()
                 .Build();
             // Act
+            Expect(typeof(Options))
+                .To.Have.Property(nameof(Options.Source))
+                .Required();
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(o => Expect(o.Source).To.Equal(expected))
-                .WithNotParsed(
-                    msg => Assert.Fail($"parse failure:\n{msg.JoinWith("\n")}"));
+                .ThrowOnParseError();
             // Assert
+        }
+
+        [TestCase("-t")]
+        [TestCase("--target")]
+        public void ShouldHaveRequiredTargetOption(string opt)
+        {
+            // Arrange
+            var expected = GetRandomString(1);
+            var args = ArgsBuilder.Create()
+                .WithOption(opt, expected)
+                .WithMissingRequiredArgs()
+                .Build();
+            // Act
+            Expect(typeof(Options))
+                .To.Have.Property(nameof(Options.Target))
+                .Required();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(o => Expect(o.Target).To.Equal(expected))
+                .ThrowOnParseError();
+            // Assert
+        }
+
+        [Test]
+        public void ShouldHaveArchiveOption()
+        {
+            // Arrange
+            // Act
+            // Assert
+        }
+    }
+
+    public static class ParserResultExtensions
+    {
+        public static void ThrowOnParseError(
+            this ParserResult<Options> result
+        )
+        {
+            result.WithNotParsed(msg =>
+                throw new InvalidOperationException(
+                    $"arguments parse failure:\n{msg.JoinWith("\n")}"
+                )
+            );
+        }
+    }
+
+    public static class OptionsPropertyInfoMatchers
+    {
+        public static void Required(this WithType t)
+        {
+            var attrib = t.PropertyInfo.GetCustomAttributes()
+                .OfType<OptionAttribute>()
+                .FirstOrDefault();
+            Expect(attrib).Not.To.Be.Null(
+                $"No [Option] attribute on property {t.PropertyInfo.Name}"
+            );
+            Expect(attrib.Required).To.Be.True(
+                $"-{attrib.ShortName}|--{attrib.LongName} shold be required"
+            );
         }
     }
 
@@ -57,11 +118,13 @@ namespace bitsplat.Tests
                 .Flatten()
                 .ToArray();
 
-        private static readonly (string shortName, string longName, bool isFlag)[] RequiredOptions
-            = OptionProperties
+        private static readonly (string shortName, string longName, bool isFlag)[]
+            RequiredOptions = OptionProperties
                 .Select(pi =>
                 {
-                    var attrib = pi.GetCustomAttributes().OfType<OptionAttribute>().FirstOrDefault();
+                    var attrib = pi.GetCustomAttributes()
+                        .OfType<OptionAttribute>()
+                        .FirstOrDefault();
                     return
                     (
                         shortName: attrib.ShortName,
@@ -77,12 +140,24 @@ namespace bitsplat.Tests
                 this, (acc, cur) =>
                     acc.AppendArg(o =>
                     {
-                        var missing = o.None(a => a == $"-{cur.shortName}" ||
-                            a == $"--{cur.longName}");
+                        var shortArg = $"-{cur.shortName}";
+                        var longArg = $"--{cur.longName}";
+                        var missing = o.None(
+                            a => a == shortArg ||
+                                a == longArg);
+                        if (!missing)
+                        {
+                            return o;
+                        }
+
+                        var toAppend = GetRandomBoolean()
+                            ? shortArg
+                            : longArg;
+
                         return missing
                             ? (cur.isFlag
-                                ? o.And(cur.shortName)
-                                : o.And(cur.longName).And(GetRandomString(1)))
+                                ? o.And(toAppend)
+                                : o.And(toAppend).And(GetRandomString(1)))
                             : o;
                     })
             );

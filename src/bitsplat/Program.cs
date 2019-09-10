@@ -19,11 +19,11 @@ namespace bitsplat
             HelpText = "Source folder")]
         public string Source { get; set; }
 
-//        [Option(
-//            't', "target",
-//            Required = true,
-//            HelpText = "Target folder")]
-//        public string Target { get; set; }
+        [Option(
+            't', "target",
+            Required = true,
+            HelpText = "Target folder")]
+        public string Target { get; set; }
 
         // TODO
 //        [Option(

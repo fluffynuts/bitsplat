@@ -47,15 +47,15 @@ namespace bitsplat.Tests.History
         }
     }
 
+    public class WithType
+    {
+        public PropertyInfo PropertyInfo { get; set; }
+        public WithType With => this; // lazy, but will do for now
+        public Type ParentType { get; set; }
+    }
+
     public static class PropertyMatchers
     {
-        public class WithType
-        {
-            public PropertyInfo PropertyInfo { get; set; }
-            public WithType With => this; // lazy, but will do for now
-            public Type ParentType { get; set; }
-        }
-
         public static void Type(
             this WithType wt,
             Type expected)
