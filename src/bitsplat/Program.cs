@@ -1,5 +1,7 @@
 ﻿using System;
 using bitsplat.CommandLine;
+using bitsplat.Filters;
+using DryIoc;
 
 namespace bitsplat
 {
@@ -29,6 +31,7 @@ namespace bitsplat
                         .WithArg("--quiet")
                 )
                 .Parse<Options>(args);
+
         }
     }
 

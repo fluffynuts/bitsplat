@@ -46,17 +46,26 @@ namespace bitsplat.Tests.History
         public class WhenTargetFolderExists
         {
             [Test]
+            [Repeat(100)]
             public void ShouldIncludeSourcesMatchingTargetFolder()
             {
                 // Arrange
                 var sourceBase = GetRandomPath();
-                var source1 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
-                var source2 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
-                var sourceRelativeBase = source1
-                    .RelativePath.Split(
-                        Path.DirectorySeparatorChar
-                    )
-                    .First();
+                var source1 = FileResource.For(
+                    sourceBase, 
+                    GetRandomPath(2), 
+                    GetRandomInt());
+                var source2 = FileResource.For(
+                    sourceBase, 
+                    // two sources must be in different primary folders
+                    GetRandomPath(2), 
+                    GetRandomInt());
+                var sourceRelativeBaseParts = source1
+                    .RelativePath.Split(Path.DirectorySeparatorChar);
+                var sourceRelativeBase = 
+                    sourceRelativeBaseParts.Length == 1
+                    ? ""
+                    : sourceRelativeBaseParts.First();
                 var targetBase = GetRandomPath();
                 var targets = new[]
                 {
@@ -82,6 +91,7 @@ namespace bitsplat.Tests.History
                 // Assert
                 Expect(result1)
                     .To.Equal(FilterResult.Include);
+                
                 Expect(result2)
                     .To.Equal(FilterResult.Ambivalent);
             }
@@ -141,6 +151,11 @@ namespace bitsplat.Tests.History
         public string Path { get; }
         public long Size { get; }
         public string RelativePath { get; }
+
+        public override string ToString()
+        {
+            return $"{Path} :: {Size}";
+        }
 
         public static FileResource For(
             string basePath,
