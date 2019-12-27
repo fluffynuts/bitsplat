@@ -21,5 +21,20 @@ namespace bitsplat
                 action?.Invoke(item);
             }
         }
+
+        internal static void ForEach<T>(
+            this IEnumerable<T> collection,
+            Action<T, int> action)
+        {
+            if (collection == null)
+            {
+                return;
+            }
+            var idx = 0;
+            foreach (var item in collection)
+            {
+                action?.Invoke(item, idx++);
+            }
+        }
     }
 }
