@@ -2,12 +2,30 @@
 
 namespace bitsplat
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var opts = Args.Configure()
+                .WithParameter(
+                    "source",
+                    o => o.WithArg("-s")
+                        .WithArg("--source")
+                )
+                .WithParameter(
+                    "target",
+                    o => o.WithArg("-t")
+                        .WithArg("--target")
+                )
+                .Parse(args);
+            // TODO: actually use args
         }
+    }
+
+    public class Options : ParsedArguments
+    {
+        public string Source => SingleParameter("-s", "--source");
+        public string Target => SingleParameter("-t", "--target");
     }
 
 //    public class Options
