@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="1.60.6" />
+      <PackageReference Include="DryIoc" Version="4.0.7" />
       <PackageReference Include="FluentMigrator" Version="3.2.1" />
       <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
       <PackageReference Include="PeanutButter.Utils" Version="1.2.288" />

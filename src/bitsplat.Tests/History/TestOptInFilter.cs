@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Storage;
 using NUnit.Framework;
@@ -29,13 +30,15 @@ namespace bitsplat.Tests.History
                     .Returns(new HistoryItem[0]);
                 var sut = Create();
                 // Act
-                var result = sut.Filter(
-                    sources,
-                    targets,
-                    targetHistoryRepository);
+                var results = sources.Select(
+                    s => sut.Filter(
+                        s,
+                        targets,
+                        targetHistoryRepository)
+                    ).ToArray();
                 // Assert
-                Expect(result)
-                    .To.Be.Empty();
+                Expect(results).To.Contain.All()
+                    .Matched.By(o => o == FilterResult.Ambivalent);
             }
         }
 
@@ -47,12 +50,9 @@ namespace bitsplat.Tests.History
             {
                 // Arrange
                 var sourceBase = GetRandomPath();
-                var sources = new[]
-                {
-                    FileResource.For(sourceBase, GetRandomPath(), GetRandomInt()),
-                    FileResource.For(sourceBase, GetRandomPath(), GetRandomInt())
-                };
-                var sourceRelativeBase = sources[0]
+                var source1 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
+                var source2 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
+                var sourceRelativeBase = source1
                     .RelativePath.Split(
                         Path.DirectorySeparatorChar
                     )
@@ -71,15 +71,19 @@ namespace bitsplat.Tests.History
                     .Returns(new HistoryItem[0]);
                 var sut = Create();
                 // Act
-                var result = sut.Filter(
-                    sources,
+                var result1 = sut.Filter(
+                    source1,
+                    targets,
+                    targetHistoryRepository);
+                var result2 = sut.Filter(
+                    source2,
                     targets,
                     targetHistoryRepository);
                 // Assert
-                Expect(result)
-                    .To.Contain(sources.First());
-                Expect(result)
-                    .Not.To.Contain(sources.Second());
+                Expect(result1)
+                    .To.Equal(FilterResult.Include);
+                Expect(result2)
+                    .To.Equal(FilterResult.Ambivalent);
             }
         }
 
@@ -91,12 +95,9 @@ namespace bitsplat.Tests.History
             {
                 // Arrange
                 var sourceBase = GetRandomPath();
-                var sources = new[]
-                {
-                    FileResource.For(sourceBase, GetRandomPath(), GetRandomInt()),
-                    FileResource.For(sourceBase, GetRandomPath(), GetRandomInt())
-                };
-                var sourceRelativeBase = sources[0]
+                var source1 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
+                var source2 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
+                var sourceRelativeBase = source1
                     .RelativePath.Split(
                         Path.DirectorySeparatorChar
                     )
@@ -113,21 +114,25 @@ namespace bitsplat.Tests.History
                     });
                 var sut = Create();
                 // Act
-                var result = sut.Filter(
-                    sources,
+                var result1 = sut.Filter(
+                    source1,
+                    targets,
+                    targetHistoryRepository);
+                var result2 = sut.Filter(
+                    source2,
                     targets,
                     targetHistoryRepository);
                 // Assert
-                Expect(result)
-                    .To.Contain(sources.First());
-                Expect(result)
-                    .Not.To.Contain(sources.Second());
+                Expect(result1)
+                    .To.Equal(FilterResult.Include);
+                Expect(result2)
+                    .To.Equal(FilterResult.Ambivalent);
             }
         }
 
         private static IFilter Create()
         {
-            return new OptInFilter();
+            return new TargetOptInFilter();
         }
     }
 

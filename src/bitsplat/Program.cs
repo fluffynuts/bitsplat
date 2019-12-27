@@ -1,4 +1,5 @@
 ﻿using System;
+using bitsplat.CommandLine;
 
 namespace bitsplat
 {
@@ -8,24 +9,35 @@ namespace bitsplat
         {
             var opts = Args.Configure()
                 .WithParameter(
-                    "source",
+                    nameof(Options.Source),
                     o => o.WithArg("-s")
                         .WithArg("--source")
                 )
                 .WithParameter(
-                    "target",
+                    nameof(Options.Target),
                     o => o.WithArg("-t")
                         .WithArg("--target")
                 )
-                .Parse(args);
-            // TODO: actually use args
+                .WithFlag(
+                    nameof(Options.Resume),
+                    o => o.WithArg("-r")
+                        .WithArg("--resume")
+                )
+                .WithFlag(
+                    nameof(Options.Quiet),
+                    o => o.WithArg("-q")
+                        .WithArg("--quiet")
+                )
+                .Parse<Options>(args);
         }
     }
 
     public class Options : ParsedArguments
     {
-        public string Source => SingleParameter("-s", "--source");
-        public string Target => SingleParameter("-t", "--target");
+        public string Source { get; set; }
+        public string Target { get; set; }
+        public bool Resume { get; set; }
+        public bool Quiet { get; set; }
     }
 
 //    public class Options

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
@@ -38,354 +39,362 @@ namespace bitsplat.Tests
         public class Behavior
         {
             [TestFixture]
-            public class WhenPresentedWithTwoEmptyFilesystems
+            public class WithPermissiveFilterOnly
             {
-                [Test]
-                public void ShouldListRecursiveOnBoth()
+                [TestFixture]
+                public class WhenPresentedWithTwoEmptyFilesystems
                 {
-                    // Arrange
-                    var fs1 = Substitute.For<IFileSystem>();
-                    var fs2 = Substitute.For<IFileSystem>();
-                    var sut = Create();
-                    // Act
-                    sut.Synchronize(fs1, fs2);
-                    // Assert
-                    Expect(fs1)
-                        .To.Have.Received(1)
-                        .ListResourcesRecursive();
-                    Expect(fs2)
-                        .To.Have.Received(1)
-                        .ListResourcesRecursive();
-                }
-                
-                [Test]
-                public void ShouldNotRecordAnyHistory()
-                {
-                    // Arrange
-                    var fs1 = Substitute.For<IFileSystem>();
-                    var fs2 = Substitute.For<IFileSystem>();
-                    var history = Substitute.For<ITargetHistoryRepository>();
-                    var sut = Create(targetHistoryRepository: history);
-                    // Act
-                    sut.Synchronize(fs1, fs2);
-                    // Assert
-                    Expect(history).Not.To.Have.Received()
-                        .Upsert(Arg.Any<IHistoryItem>());
-                }
-            }
-
-            [TestFixture]
-            public class WhenSourceHasOneFileAndTargetIsEmpty
-            {
-                [Test]
-                public void ShouldCopyTheSourceFileToTarget()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
+                    [Test]
+                    public void ShouldListRecursiveOnBoth()
                     {
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = "some-file.ext";
-                        var data = GetRandomBytes();
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            data);
+                        // Arrange
+                        var fs1 = Substitute.For<IFileSystem>();
+                        var fs2 = Substitute.For<IFileSystem>();
                         var sut = Create();
                         // Act
-                        sut.Synchronize(source, target);
+                        sut.Synchronize(fs1, fs2);
                         // Assert
-                        var inTarget = target.ListResourcesRecursive();
-                        Expect(inTarget)
-                            .To.Contain.Only(1)
-                            .Item();
-                        var copied = inTarget.Single();
-                        Expect(copied.RelativePath)
-                            .To.Equal(relPath);
-                        Expect(copied)
-                            .To.Have.Data(data);
-                    }
-                }
-
-                [Test]
-                public void ShouldUpsertHistory()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
-                    {
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = "some-file.ext";
-                        var data = GetRandomBytes();
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            data);
-                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
-                        var sut = Create(targetHistoryRepository: historyRepo);
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        Expect(historyRepo)
+                        Expect(fs1)
                             .To.Have.Received(1)
-                            .Upsert(Arg.Is<IHistoryItem>(
-                                o => o.Path == relPath &&
-                                     o.Size == data.Length
-                            ));
-                    }
-                }
-            }
-
-            [TestFixture]
-            public class WhenSourceHasFileAndTargetHasSameFile
-            {
-                [Test]
-                public void ShouldNotReWriteTheFile()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
-                    {
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString(2);
-                        var data = GetRandomBytes(100);
-                        var targetFilePath = arena.CreateResource(
-                            arena.TargetPath,
-                            relPath,
-                            data);
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            data);
-                        var beforeTest = DateTime.Now;
-                        var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
-                        File.SetLastWriteTime(targetFilePath, lastWrite);
-
-                        var sut = Create();
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        Expect(targetFilePath)
-                            .To.Be.A.File();
-                        var targetInfo = new FileInfo(targetFilePath);
-                        Expect(targetInfo.LastWriteTime)
-                            .To.Be.Less.Than(beforeTest);
-                    }
-                }
-                
-                [Test]
-                public void ShouldNotReWriteTheFileWhenInHistoryButNotOnDisk()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
-                    {
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString(2);
-                        var data = GetRandomBytes(100);
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            data);
-                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
-                        historyRepo.Exists(relPath).Returns(true);
-                        var targetFilePath = Path.Combine(arena.TargetPath, relPath);
-                        var historyItem = new HistoryItem(
-                            relPath, data.Length);
-                        historyRepo.Find(relPath).Returns(historyItem);
-
-                        var sut = Create(targetHistoryRepository: historyRepo);
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        Expect(historyRepo)
+                            .ListResourcesRecursive();
+                        Expect(fs2)
                             .To.Have.Received(1)
-                            .Find(relPath);
-                        Expect(targetFilePath)
-                            .Not.To.Be.A.File();
+                            .ListResourcesRecursive();
                     }
-                }
 
-                [Test]
-                public void ShouldUpsertHistory()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
+                    [Test]
+                    public void ShouldNotRecordAnyHistory()
                     {
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString(2);
-                        var data = GetRandomBytes(100);
-                        var targetFilePath = arena.CreateResource(
-                            arena.TargetPath,
-                            relPath,
-                            data);
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            data);
-                        var beforeTest = DateTime.Now;
-                        var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
-                        File.SetLastWriteTime(targetFilePath, lastWrite);
-                        var historyRepo = Substitute.For<ITargetHistoryRepository>();
-
-                        var sut = Create(targetHistoryRepository: historyRepo);
+                        // Arrange
+                        var fs1 = Substitute.For<IFileSystem>();
+                        var fs2 = Substitute.For<IFileSystem>();
+                        var history = Substitute.For<ITargetHistoryRepository>();
+                        var sut = Create(targetHistoryRepository: history);
                         // Act
-                        sut.Synchronize(source, target);
+                        sut.Synchronize(fs1, fs2);
                         // Assert
-                        Expect(historyRepo)
-                            .To.Have.Received(1)
-                            .Upsert(Arg.Is<IHistoryItem>(
-                                o => o.Path == relPath &&
-                                     o.Size == data.Length
-                            ));
-                    }
-                }
-            }
-
-            [TestFixture]
-            public class WhenSourceHasFileAndTargetHasPartialFileWithNoErrors
-            {
-                [Test]
-                public void ShouldResumeWhenResumeStrategySaysYes()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
-                    {
-                        var resumeStrategy = Substitute.For<IResumeStrategy>();
-                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
-                            .Returns(true);
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString();
-                        var allData = GetRandomBytes(1024);
-                        var partialSize = GetRandomInt(384, 768);
-                        var partialData = allData.Take(partialSize)
-                            .ToArray();
-                        var expected = allData.Skip(partialSize)
-                            .ToArray();
-                        var targetFilePath = arena.CreateResource(
-                            arena.TargetPath,
-                            relPath,
-                            partialData);
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            allData);
-                        var captured = new List<byte>();
-                        var ended = false;
-                        var intermediate = new GenericPassThrough(
-                            (data, count) => captured.AddRange(data.Take(count)),
-                            () => ended = true
-                        );
-                        var sut = Create(
-                            resumeStrategy,
-                            new IPassThrough[] { intermediate }
-                        );
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        var targetData = File.ReadAllBytes(targetFilePath);
-                        Expect(targetData)
-                            .To.Equal(allData);
-                        var transferred = captured.ToArray();
-                        Expect(transferred)
-                            .To.Equal(expected, "unexpected transferred data");
-                        Expect(ended)
-                            .To.Be.True();
+                        Expect(history)
+                            .Not.To.Have.Received()
+                            .Upsert(Arg.Any<IHistoryItem>());
                     }
                 }
 
-                [Test]
-                public void ShouldNotResumeIfResumeStrategySaysNo()
+                [TestFixture]
+                public class WhenSourceHasOneFileAndTargetIsEmpty
                 {
-                    // Arrange
-                    using (var arena = new TestArena())
+                    [Test]
+                    public void ShouldCopyTheSourceFileToTarget()
                     {
-                        var resumeStrategy = Substitute.For<IResumeStrategy>();
-                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
-                            .Returns(false);
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString();
-                        var allData = GetRandomBytes(1024);
-                        var partialSize = GetRandomInt(384, 768);
-                        var partialData = allData.Take(partialSize)
-                            .ToArray();
-                        var targetFilePath = arena.CreateResource(
-                            arena.TargetPath,
-                            relPath,
-                            partialData);
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            allData);
-                        var captured = new List<byte>();
-                        var ended = false;
-                        var intermediate = new GenericPassThrough(
-                            (data, count) => captured.AddRange(data.Take(count)),
-                            () => ended = true
-                        );
-                        var sut = Create(
-                            resumeStrategy,
-                            new IPassThrough[] { intermediate }
-                        );
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        var targetData = File.ReadAllBytes(targetFilePath);
-                        Expect(targetData)
-                            .To.Equal(allData);
-                        var transferred = captured.ToArray();
-                        Expect(transferred)
-                            .To.Equal(allData, "should have re-transferred all data");
-                        Expect(ended)
-                            .To.Be.True();
-                    }
-                }
-
-                [Test]
-                public void ShouldPassThroughAllProvidedIntermediatesInOrder()
-                {
-                    // Arrange
-                    using (var arena = new TestArena())
-                    {
-                        var resumeStrategy = Substitute.For<IResumeStrategy>();
-                        resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
-                            .Returns(false);
-                        var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                        var relPath = GetRandomString();
-                        var allData = GetRandomBytes(100, 200); // small buffer, likely to be read in one pass
-                        arena.CreateResource(
-                            arena.SourcePath,
-                            relPath,
-                            allData);
-                        var intermediateCalls = new List<string>();
-                        var endCalls = new List<string>();
-                        var intermediate1 = new GenericPassThrough(
-                            (data, count) => intermediateCalls.Add("first"),
-                            () => endCalls.Add("first")
-                        );
-                        var intermediate2 = new GenericPassThrough(
-                            (data, count) => intermediateCalls.Add("second"),
-                            () => endCalls.Add("second")
-                        );
-                        var intermediate3 = new GenericPassThrough(
-                            (data, count) => intermediateCalls.Add("third"),
-                            () => endCalls.Add("third")
-                        );
-                        var expected = new[]
+                        // Arrange
+                        using (var arena = new TestArena())
                         {
-                            "first",
-                            "second",
-                            "third"
-                        };
-                        var sut = Create(
-                            resumeStrategy,
-                            new IPassThrough[]
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = "some-file.ext";
+                            var data = GetRandomBytes();
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                data);
+                            var sut = Create();
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            var inTarget = target.ListResourcesRecursive();
+                            Expect(inTarget)
+                                .To.Contain.Only(1)
+                                .Item();
+                            var copied = inTarget.Single();
+                            Expect(copied.RelativePath)
+                                .To.Equal(relPath);
+                            Expect(copied)
+                                .To.Have.Data(data);
+                        }
+                    }
+
+                    [Test]
+                    public void ShouldUpsertHistory()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = "some-file.ext";
+                            var data = GetRandomBytes();
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                data);
+                            var historyRepo = Substitute.For<ITargetHistoryRepository>();
+                            var sut = Create(targetHistoryRepository: historyRepo);
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            Expect(historyRepo)
+                                .To.Have.Received(1)
+                                .Upsert(Arg.Is<IHistoryItem>(
+                                    o => o.Path == relPath &&
+                                         o.Size == data.Length
+                                ));
+                        }
+                    }
+                }
+
+                [TestFixture]
+                public class WhenSourceHasFileAndTargetHasSameFile
+                {
+                    [Test]
+                    public void ShouldNotReWriteTheFile()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString(2);
+                            var data = GetRandomBytes(100);
+                            var targetFilePath = arena.CreateResource(
+                                arena.TargetPath,
+                                relPath,
+                                data);
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                data);
+                            var beforeTest = DateTime.Now;
+                            var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
+                            File.SetLastWriteTime(targetFilePath, lastWrite);
+
+                            var sut = Create();
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            Expect(targetFilePath)
+                                .To.Be.A.File();
+                            var targetInfo = new FileInfo(targetFilePath);
+                            Expect(targetInfo.LastWriteTime)
+                                .To.Be.Less.Than(beforeTest);
+                        }
+                    }
+
+                    [Test]
+                    public void ShouldNotReWriteTheFileWhenInHistoryButNotOnDisk()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString(2);
+                            var data = GetRandomBytes(100);
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                data);
+                            var historyRepo = Substitute.For<ITargetHistoryRepository>();
+                            historyRepo.Exists(relPath)
+                                .Returns(true);
+                            var targetFilePath = Path.Combine(arena.TargetPath, relPath);
+                            var historyItem = new HistoryItem(
+                                relPath,
+                                data.Length);
+                            historyRepo.Find(relPath)
+                                .Returns(historyItem);
+
+                            var sut = Create(targetHistoryRepository: historyRepo);
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            Expect(historyRepo)
+                                .To.Have.Received(1)
+                                .Find(relPath);
+                            Expect(targetFilePath)
+                                .Not.To.Be.A.File();
+                        }
+                    }
+
+                    [Test]
+                    public void ShouldUpsertHistory()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString(2);
+                            var data = GetRandomBytes(100);
+                            var targetFilePath = arena.CreateResource(
+                                arena.TargetPath,
+                                relPath,
+                                data);
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                data);
+                            var beforeTest = DateTime.Now;
+                            var lastWrite = beforeTest.AddMinutes(GetRandomInt(-100, -1));
+                            File.SetLastWriteTime(targetFilePath, lastWrite);
+                            var historyRepo = Substitute.For<ITargetHistoryRepository>();
+
+                            var sut = Create(targetHistoryRepository: historyRepo);
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            Expect(historyRepo)
+                                .To.Have.Received(1)
+                                .Upsert(Arg.Is<IHistoryItem>(
+                                    o => o.Path == relPath &&
+                                         o.Size == data.Length
+                                ));
+                        }
+                    }
+                }
+
+                [TestFixture]
+                public class WhenSourceHasFileAndTargetHasPartialFileWithNoErrors
+                {
+                    [Test]
+                    public void ShouldResumeWhenResumeStrategySaysYes()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var resumeStrategy = Substitute.For<IResumeStrategy>();
+                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                                .Returns(true);
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString();
+                            var allData = GetRandomBytes(1024);
+                            var partialSize = GetRandomInt(384, 768);
+                            var partialData = allData.Take(partialSize)
+                                .ToArray();
+                            var expected = allData.Skip(partialSize)
+                                .ToArray();
+                            var targetFilePath = arena.CreateResource(
+                                arena.TargetPath,
+                                relPath,
+                                partialData);
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                allData);
+                            var captured = new List<byte>();
+                            var ended = false;
+                            var intermediate = new GenericPassThrough(
+                                (data, count) => captured.AddRange(data.Take(count)),
+                                () => ended = true
+                            );
+                            var sut = Create(
+                                resumeStrategy,
+                                new IPassThrough[] { intermediate }
+                            );
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            var targetData = File.ReadAllBytes(targetFilePath);
+                            Expect(targetData)
+                                .To.Equal(allData);
+                            var transferred = captured.ToArray();
+                            Expect(transferred)
+                                .To.Equal(expected, "unexpected transferred data");
+                            Expect(ended)
+                                .To.Be.True();
+                        }
+                    }
+
+                    [Test]
+                    public void ShouldNotResumeIfResumeStrategySaysNo()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var resumeStrategy = Substitute.For<IResumeStrategy>();
+                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                                .Returns(false);
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString();
+                            var allData = GetRandomBytes(1024);
+                            var partialSize = GetRandomInt(384, 768);
+                            var partialData = allData.Take(partialSize)
+                                .ToArray();
+                            var targetFilePath = arena.CreateResource(
+                                arena.TargetPath,
+                                relPath,
+                                partialData);
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                allData);
+                            var captured = new List<byte>();
+                            var ended = false;
+                            var intermediate = new GenericPassThrough(
+                                (data, count) => captured.AddRange(data.Take(count)),
+                                () => ended = true
+                            );
+                            var sut = Create(
+                                resumeStrategy,
+                                new IPassThrough[] { intermediate }
+                            );
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            var targetData = File.ReadAllBytes(targetFilePath);
+                            Expect(targetData)
+                                .To.Equal(allData);
+                            var transferred = captured.ToArray();
+                            Expect(transferred)
+                                .To.Equal(allData, "should have re-transferred all data");
+                            Expect(ended)
+                                .To.Be.True();
+                        }
+                    }
+
+                    [Test]
+                    public void ShouldPassThroughAllProvidedIntermediatesInOrder()
+                    {
+                        // Arrange
+                        using (var arena = new TestArena())
+                        {
+                            var resumeStrategy = Substitute.For<IResumeStrategy>();
+                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                                .Returns(false);
+                            var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
+                            var relPath = GetRandomString();
+                            var allData = GetRandomBytes(100, 200); // small buffer, likely to be read in one pass
+                            arena.CreateResource(
+                                arena.SourcePath,
+                                relPath,
+                                allData);
+                            var intermediateCalls = new List<string>();
+                            var endCalls = new List<string>();
+                            var intermediate1 = new GenericPassThrough(
+                                (data, count) => intermediateCalls.Add("first"),
+                                () => endCalls.Add("first")
+                            );
+                            var intermediate2 = new GenericPassThrough(
+                                (data, count) => intermediateCalls.Add("second"),
+                                () => endCalls.Add("second")
+                            );
+                            var intermediate3 = new GenericPassThrough(
+                                (data, count) => intermediateCalls.Add("third"),
+                                () => endCalls.Add("third")
+                            );
+                            var expected = new[]
                             {
-                                intermediate1, intermediate2, intermediate3
-                            });
-                        // Act
-                        sut.Synchronize(source, target);
-                        // Assert
-                        Expect(intermediateCalls)
-                            .To.Equal(expected);
-                        Expect(endCalls)
-                            .To.Equal(expected);
+                                "first",
+                                "second",
+                                "third"
+                            };
+                            var sut = Create(
+                                resumeStrategy,
+                                new IPassThrough[]
+                                {
+                                    intermediate1, intermediate2, intermediate3
+                                });
+                            // Act
+                            sut.Synchronize(source, target);
+                            // Assert
+                            Expect(intermediateCalls)
+                                .To.Equal(expected);
+                            Expect(endCalls)
+                                .To.Equal(expected);
+                        }
                     }
                 }
             }
@@ -468,7 +477,7 @@ namespace bitsplat.Tests
                         .Matched.By(
                             resource => resource.RelativePath == "partial"
                         );
-                    
+
                     var batchComplete = notifyable.BatchCompletedNotifications.Single();
                     Expect(batchComplete)
                         .To.Contain
@@ -484,9 +493,7 @@ namespace bitsplat.Tests
                         .Matched.By(
                             resource => resource.RelativePath == "partial"
                         );
-                    
-                    
-                    
+
                     Expect(notifyable.ResourceNotifications)
                         .To.Contain.Exactly(2)
                         .Items();
@@ -506,7 +513,7 @@ namespace bitsplat.Tests
                         .To.Equal("partial");
                     Expect(partialResource.target.Size)
                         .To.Equal(partialTargetData.Length);
-                    
+
                     Expect(notifyable.CompletedNotifications)
                         .To.Contain.Exactly(2)
                         .Items();
@@ -540,6 +547,7 @@ namespace bitsplat.Tests
         {
             public List<IEnumerable<IFileResource>> BatchStartedNotifications { get; }
                 = new List<IEnumerable<IFileResource>>();
+
             public List<IEnumerable<IFileResource>> BatchCompletedNotifications { get; }
                 = new List<IEnumerable<IFileResource>>();
 
@@ -561,6 +569,7 @@ namespace bitsplat.Tests
             {
                 BatchStartedNotifications.Add(sourceResources);
             }
+
             public void NotifySyncBatchComplete(
                 IEnumerable<IFileResource> sourceResources)
             {
@@ -575,7 +584,7 @@ namespace bitsplat.Tests
             }
 
             public void NotifySyncComplete(
-                IFileResource sourceResource, 
+                IFileResource sourceResource,
                 IFileResource targetResource)
             {
                 CompletedNotifications.Add((sourceResource, targetResource));
@@ -616,13 +625,15 @@ namespace bitsplat.Tests
             IResumeStrategy resumeStrategy = null,
             IPassThrough[] intermediatePipes = null,
             IResourceMatcher[] resourceMatchers = null,
-            ITargetHistoryRepository targetHistoryRepository = null)
+            ITargetHistoryRepository targetHistoryRepository = null,
+            IFilter[] filters = null)
         {
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
-                resourceMatchers ?? DefaultResourceMatchers
+                resourceMatchers ?? DefaultResourceMatchers,
+                filters ?? new IFilter[] { new TargetOptInFilter() }
             );
         }
 

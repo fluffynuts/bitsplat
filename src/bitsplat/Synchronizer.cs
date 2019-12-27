@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
@@ -23,13 +24,15 @@ namespace bitsplat
         private readonly IResumeStrategy _resumeStrategy;
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IResourceMatcher[] _resourceMatchers;
+        private readonly IFilter[] _filters;
         private readonly ISyncQueueNotifiable[] _notifiables;
 
         public Synchronizer(
             ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
             IPassThrough[] intermediatePipes,
-            IResourceMatcher[] resourceMatchers)
+            IResourceMatcher[] resourceMatchers,
+            IFilter[] filters)
         {
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
@@ -38,6 +41,7 @@ namespace bitsplat
                 .OfType<ISyncQueueNotifiable>()
                 .ToArray();
             _resourceMatchers = resourceMatchers;
+            _filters = filters;
         }
 
         private class FileSystemComparison
@@ -71,7 +75,8 @@ namespace bitsplat
         {
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
-            var targetResources = targetResourcesCollection as IReadWriteFileResource[] ?? targetResourcesCollection.ToArray();
+            var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
+                                  targetResourcesCollection.ToArray();
             var comparison = CompareResources(sourceResources, targetResources);
             comparison.Skipped.ForEach(RecordHistory);
 
@@ -187,20 +192,44 @@ namespace bitsplat
                 new FileSystemComparison(),
                 (acc, sourceResource) =>
                 {
-                    var shouldSkip = 
-                        ExistsInHistory(sourceResource) ||
-                        targetResources.Any(
-                                   targetResource => _resourceMatchers.Aggregate(
-                                       true,
-                                       (matched, cur) => matched && cur.AreMatched(sourceResource, targetResource)
-                                   ));
-                    var list = shouldSkip
-                                   ? acc.Skipped
-                                   : acc.SyncQueue;
+                    var filterResult = ApplyAllFilters(
+                        targetResources,
+                        sourceResource
+                    );
+                    
+                    var list = filterResult == FilterResult.Include
+                                   ? acc.SyncQueue
+                                   : acc.Skipped;
                     list.Add(sourceResource);
                     return acc;
                 });
             return comparison;
+        }
+
+        private FilterResult ApplyAllFilters(IEnumerable<IReadWriteFileResource> targetResources,
+            IReadWriteFileResource sourceResource)
+        {
+            var filterResult = _filters.Aggregate(
+                FilterResult.Ambivalent,
+                (acc1, cur1) =>
+                {
+                    // if a filter has decided to _definitely_ exclude,
+                    // that wins
+                    if (acc1 == FilterResult.Exclude)
+                    {
+                        return acc1;
+                    }
+
+                    var thisResult = cur1.Filter(
+                        sourceResource,
+                        targetResources,
+                        _targetHistoryRepository);
+                    // if this filter doesn't care, keep on with not caring
+                    return thisResult == FilterResult.Ambivalent
+                               ? acc1
+                               : thisResult; // otherwise return whatever this filter wants
+                });
+            return filterResult;
         }
 
         private bool ExistsInHistory(

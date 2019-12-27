@@ -11,6 +11,7 @@ using static PeanutButter.RandomGenerators.RandomValueGen;
 namespace bitsplat.Tests
 {
     [TestFixture]
+    [Explicit("WIP")]
     public class TestProgram
     {
         [Test]
@@ -41,12 +42,12 @@ namespace bitsplat.Tests
             }
         }
 
-        private static Arena CreateArena()
+        private static TestArena CreateArena()
         {
-            return new Arena();
+            return new TestArena();
         }
 
-        public class Arena : IDisposable
+        public class TestArena : IDisposable
         {
             public class ArenaFile
             {
@@ -68,7 +69,7 @@ namespace bitsplat.Tests
             public AutoTempFolder Target { get; set; }
             public AutoTempFolder Source { get; private set; }
 
-            public Arena()
+            public TestArena()
             {
                 Source = new AutoTempFolder();
                 Target = new AutoTempFolder();

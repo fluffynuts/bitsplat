@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using bitsplat.CommandLine;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using NExpect;

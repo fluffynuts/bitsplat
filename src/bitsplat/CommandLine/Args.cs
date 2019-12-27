@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using PeanutButter.Utils;
 
-namespace bitsplat
+namespace bitsplat.CommandLine
 {
     public static class Args
     {
@@ -70,62 +70,6 @@ namespace bitsplat
         public static ArgumentsBuilder Configure()
         {
             return new ArgumentsBuilder();
-        }
-    }
-
-    public class ArgumentsBuilder
-    {
-        private Dictionary<string, Action<FlagParser>> _flags
-            = new Dictionary<string, Action<FlagParser>>();
-
-        private Dictionary<string, Action<ParameterParser>>
-            _parameters = new Dictionary<string, Action<ParameterParser>>();
-
-        public ArgumentsBuilder WithFlag(
-            string name,
-            Action<FlagParser> configuration)
-        {
-            _flags[name] = configuration;
-            return this;
-        }
-
-        public ArgumentsBuilder WithParameter(
-            string name,
-            Action<ParameterParser> configuration)
-        {
-            _parameters[name] = configuration;
-            return this;
-        }
-
-        public ParsedArguments Parse(string[] args)
-        {
-            var result = new ParsedArguments();
-            var argsList = args.ToList();
-            _flags.ForEach(kvp => ParseFlag(result, argsList, kvp.Key, kvp.Value));
-            _parameters.ForEach(kvp => ParseParameter(result, argsList, kvp.Key, kvp.Value));
-            return result;
-        }
-
-        private void ParseParameter(
-            ParsedArguments result,
-            List<string> args,
-            string name,
-            Action<ParameterParser> configure)
-        {
-            var parser = new ParameterParser(name);
-            configure(parser);
-            result.Parameters[name] = parser.Parse(args);
-        }
-
-        private void ParseFlag(
-            ParsedArguments result,
-            List<string> args,
-            string name,
-            Action<FlagParser> configure)
-        {
-            var parser = new FlagParser(name);
-            configure(parser);
-            result.Flags[name] = parser.Parse(args);
         }
     }
 

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResourceMatchers;
@@ -61,7 +62,8 @@ namespace bitsplat.Tests.ResumeStrategies
                 {
                     new SameRelativePathMatcher(),
                     new SameSizeMatcher()
-                }
+                },
+                new IFilter[] { new TargetOptInFilter() }
             );
         }
     }
