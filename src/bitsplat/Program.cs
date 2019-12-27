@@ -30,8 +30,17 @@ namespace bitsplat
                     o => o.WithArg("-q")
                         .WithArg("--quiet")
                 )
+                .WithFlag(
+                    nameof(Options.NoHistory),
+                    o => o.WithArg("-n")
+                        .WithArg("--no-history")
+                )
+                .WithParameter(
+                    nameof(Options.Archive),
+                    o => o.WithArg("-a")
+                        .WithArg("--archive")
+                )
                 .Parse<Options>(args);
-
         }
     }
 
@@ -39,8 +48,11 @@ namespace bitsplat
     {
         public string Source { get; set; }
         public string Target { get; set; }
+        public string Archive { get; set; }
+
         public bool Resume { get; set; }
         public bool Quiet { get; set; }
+        public bool NoHistory { get; set; }
     }
 
 //    public class Options

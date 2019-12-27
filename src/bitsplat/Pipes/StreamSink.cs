@@ -10,7 +10,10 @@ namespace bitsplat.Pipes
         private IPipeElement _source;
         private readonly List<ISink> _sinks = new List<ISink>();
 
-        public StreamSink(Stream target): this(target, true)
+        public StreamSink(
+            Stream target
+        )
+            : this(target, true)
         {
         }
 
