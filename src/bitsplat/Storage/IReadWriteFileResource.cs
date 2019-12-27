@@ -14,4 +14,14 @@ namespace bitsplat.Storage
         Stream Read();
         Stream Write();
     }
+
+    public static class FileResourceExtensions
+    {
+        public static string FileName(this IFileResource resource)
+        {
+            // TODO: test on 'doze (FileResources can come from
+            // the history database, where / is the separator char
+            return Path.GetFileName(resource.RelativePath);
+        }
+    }
 }

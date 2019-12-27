@@ -213,9 +213,7 @@ namespace bitsplat
                 FilterResult.Ambivalent,
                 (acc1, cur1) =>
                 {
-                    // if a filter has decided to _definitely_ exclude,
-                    // that wins
-                    if (acc1 == FilterResult.Exclude)
+                    if (AlreadyExcluded())
                     {
                         return acc1;
                     }
@@ -224,10 +222,20 @@ namespace bitsplat
                         sourceResource,
                         targetResources,
                         _targetHistoryRepository);
-                    // if this filter doesn't care, keep on with not caring
-                    return thisResult == FilterResult.Ambivalent
+                    
+                    return CurrentFilterIsAmbivalent()
                                ? acc1
                                : thisResult; // otherwise return whatever this filter wants
+
+                    bool AlreadyExcluded()
+                    {
+                        return acc1 == FilterResult.Exclude;
+                    }
+
+                    bool CurrentFilterIsAmbivalent()
+                    {
+                        return thisResult == FilterResult.Ambivalent;
+                    }
                 });
             return filterResult;
         }

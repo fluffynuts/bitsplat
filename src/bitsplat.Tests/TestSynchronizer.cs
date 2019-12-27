@@ -80,7 +80,7 @@ namespace bitsplat.Tests
                 }
 
                 [TestFixture]
-                public class WhenSourceHasOneFileAndTargetIsEmpty
+                public class WhenSourceHasOneFileAndTargetIsEmptyAndHavePermissiveFilter
                 {
                     [Test]
                     public void ShouldCopyTheSourceFileToTarget()
@@ -95,7 +95,7 @@ namespace bitsplat.Tests
                                 arena.SourcePath,
                                 relPath,
                                 data);
-                            var sut = Create();
+                            var sut = Create(filters: CreatePermissiveFilter());
                             // Act
                             sut.Synchronize(source, target);
                             // Assert
@@ -125,7 +125,9 @@ namespace bitsplat.Tests
                                 relPath,
                                 data);
                             var historyRepo = Substitute.For<ITargetHistoryRepository>();
-                            var sut = Create(targetHistoryRepository: historyRepo);
+                            var sut = Create(
+                                targetHistoryRepository: historyRepo,
+                                filters: CreatePermissiveFilter());
                             // Act
                             sut.Synchronize(source, target);
                             // Assert
@@ -202,9 +204,6 @@ namespace bitsplat.Tests
                             // Act
                             sut.Synchronize(source, target);
                             // Assert
-                            Expect(historyRepo)
-                                .To.Have.Received(1)
-                                .Find(relPath);
                             Expect(targetFilePath)
                                 .Not.To.Be.A.File();
                         }
@@ -386,7 +385,11 @@ namespace bitsplat.Tests
                                 new IPassThrough[]
                                 {
                                     intermediate1, intermediate2, intermediate3
-                                });
+                                },
+                                // this test is about notifiers, so we'll
+                                // just pretend that all sources are to be required
+                                // at the target
+                                filters: CreatePermissiveFilter());
                             // Act
                             sut.Synchronize(source, target);
                             // Assert
@@ -410,7 +413,9 @@ namespace bitsplat.Tests
                 using (var arena = new TestArena())
                 {
                     var missingData = GetRandomBytes(100);
-                    arena.CreateSourceResource("missing", missingData);
+                    arena.CreateSourceResource(
+                        "missing",
+                        missingData);
                     var partialFileAllData = "hello world".AsBytes();
                     var partialTargetData = "hello".AsBytes();
                     arena.CreateSourceResource("partial", partialFileAllData);
@@ -437,13 +442,15 @@ namespace bitsplat.Tests
                         new IPassThrough[] { notifyable, intermediate1 }
                             .Randomize()
                             .ToArray(),
-                        DefaultResourceMatchers);
+                        DefaultResourceMatchers
+                    );
                     // Act
                     sut.Synchronize(
                         arena.SourceFileSystem,
                         arena.TargetFileSystem);
                     // Assert
-                    var partialResultData = arena.TargetFileSystem.ReadAllBytes("partial");
+                    var partialResultData = arena.TargetFileSystem.ReadAllBytes(
+                        "partial");
                     Expect(partialResultData)
                         .To.Equal(partialFileAllData,
                             () => $@"Expected {
@@ -615,6 +622,18 @@ namespace bitsplat.Tests
             }
         }
 
+        private static IFilter[] CreatePermissiveFilter()
+        {
+            var filter = Substitute.For<IFilter>();
+            filter.Filter(
+                    Arg.Any<IFileResource>(),
+                    Arg.Any<IEnumerable<IFileResource>>(),
+                    Arg.Any<ITargetHistoryRepository>()
+                )
+                .Returns(FilterResult.Include);
+            return new[] { filter };
+        }
+
         private static ISynchronizer Create(
             params IPassThrough[] intermediatePipes)
         {
@@ -633,7 +652,7 @@ namespace bitsplat.Tests
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
                 resourceMatchers ?? DefaultResourceMatchers,
-                filters ?? new IFilter[] { new TargetOptInFilter() }
+                filters ?? DefaultFilters
             );
         }
 
@@ -641,6 +660,13 @@ namespace bitsplat.Tests
         {
             new SameRelativePathMatcher(),
             new SameSizeMatcher()
+        };
+
+        private static readonly IFilter[] DefaultFilters =
+        {
+            new TargetOptInFilter(),
+            new SimpleTargetExistsFilter(),
+            new NoDotFilesFilter()
         };
     }
 

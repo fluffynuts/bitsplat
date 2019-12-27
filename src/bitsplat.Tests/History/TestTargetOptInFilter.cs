@@ -14,7 +14,7 @@ using static bitsplat.Tests.RandomValueGen;
 namespace bitsplat.Tests.History
 {
     [TestFixture]
-    public class TestOptInFilter
+    public class TestTargetOptInFilter
     {
         [TestFixture]
         public class WhenNoTargetHistoryOrTargetResources

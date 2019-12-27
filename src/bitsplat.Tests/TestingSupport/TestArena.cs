@@ -63,5 +63,36 @@ namespace bitsplat.Tests.TestingSupport
                 relativePath,
                 data);
         }
+
+        public string CreateTargetFolder(params string[] folderPath)
+        {
+            var fullPath = Path.Combine(
+                new[] { TargetPath }.And(folderPath)
+            );
+            EnsureFolderExists(fullPath);
+            return Path.Combine(folderPath);
+        }
+
+        private void EnsureFolderExists(string fullPath)
+        {
+            var current = null as string;
+            fullPath.Split(Path.DirectorySeparatorChar.ToString())
+                .ForEach(part =>
+                {
+                    if (string.IsNullOrEmpty(current))
+                    {
+                        current = part;
+                        if (string.IsNullOrWhiteSpace(current))
+                        {
+                            return;
+                        }
+                    }
+                    var partial = Path.Combine(current, part);
+                    if (!Directory.Exists(partial))
+                    {
+                        Directory.CreateDirectory(partial);
+                    }
+                });
+        }
     }
 }
