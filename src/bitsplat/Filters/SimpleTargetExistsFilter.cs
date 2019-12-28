@@ -34,13 +34,14 @@ namespace bitsplat.Filters
             IEnumerable<IFileResource> targetResources,
             IFileResource sourceResource)
         {
-            return targetResources.Any(
-                t => t.RelativePath.Equals(
-                         sourceResource.RelativePath,
-                         StringComparison.CurrentCulture
-                     ) &&
-                     t.Size == sourceResource.Size
-            );
+            return targetResources.FirstOrDefault(
+                           t => t.RelativePath.Equals(
+                               sourceResource.RelativePath,
+                               StringComparison.CurrentCulture
+                           )
+                       )
+                       ?.Size ==
+                   sourceResource.Size;
         }
     }
 }

@@ -51,11 +51,11 @@ namespace bitsplat.Tests.History
             {
                 // Arrange
                 var sourceBase = GetRandomPath();
-                var source1 = FileResource.For(
+                var source1 = FakeFileResource.For(
                     sourceBase, 
                     GetRandomPath(2), 
                     GetRandomInt());
-                var source2 = FileResource.For(
+                var source2 = FakeFileResource.For(
                     sourceBase, 
                     // two sources must be in different primary folders
                     GetRandomPath(2), 
@@ -69,7 +69,7 @@ namespace bitsplat.Tests.History
                 var targetBase = GetRandomPath();
                 var targets = new[]
                 {
-                    FileResource.For(
+                    FakeFileResource.For(
                         targetBase,
                         Path.Combine(sourceRelativeBase, GetRandomPath()),
                         GetRandomInt()
@@ -104,9 +104,9 @@ namespace bitsplat.Tests.History
             public void ShouldIncludeSourcesMatchingTargetFolder()
             {
                 // Arrange
-                var sourceBase = GetRandomPath();
-                var source1 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
-                var source2 = FileResource.For(sourceBase, GetRandomPath(), GetRandomInt());
+                var sourceBase = GetRandomPath(2);
+                var source1 = FakeFileResource.For(sourceBase, GetRandomPath(2), GetRandomInt());
+                var source2 = FakeFileResource.For(sourceBase, GetRandomPath(2), GetRandomInt());
                 var sourceRelativeBase = source1
                     .RelativePath.Split(
                         Path.DirectorySeparatorChar
@@ -118,7 +118,7 @@ namespace bitsplat.Tests.History
                     .Returns(new[]
                     {
                         new HistoryItem(
-                            Path.Combine(sourceRelativeBase, GetRandomPath()),
+                            Path.Combine(sourceRelativeBase, GetRandomPath(2)),
                             GetRandomInt()
                         )
                     });
@@ -143,39 +143,6 @@ namespace bitsplat.Tests.History
         private static IFilter Create()
         {
             return new TargetOptInFilter();
-        }
-    }
-
-    public class FileResource : BasicFileResource, IFileResource
-    {
-        public override string Path { get; }
-        public override long Size { get; }
-        public override string RelativePath { get; }
-
-        public override string ToString()
-        {
-            return $"{Path} :: {Size}";
-        }
-
-        public static FileResource For(
-            string basePath,
-            string relativePath,
-            long size)
-        {
-            return new FileResource(
-                basePath,
-                relativePath,
-                size);
-        }
-
-        public FileResource(
-            string basePath,
-            string relativePath,
-            long size)
-        {
-            RelativePath = relativePath;
-            Path = System.IO.Path.Combine(basePath, relativePath);
-            Size = size;
         }
     }
 }

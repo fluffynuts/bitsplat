@@ -51,7 +51,14 @@ namespace bitsplat.Storage
         /// <returns></returns>
         IEnumerable<IReadWriteFileResource> ListResourcesRecursive();
 
+        /// <summary>
+        /// Fetches the size, in bytes, of the given path
+        /// - should return -1 if the file is not found
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         long FetchSize(string path);
+        
         /// <summary>
         /// Deletes the file given by relative path, if it exists
         /// - does not throw if file does not exist

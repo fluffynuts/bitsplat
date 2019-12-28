@@ -13,13 +13,13 @@ using static PeanutButter.RandomGenerators.RandomValueGen;
 namespace bitsplat.Tests
 {
     [TestFixture]
-    [Explicit("Discovery")]
     public class DiscoveryTests
     {
         [TestFixture]
         public class MemoryStreams : DiscoveryTests
         {
             [Test]
+            [Explicit("Discovery")]
             public void WriteMemStreamWithInitialData()
             {
                 // Arrange
@@ -42,9 +42,10 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
-        public class DryIocDiscovery: DiscoveryTests
+        public class DryIocDiscovery : DiscoveryTests
         {
             [Test]
+            [Explicit("Discovery")]
             public void ResolveMany()
             {
                 // Arrange

@@ -204,7 +204,8 @@ namespace bitsplat
             return comparison;
         }
 
-        private FilterResult ApplyAllFilters(IEnumerable<IReadWriteFileResource> targetResources,
+        private FilterResult ApplyAllFilters(
+            IEnumerable<IReadWriteFileResource> targetResources,
             IReadWriteFileResource sourceResource)
         {
             var filterResult = _filters.Aggregate(

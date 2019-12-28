@@ -32,7 +32,7 @@ namespace bitsplat.Tests
                     .Not.To.Throw();
                 // Assert
                 Expect(source)
-                    .To.Have.Received(1)
+                    .To.Have.Received(2)
                     .ListResourcesRecursive();
                 Expect(target)
                     .Not.To.Have.Received()
