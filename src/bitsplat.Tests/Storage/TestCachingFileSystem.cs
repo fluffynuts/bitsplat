@@ -96,9 +96,9 @@ namespace bitsplat.Tests.Storage
                 var result3 = sut.BasePath;
                 // Assert
                 Expect(result1)
-                    .To.Equal(expected1);
-                Expect(result2)
-                    .To.Equal(expected1);
+                    .To.Equal(result2)
+                    .And.To.Equal(expected1);
+                
                 Expect(result3)
                     .To.Equal(expected2);
             }
