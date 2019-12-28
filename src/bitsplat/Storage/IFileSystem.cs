@@ -52,5 +52,11 @@ namespace bitsplat.Storage
         IEnumerable<IReadWriteFileResource> ListResourcesRecursive();
 
         long FetchSize(string path);
+        /// <summary>
+        /// Deletes the file given by relative path, if it exists
+        /// - does not throw if file does not exist
+        /// </summary>
+        /// <param name="path"></param>
+        void Delete(string path);
     }
 }

@@ -37,7 +37,7 @@ namespace bitsplat.Filters
             return targetResources.Any(
                 t => t.RelativePath.Equals(
                          sourceResource.RelativePath,
-                         StringComparison.CurrentCultureIgnoreCase
+                         StringComparison.CurrentCulture
                      ) &&
                      t.Size == sourceResource.Size
             );

@@ -3,7 +3,6 @@ using System.Linq;
 using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
-using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
 using bitsplat.Tests.TestingSupport;
 using NExpect;
@@ -58,11 +57,6 @@ namespace bitsplat.Tests.ResumeStrategies
                 Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes,
-                new IResourceMatcher[]
-                {
-                    new SameRelativePathMatcher(),
-                    new SameSizeMatcher()
-                },
                 new IFilter[] { new TargetOptInFilter() }
             );
         }

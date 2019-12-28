@@ -416,6 +416,50 @@ namespace bitsplat.Tests.Storage
             }
         }
 
+        [TestFixture]
+        public class Delete
+        {
+            [TestFixture]
+            public class WhenFileDoesNotExist
+            {
+                [Test]
+                public void ShouldNotThrow()
+                {
+                    // Arrange
+                    using var folder = new AutoTempFolder();
+                    var relPath = GetRandomFileName();
+                    var fullPath = Path.Combine(folder.Path, relPath);
+                    Expect(fullPath)
+                        .Not.To.Exist();
+                    var sut = Create(folder.Path);
+                    // Act
+                    Expect(() => sut.Delete(relPath))
+                        .Not.To.Throw();
+                    // Assert
+                }
+            }
+
+            [TestFixture]
+            public class WhenFileDoesExist
+            {
+                [Test]
+                public void ShouldDeleteIt()
+                {
+                    // Arrange
+                    using var folder = new AutoTempFolder();
+                    var relPath = GetRandomFileName();
+                    var fullPath = Path.Combine(folder.Path, relPath);
+                    File.WriteAllBytes(fullPath, GetRandomBytes());
+                    var sut = Create(folder.Path);
+                    // Act
+                    sut.Delete(relPath);
+                    // Assert
+                    Expect(fullPath)
+                        .Not.To.Exist();
+                }
+            }
+        }
+
         private static IFileSystem Create(string baseFolder)
         {
             return new LocalFileSystem(baseFolder);

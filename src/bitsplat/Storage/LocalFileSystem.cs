@@ -62,6 +62,15 @@ namespace bitsplat.Storage
             }
         }
 
+        public void Delete(string path)
+        {
+            var fullPath = FullPathFor(path);
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+        }
+
         private string FullPathFor(
             string possibleRelativePath)
         {

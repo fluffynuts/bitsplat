@@ -1,10 +1,31 @@
 using System;
+using System.Linq;
 using System.IO;
+using System.Text.RegularExpressions;
 using bitsplat.Storage;
 using PeanutButter.Utils;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests.TestingSupport
 {
+    public class ArenaFile: BasicFileResource
+    {
+        public override string Path { get; }
+        public override long Size => Data?.Length ?? 0;
+        public override string RelativePath { get; }
+        public byte[] Data { get; }
+
+        public ArenaFile(
+            string fullPath,
+            string relativePath,
+            byte[] data)
+        {
+            Path = fullPath;
+            RelativePath = relativePath;
+            Data = data;
+        }
+    }
+
     public class TestArena : IDisposable
     {
         public IFileSystem SourceFileSystem { get; }
@@ -73,13 +94,79 @@ namespace bitsplat.Tests.TestingSupport
             return Path.Combine(folderPath);
         }
 
+        public string SourcePathFor(string relative)
+        {
+            return Path.Combine(SourcePath, relative);
+        }
+
+        public string TargetPathFor(string relative)
+        {
+            return Path.Combine(TargetPath, relative);
+        }
+
+        public ArenaFile CreateSourceFile(
+            string path = null,
+            byte[] data = null)
+        {
+            var subFolder = null as string;
+            var name = null as string;
+            if (path != null)
+            {
+                var parts = Regex.Split(path, "[/|\\\\]");
+                if (parts.Length > 1)
+                {
+                    subFolder = parts.Take(
+                            parts.Length - 1
+                        )
+                        .JoinWith(Path.DirectorySeparatorChar.ToString());
+                    name = parts.Last();
+                }
+                else
+                {
+                    name = parts.First();
+                }
+            }
+
+            return CreateFileIn(
+                SourcePath,
+                subFolder,
+                name,
+                data);
+        }
+
+        public static ArenaFile CreateFileIn(
+            string baseFolder,
+            string subFolder = null,
+            string name = null,
+            byte[] data = null)
+        {
+            data ??= GetRandomBytes();
+            name ??= GetRandomString(4);
+            var path = CombinePaths(baseFolder, subFolder, name);
+            File.WriteAllBytes(path, data);
+            return new ArenaFile(
+                path,
+                CombinePaths(subFolder, name),
+                data);
+        }
+
+        private static string CombinePaths(params string[] elements)
+        {
+            return Path.Combine(
+                elements
+                    .Where(e => !string.IsNullOrEmpty(e))
+                    .ToArray()
+            );
+        }
+
         private void EnsureFolderExists(string fullPath)
         {
             var current = null as string;
             fullPath.Split(Path.DirectorySeparatorChar.ToString())
                 .ForEach(part =>
                 {
-                    if (string.IsNullOrEmpty(current))
+                    if (string.IsNullOrEmpty(current) ||
+                        current.EndsWith(":"))
                     {
                         current = part;
                         if (string.IsNullOrWhiteSpace(current))
@@ -87,6 +174,7 @@ namespace bitsplat.Tests.TestingSupport
                             return;
                         }
                     }
+
                     var partial = Path.Combine(current, part);
                     if (!Directory.Exists(partial))
                     {

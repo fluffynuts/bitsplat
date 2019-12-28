@@ -146,11 +146,11 @@ namespace bitsplat.Tests.History
         }
     }
 
-    public class FileResource : IFileResource
+    public class FileResource : BasicFileResource, IFileResource
     {
-        public string Path { get; }
-        public long Size { get; }
-        public string RelativePath { get; }
+        public override string Path { get; }
+        public override long Size { get; }
+        public override string RelativePath { get; }
 
         public override string ToString()
         {

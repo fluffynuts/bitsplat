@@ -10,7 +10,7 @@ namespace bitsplat.Filters
             IEnumerable<IFileResource> targetResources,
             ITargetHistoryRepository targetHistoryRepository)
         {
-            return sourceResource.FileName().StartsWith(".")
+            return sourceResource.Name.StartsWith(".")
                        ? FilterResult.Exclude
                        : FilterResult.Ambivalent;
         }

@@ -22,7 +22,7 @@ namespace bitsplat.Tests.TestingSupport
                         () => $"Expected {false.AsNot()}to find file at: {actual.Path}");
                 }
 
-                using (var stream = actual.Read())
+                using (var stream = actual.OpenForRead())
                 {
                     var data = stream.ReadAllBytes();
                     var passed = expected.Length == data.Length &&

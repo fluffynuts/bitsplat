@@ -5,7 +5,6 @@ using System.Linq;
 using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
-using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
 using PeanutButter.Utils;
@@ -25,7 +24,6 @@ namespace bitsplat
         private readonly ITargetHistoryRepository _targetHistoryRepository;
         private readonly IResumeStrategy _resumeStrategy;
         private readonly IPassThrough[] _intermediatePipes;
-        private readonly IResourceMatcher[] _resourceMatchers;
         private readonly IFilter[] _filters;
         private readonly ISyncQueueNotifiable[] _notifiables;
 
@@ -33,7 +31,6 @@ namespace bitsplat
             ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
             IPassThrough[] intermediatePipes,
-            IResourceMatcher[] resourceMatchers,
             IFilter[] filters)
         {
             _targetHistoryRepository = targetHistoryRepository;
@@ -42,7 +39,6 @@ namespace bitsplat
             _notifiables = intermediatePipes
                 .OfType<ISyncQueueNotifiable>()
                 .ToArray();
-            _resourceMatchers = resourceMatchers;
             _filters = filters;
         }
 
@@ -52,11 +48,11 @@ namespace bitsplat
             public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
         }
 
-        private class FileResource : IFileResource
+        private class FileResource : BasicFileResource, IFileResource
         {
-            public string Path { get; }
-            public long Size { get; }
-            public string RelativePath { get; }
+            public override string Path { get; }
+            public override long Size { get; }
+            public override string RelativePath { get; }
 
             public FileResource(
                 IFileSystem targetFileSystem,
@@ -93,7 +89,7 @@ namespace bitsplat
                 var targetResource = targetResources.FirstOrDefault(
                     r => r.RelativePath == sourceResource.RelativePath);
 
-                var sourceStream = sourceResource.Read();
+                var sourceStream = sourceResource.OpenForRead();
                 var targetStream = target.Open(
                     sourceResource.RelativePath,
                     FileMode.OpenOrCreate);

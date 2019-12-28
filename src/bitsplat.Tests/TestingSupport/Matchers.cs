@@ -1,8 +1,11 @@
+using System.IO;
 using System.Linq;
+using NExpect;
 using NExpect.Implementations;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 using PeanutButter.Utils;
+using static NExpect.Expectations;
 
 namespace bitsplat.Tests.TestingSupport
 {
@@ -42,6 +45,19 @@ namespace bitsplat.Tests.TestingSupport
                     passed,
                     () => $"Expected {path} {passed.AsNot()}to have contents"
                 );
+        }
+
+        public static void Data(
+            this IHave<string> have,
+            byte[] data)
+        {
+            have.Compose(actual =>
+            {
+                Expect(actual).To.Exist();
+                var contents = File.ReadAllBytes(actual);
+                Expect(contents)
+                    .To.Equal(data, "Data mismatch");
+            });
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace bitsplat.Storage
 {
@@ -7,21 +9,25 @@ namespace bitsplat.Storage
         string Path { get; }
         long Size { get; }
         string RelativePath { get; }
+        string Name { get; }
     }
 
-    public interface IReadWriteFileResource: IFileResource
+    public abstract class BasicFileResource : IFileResource
     {
-        Stream Read();
-        Stream Write();
+        public abstract string Path { get; }
+        public abstract long Size { get; }
+        public abstract string RelativePath { get; }
+
+        public virtual string Name => Regex.Split(
+                RelativePath ?? "",
+                "[/||\\\\]"
+            )
+            .Last();
     }
 
-    public static class FileResourceExtensions
+    public interface IReadWriteFileResource : IFileResource
     {
-        public static string FileName(this IFileResource resource)
-        {
-            // TODO: test on 'doze (FileResources can come from
-            // the history database, where / is the separator char
-            return Path.GetFileName(resource.RelativePath);
-        }
+        Stream OpenForRead();
+        Stream OpenForWrite();
     }
 }

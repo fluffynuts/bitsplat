@@ -4,13 +4,13 @@ using System.IO;
 namespace bitsplat.Storage
 {
     public class LocalReadWriteFileResource
-        : IReadWriteFileResource
+        : BasicFileResource, IReadWriteFileResource
     {
         private readonly string _basePath;
         private readonly IFileSystem _fileSystem;
-        public string Path { get; }
-        public long Size => (_size ?? (_size = FetchSize())).Value;
-        public string RelativePath => _relativePath ?? (_relativePath = GetRelativePath());
+        public override string Path { get; }
+        public override long Size => (_size ?? (_size = FetchSize())).Value;
+        public override string RelativePath => _relativePath ?? (_relativePath = GetRelativePath());
 
         private long? _size;
 
@@ -36,7 +36,7 @@ namespace bitsplat.Storage
             return _fileSystem.FetchSize(RelativePath);
         }
 
-        public Stream Read()
+        public Stream OpenForRead()
         {
             return _fileSystem.Open(
                 RelativePath,
@@ -44,7 +44,7 @@ namespace bitsplat.Storage
             );
         }
 
-        public Stream Write()
+        public Stream OpenForWrite()
         {
             return _fileSystem.Open(
                 RelativePath,

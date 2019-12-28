@@ -1,7 +1,4 @@
-﻿using System;
-using bitsplat.CommandLine;
-using bitsplat.Filters;
-using DryIoc;
+﻿using bitsplat.CommandLine;
 
 namespace bitsplat
 {
@@ -43,43 +40,4 @@ namespace bitsplat
                 .Parse<Options>(args);
         }
     }
-
-    public class Options : ParsedArguments
-    {
-        public string Source { get; set; }
-        public string Target { get; set; }
-        public string Archive { get; set; }
-
-        public bool Resume { get; set; }
-        public bool Quiet { get; set; }
-        public bool NoHistory { get; set; }
-    }
-
-//    public class Options
-//    {
-//        [Option(
-//            's', "source",
-//            Required = true,
-//            HelpText = "Source folder")]
-//        public string Source { get; set; }
-//
-//        [Option(
-//            't', "target",
-//            Required = true,
-//            HelpText = "Target folder")]
-//        public string Target { get; set; }
-//
-//        [Option(
-//            'a', "archive",
-//            Required = false,
-//            HelpText = "Archive folder")]
-//        public string Archive { get; set; }
-//
-//        [Option(
-//            'n', "no-history",
-//            Required = false,
-//            HelpText = "No history -- just sync existing")]
-//        public bool NoHistory { get; set; }
-//
-//    }
 }

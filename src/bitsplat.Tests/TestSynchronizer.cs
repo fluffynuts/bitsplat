@@ -6,7 +6,6 @@ using System.Linq;
 using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
-using bitsplat.ResourceMatchers;
 using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
 using bitsplat.Tests.TestingSupport;
@@ -441,8 +440,7 @@ namespace bitsplat.Tests
                         new AlwaysResumeStrategy(),
                         new IPassThrough[] { notifyable, intermediate1 }
                             .Randomize()
-                            .ToArray(),
-                        DefaultResourceMatchers
+                            .ToArray()
                     );
                     // Act
                     sut.Synchronize(
@@ -643,7 +641,6 @@ namespace bitsplat.Tests
         private static ISynchronizer Create(
             IResumeStrategy resumeStrategy = null,
             IPassThrough[] intermediatePipes = null,
-            IResourceMatcher[] resourceMatchers = null,
             ITargetHistoryRepository targetHistoryRepository = null,
             IFilter[] filters = null)
         {
@@ -651,16 +648,9 @@ namespace bitsplat.Tests
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
-                resourceMatchers ?? DefaultResourceMatchers,
                 filters ?? DefaultFilters
             );
         }
-
-        private static readonly IResourceMatcher[] DefaultResourceMatchers =
-        {
-            new SameRelativePathMatcher(),
-            new SameSizeMatcher()
-        };
 
         private static readonly IFilter[] DefaultFilters =
         {
