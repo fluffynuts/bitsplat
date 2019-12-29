@@ -11,6 +11,7 @@ namespace bitsplat
                     nameof(Options.Source),
                     o => o.WithArg("-s")
                         .WithArg("--source")
+                        .Required()
                 )
                 .WithParameter(
                     nameof(Options.Target),
@@ -36,6 +37,11 @@ namespace bitsplat
                     nameof(Options.Archive),
                     o => o.WithArg("-a")
                         .WithArg("--archive")
+                )
+                .WithParameter(
+                    nameof(Options.SyncStrategy),
+                    o => o.WithArg("-s")
+                        .WithArg("--sync-strategy")
                 )
                 .Parse<Options>(args);
         }
