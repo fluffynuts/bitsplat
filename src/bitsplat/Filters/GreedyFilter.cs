@@ -12,13 +12,26 @@ namespace bitsplat.Filters
             IEnumerable<IFileResource> targetResources,
             ITargetHistoryRepository targetHistoryRepository)
         {
-            var existing = targetResources
-                .FirstOrDefault(
-                    r => r.RelativePath == sourceResource.RelativePath
-                );
-            return existing?.Size == sourceResource.Size
+            return HaveMatchingTargetResource() ||
+                   HaveMatchingHistoryItem()
                        ? FilterResult.Ambivalent
                        : FilterResult.Include;
+
+            bool HaveMatchingTargetResource()
+            {
+                var existing = targetResources.FirstOrDefault(
+                    r => r.RelativePath == sourceResource.RelativePath
+                );
+                return existing?.Size == sourceResource.Size;
+            }
+
+            bool HaveMatchingHistoryItem()
+            {
+                var historyItem = targetHistoryRepository.Find(
+                    sourceResource.RelativePath
+                );
+                return historyItem?.Size == sourceResource.Size;
+            }
         }
     }
 }
