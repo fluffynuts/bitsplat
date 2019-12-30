@@ -161,7 +161,9 @@ namespace bitsplat.Tests
                                     .Not.To.Be.Null();
                                 Expect(result.Flags)
                                     .To.Contain.Key("force")
-                                    .With.Value(false);
+                                    .With.Value.Intersection.Equal.To(
+                                        new { Value = false }
+                                    );
                             }
 
                             [TestCase(true)]
@@ -186,7 +188,9 @@ namespace bitsplat.Tests
                                     .Not.To.Be.Null();
                                 Expect(result.Flags)
                                     .To.Contain.Key("force")
-                                    .With.Value(defaultValue);
+                                    .With.Value.Intersection.Equal.To(
+                                        new { Value = defaultValue }
+                                    );
                             }
                         }
 
@@ -212,7 +216,9 @@ namespace bitsplat.Tests
                                     .Not.To.Be.Null();
                                 Expect(result.Parameters)
                                     .To.Contain.Key("source")
-                                    .With.Value(new string[0]);
+                                    .With.Value.Intersection.Equal.To(
+                                        new { Value = new string[0] }
+                                    );
                             }
                         }
 
@@ -336,6 +342,26 @@ namespace bitsplat.Tests
                                     .To.Equal(expected);
                             }
 
+                            [Test]
+                            public void ShouldMapConvertable()
+                            {
+                                // Arrange
+                                var expected = GetRandomCollection<int>(2);
+                                var args = expected.Select(i => new[] { "-i", i.ToString() })
+                                    .SelectMany(o => o)
+                                    .ToArray();
+                                // Act
+                                var result = Args.Configure()
+                                    .WithParameter(
+                                        nameof(Opts.Ints),
+                                        o => o.WithArg("-i")
+                                    )
+                                    .Parse<Opts>(args);
+                                // Assert
+                                Expect(result.Ints)
+                                    .To.Equal(expected);
+                            }
+
                             public enum EnumValue
                             {
                                 One,
@@ -351,6 +377,7 @@ namespace bitsplat.Tests
                                 public IEnumerable<string> MultiValueEnumerable { get; set; }
                                 public IList<string> MultiValueList { get; set; }
                                 public EnumValue EnumValue { get; set; }
+                                public int[] Ints { get; set; }
                             }
                         }
                     }

@@ -19,6 +19,15 @@ namespace bitsplat.Archivers
         );
     }
 
+    public class NullArchiver : IArchiver
+    {
+        public void RunArchiveOperations(
+            IFileSystem source, 
+            IFileSystem target)
+        {
+        }
+    }
+
     public class Mede8erArchiver : IArchiver
     {
         private readonly IPassThrough[] _intermediatePipes;

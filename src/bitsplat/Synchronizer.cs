@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +6,6 @@ using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
-using PeanutButter.Utils;
 
 namespace bitsplat
 {

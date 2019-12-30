@@ -5,11 +5,21 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
-    public class CachingFileSystem : IFileSystem
+    public class CachingFileSystem
+        : ISourceFileSystem,
+          ITargetFileSystem
     {
+        public static IFileSystem For(string uri)
+        {
+            return new CachingFileSystem(
+                FileSystem.For(uri)
+            );
+        }
+
         public string BasePath => _underlying.BasePath;
-        
+
         private readonly IFileSystem _underlying;
+
         private readonly ConcurrentDictionary<string, object> _cache
             = new ConcurrentDictionary<string, object>();
 

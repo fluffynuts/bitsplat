@@ -42,6 +42,8 @@ namespace bitsplat.CommandLine
         ) where T : ParsedArguments, new()
         {
             var result = new T();
+            result.RawArguments = args.ToArray(); // copy
+
             var argsList = args.ToList();
             _flags.ForEach(
                 kvp => ParseFlag(
@@ -76,7 +78,7 @@ namespace bitsplat.CommandLine
                 kvp => MapParameter(
                     result,
                     kvp.Key,
-                    kvp.Value
+                    kvp.Value.Value
                 )
             );
         }
@@ -265,7 +267,10 @@ namespace bitsplat.CommandLine
         {
             var parser = new ParameterParser(name);
             configure(parser);
-            result.Parameters[name] = parser.Parse(args);
+            result.Parameters[name] = new ParsedArgument<string[]>()
+            {
+                Value = parser.Parse(args)
+            };
         }
 
         private void ParseFlag(
@@ -276,7 +281,10 @@ namespace bitsplat.CommandLine
         {
             var parser = new FlagParser(name);
             configure(parser);
-            result.Flags[name] = parser.Parse(args);
+            result.Flags[name] = new ParsedArgument<bool>()
+            {
+                Value = parser.Parse(args)
+            };
         }
     }
 

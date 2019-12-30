@@ -11,10 +11,10 @@ using static PeanutButter.RandomGenerators.RandomValueGen;
 namespace bitsplat.Tests
 {
     [TestFixture]
-    [Explicit("WIP")]
     public class TestProgram
     {
         [Test]
+        [Explicit("WIP")]
         public void ShouldSyncOneFileInRoot()
         {
             // Arrange

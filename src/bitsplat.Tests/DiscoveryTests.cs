@@ -100,6 +100,71 @@ namespace bitsplat.Tests
                     .To.Contain.Exactly(1)
                     .Matched.By(o => o.GetType() == typeof(SimpleTargetExistsFilter));
             }
+
+            [TestFixture]
+            public class MultipleResolutions
+            {
+                [Test]
+                [Explicit("Discovery")]
+                public void IdeallyAsArrayConstructorParameter()
+                {
+                    // Arrange
+                    var container = new Container();
+                    container.Register<IFoo, Bar>();
+                    container.Register<IFoo, Qux>();
+                    container.Register<IConsumer, Consumer>();
+                    // Act
+                    var result = container.Resolve<IConsumer>();
+                    // Assert
+                    Expect(result.Foos)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(o => o is Bar);
+                    Expect(result.Foos)
+                        .To.Contain.Exactly(1)
+                        .Matched.By(o => o is Qux);
+                }
+
+                [Test]
+                [Explicit("Discovery")]
+                public void ShouldBeEmptyWhenNoImplementationsFound()
+                {
+                    // Arrange
+                    var container = new Container();
+                    container.Register<IConsumer, Consumer>();
+                    // Act
+                    var result = container.Resolve<IConsumer>();
+                    // Assert
+                    Expect(result.Foos)
+                        .To.Be.Empty();
+                }
+
+                public interface IConsumer
+                {
+                    IFoo[] Foos { get; }
+                }
+
+                public class Consumer : IConsumer
+                {
+                    public IFoo[] Foos { get; }
+
+                    public Consumer(IFoo[] foos)
+                    {
+                        Foos = foos;
+                    }
+                }
+
+                public interface IFoo
+                {
+                }
+
+                public class Bar : IFoo
+                {
+                }
+
+                public class Qux : IFoo
+                {
+                }
+            }
         }
     }
 }

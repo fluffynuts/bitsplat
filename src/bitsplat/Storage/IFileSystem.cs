@@ -3,6 +3,18 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
+    public interface ISourceFileSystem : IFileSystem
+    {
+    }
+
+    public interface ITargetFileSystem : IFileSystem
+    {
+    }
+
+    public interface IArchiveFileSystem : IFileSystem
+    {
+    }
+
     public interface IFileSystem
     {
         /// <summary>

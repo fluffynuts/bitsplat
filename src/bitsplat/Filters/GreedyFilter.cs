@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using bitsplat.History;
@@ -5,6 +6,16 @@ using bitsplat.Storage;
 
 namespace bitsplat.Filters
 {
+    public static class FilterRegistrations
+    {
+        public static readonly Dictionary<SyncStrategy, Type>
+            FilterMap = new Dictionary<SyncStrategy, Type>()
+            {
+                [SyncStrategy.Greedy] = typeof(GreedyFilter),
+                [SyncStrategy.TargetOptIn] = typeof(TargetOptInFilter)
+            };
+    }
+
     public class GreedyFilter : IFilter
     {
         public FilterResult Filter(
