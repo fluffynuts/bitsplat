@@ -85,7 +85,7 @@ namespace bitsplat.Tests
             var watchedFile = arena.CreateTargetFile(
                 Path.Combine(series, season, episode1)
             );
-            var sourceFile = arena.CreateSourceFile(
+            arena.CreateSourceFile(
                 Path.Combine(series, season, episode2)
             );
 
@@ -121,7 +121,35 @@ namespace bitsplat.Tests
             Expect(expectedTargetPath)
                 .To.Exist();
         }
-        
+
+        [TestFixture]
+        public class WhenHistoryIsKept
+        {
+            [Test]
+            [Explicit("WIP")]
+            public void ShouldNotRecopyFileInHistory()
+            {
+                // Arrange
+            
+                // Act
+                // Assert
+            }
+        }
+
+        [TestFixture]
+        public class WhenHistoryIsNotKept
+        {
+            [Test]
+            [Explicit("WIP")]
+            public void ShouldRecopyMissingTargetFile()
+            {
+                // Arrange
+                
+                // Act
+                // Assert
+            }
+        }
+
         private static TestArena CreateArena()
         {
             return new TestArena();
