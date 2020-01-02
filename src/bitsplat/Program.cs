@@ -54,17 +54,13 @@ namespace bitsplat
                 )
                 .Parse<Options>(args);
 
-            var container = AppContainer.Create()
-                .WithHistoryRepository(
-                    opts.NoHistory
-                        ? typeof(NullTargetHistoryRepository)
-                        : typeof(TargetHistoryRepository)
-                )
-                .WithSource(
-                    opts.Source
-                )
+            using var container = AppContainer.Create()
                 .WithTarget(
                     opts.Target
+                )
+                .WithHistoryRepositoryFor(opts)
+                .WithSource(
+                    opts.Source
                 )
                 .WithResumeStrategy(
                     opts.Resume
@@ -74,27 +70,23 @@ namespace bitsplat
                 .WithFilter(
                     FilterMap[opts.SyncStrategy]
                 )
-                .WithArchiver(
-                    string.IsNullOrWhiteSpace(opts.Archive)
-                        ? typeof(NullArchiver)
-                        : typeof(Mede8erArchiver)
-                )
-                .WithArchive(opts.Archive);
+                .WithArchive(opts.Archive)
+                .OpenScope();
 
-            var source = container.Resolve<ISourceFileSystem>();
-            var target = container.Resolve<ITargetFileSystem>();
-            var archive = container.Resolve<IArchiveFileSystem>();
+            var source = container.ResolveSourceFileSystem();
+            var target = container.ResolveTargetFileSystem();
+            var archive = container.ResolveArchiveFileSystem();
             var archiver = container.Resolve<IArchiver>();
+
             archiver.RunArchiveOperations(
-                source,
+                target,
                 archive);
-            
+
             var synchronizer = container.Resolve<ISynchronizer>();
             synchronizer.Synchronize(
                 source,
                 target);
         }
-
     }
 
     public static class AppContainer
@@ -110,11 +102,12 @@ namespace bitsplat
             this IContainer container,
             string archive)
         {
-            if (string.IsNullOrWhiteSpace(archive))
+            if (!string.IsNullOrWhiteSpace(archive))
             {
                 return container.WithRegistration(
-                        typeof(IArchiveFileSystem),
-                        CachingFileSystem.For(archive)
+                        typeof(IFileSystem),
+                        CachingFileSystem.For(archive),
+                        ServiceKeys.ARCHIVE
                     )
                     .WithRegistration(
                         typeof(IArchiver),
@@ -125,8 +118,9 @@ namespace bitsplat
             }
 
             return container.WithRegistration(
-                    typeof(IArchiveFileSystem),
-                    new NullFileSystem()
+                    typeof(IFileSystem),
+                    new NullFileSystem(),
+                    ServiceKeys.ARCHIVE
                 )
                 .WithRegistration(
                     typeof(IArchiver),
@@ -169,8 +163,9 @@ namespace bitsplat
             string uri)
         {
             return container.WithRegistration(
-                typeof(ISourceFileSystem),
-                CachingFileSystem.For(uri)
+                typeof(IFileSystem),
+                CachingFileSystem.For(uri),
+                "source"
             );
         }
 
@@ -179,19 +174,27 @@ namespace bitsplat
             string uri)
         {
             return container.WithRegistration(
-                typeof(ITargetFileSystem),
-                CachingFileSystem.For(uri)
+                typeof(IFileSystem),
+                CachingFileSystem.For(uri),
+                "target"
             );
         }
 
-        public static IContainer WithHistoryRepository(
+        public static IContainer WithHistoryRepositoryFor(
             this IContainer container,
-            Type implementing
-        )
+            Options opts)
         {
+            if (opts.NoHistory)
+            {
+                return container.WithRegistration(
+                    typeof(ITargetHistoryRepository),
+                    new NullTargetHistoryRepository()
+                );
+            }
+
             return container.WithRegistration(
                 typeof(ITargetHistoryRepository),
-                implementing
+                new TargetHistoryRepository(opts.Target)
             );
         }
 
@@ -206,6 +209,31 @@ namespace bitsplat
                 implementationType,
                 Reuse.Transient
             );
+        }
+
+        public static IFileSystem ResolveSourceFileSystem(
+            this IResolverContext context)
+        {
+            return context.Resolve<IFileSystem>(ServiceKeys.SOURCE);
+        }
+
+        public static IFileSystem ResolveTargetFileSystem(
+            this IResolverContext context)
+        {
+            return context.Resolve<IFileSystem>(ServiceKeys.TARGET);
+        }
+
+        public static IFileSystem ResolveArchiveFileSystem(
+            this IResolverContext context)
+        {
+            return context.Resolve<IFileSystem>(ServiceKeys.ARCHIVE);
+        }
+
+        private static class ServiceKeys
+        {
+            public const string SOURCE = "source";
+            public const string TARGET = "target";
+            public const string ARCHIVE = "archive";
         }
 
         private static IContainer WithRegistration(
@@ -226,14 +254,16 @@ namespace bitsplat
         private static IContainer WithRegistration<T>(
             this IContainer container,
             Type serviceType,
-            T implementation
+            T implementation,
+            string serviceKey = null
         )
         {
             return container.With(
-                o => o.Register(
+                o => o.RegisterDelegate(
                     serviceType,
-                    typeof(T),
-                    Reuse.Singleton
+                    c => implementation,
+                    Reuse.Singleton,
+                    serviceKey: serviceKey
                 )
             );
         }

@@ -6,6 +6,11 @@ namespace bitsplat.Storage
     {
         public static IFileSystem For(string uri)
         {
+            if (string.IsNullOrEmpty(uri))
+            {
+                return new NullFileSystem();
+            }
+
             var u = new Uri(uri);
             if (u.Scheme == "file")
             {

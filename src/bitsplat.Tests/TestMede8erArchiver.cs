@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using bitsplat.Archivers;
+using bitsplat.Pipes;
 using bitsplat.Storage;
 using bitsplat.Tests.TestingSupport;
 using static NExpect.Expectations;
@@ -125,7 +126,7 @@ namespace bitsplat.Tests
 
         private IArchiver Create()
         {
-            return new Mede8erArchiver();
+            return new Mede8erArchiver(new IPassThrough[0]);
         }
     }
 }

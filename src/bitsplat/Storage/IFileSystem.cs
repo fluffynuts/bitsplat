@@ -3,16 +3,31 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
-    public interface ISourceFileSystem : IFileSystem
+    public class ListOptions
     {
-    }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
 
-    public interface ITargetFileSystem : IFileSystem
-    {
-    }
+            return Equals((ListOptions) obj);
+        }
 
-    public interface IArchiveFileSystem : IFileSystem
-    {
+        protected bool Equals(ListOptions other)
+        {
+            return IncludeDotFiles == other.IncludeDotFiles;
+        }
+
+        public override int GetHashCode()
+        {
+            return IncludeDotFiles.GetHashCode();
+        }
+
+        public bool IncludeDotFiles { get; set; }
     }
 
     public interface IFileSystem
@@ -30,7 +45,7 @@ namespace bitsplat.Storage
         /// <param name="path"></param>
         /// <returns></returns>
         bool Exists(string path);
-        
+
         /// <summary>
         /// Tests if a path exists as a file, relative to
         /// the BasePath of the filesystem
@@ -38,7 +53,7 @@ namespace bitsplat.Storage
         /// <param name="path"></param>
         /// <returns></returns>
         bool IsFile(string path);
-        
+
         /// <summary>
         /// Tests if a path exists as a directory, relative to the
         /// BasePath of the filesystem
@@ -46,7 +61,7 @@ namespace bitsplat.Storage
         /// <param name="path"></param>
         /// <returns></returns>
         bool IsDirectory(string path);
-        
+
         /// <summary>
         /// Attempts to open a file with the provided path,
         /// relative to the BasePath of the filesystem, with
@@ -56,12 +71,21 @@ namespace bitsplat.Storage
         /// <param name="mode"></param>
         /// <returns></returns>
         Stream Open(string path, FileMode mode);
-        
+
         /// <summary>
-        /// Lists all Files under the base path
+        /// Lists all files under the base path
         /// </summary>
         /// <returns></returns>
         IEnumerable<IReadWriteFileResource> ListResourcesRecursive();
+        
+        /// <summary>
+        /// Lists all files under the base path, taking into
+        /// account the provided options
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
+            ListOptions options
+        );
 
         /// <summary>
         /// Fetches the size, in bytes, of the given path
@@ -70,7 +94,7 @@ namespace bitsplat.Storage
         /// <param name="path"></param>
         /// <returns></returns>
         long FetchSize(string path);
-        
+
         /// <summary>
         /// Deletes the file given by relative path, if it exists
         /// - does not throw if file does not exist

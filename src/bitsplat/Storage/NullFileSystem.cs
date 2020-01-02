@@ -32,6 +32,12 @@ namespace bitsplat.Storage
             return new IReadWriteFileResource[0];
         }
 
+        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
+            ListOptions options)
+        {
+            return new IReadWriteFileResource[0];
+        }
+
         public long FetchSize(string path)
         {
             return -1;

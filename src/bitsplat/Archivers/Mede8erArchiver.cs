@@ -32,11 +32,6 @@ namespace bitsplat.Archivers
     {
         private readonly IPassThrough[] _intermediatePipes;
 
-        public Mede8erArchiver()
-            : this(new[] { new NullPassThrough() })
-        {
-        }
-
         // TODO: test if it makes sense to have any pass-through
         // pipes from the caller -- perhaps progress makes sense
         // at least?
@@ -54,7 +49,7 @@ namespace bitsplat.Archivers
             var sourceResources = source.ListResourcesRecursive();
             var archiveMarkers = sourceResources
                 .Where(r => r.Name?.EndsWith(".t") ?? false)
-                .Select(r => r.Name)
+                .Select(r => r.RelativePath)
                 .ToArray();
             var toArchive = archiveMarkers
                 .Select(p => p.RegexReplace(".t$", ""))

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using bitsplat.CommandLine;
 using bitsplat.Storage;
 using bitsplat.Tests.TestingSupport;
 using NExpect;
@@ -30,18 +31,16 @@ namespace bitsplat.Tests.Storage
         public void Ctor_WhenBasePathDoesNotExist_ShouldAttemptToCreateIt()
         {
             // Arrange
-            using (var folder = new AutoTempFolder())
-            {
-                var baseFolder = Path.Combine(folder.Path,
-                    Guid.NewGuid()
-                        .ToString());
-                Expect(baseFolder)
-                    .Not.To.Exist();
-                // Act
-                Expect(() => Create(baseFolder))
-                    .To.Throw<DirectoryNotFoundException>();
-                // Assert
-            }
+            using var folder = new AutoTempFolder();
+            var baseFolder = Path.Combine(folder.Path,
+                Guid.NewGuid()
+                    .ToString());
+            Expect(baseFolder)
+                .Not.To.Exist();
+            // Act
+            Expect(() => Create(baseFolder))
+                .To.Throw<DirectoryNotFoundException>();
+            // Assert
         }
 
         [TestFixture]
@@ -51,34 +50,30 @@ namespace bitsplat.Tests.Storage
             public void WhenFileExists_RelativeToConstructionPath_ShouldReturnTrue()
             {
                 // Arrange
-                using (var tempFile = new AutoTempFile())
-                {
-                    var container = Path.GetDirectoryName(tempFile.Path);
-                    var sut = Create(container);
-                    // Act
-                    var result = sut.IsFile(tempFile.Path);
-                    // Assert
-                    Expect(result)
-                        .To.Be.True();
-                }
+                using var tempFile = new AutoTempFile();
+                var container = Path.GetDirectoryName(tempFile.Path);
+                var sut = Create(container);
+                // Act
+                var result = sut.IsFile(tempFile.Path);
+                // Assert
+                Expect(result)
+                    .To.Be.True();
             }
 
             [Test]
             public void WhenFileDoesNotExist_RelativeToCtorPath_ShouldReturnFalse()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var test = Path.Combine(tempFolder.Path,
-                        Guid.NewGuid()
-                            .ToString());
-                    var sut = Create(tempFolder);
-                    // Act
-                    var result = sut.IsFile(test);
-                    // Assert
-                    Expect(result)
-                        .To.Be.False();
-                }
+                using var tempFolder = new AutoTempFolder();
+                var test = Path.Combine(tempFolder.Path,
+                    Guid.NewGuid()
+                        .ToString());
+                var sut = Create(tempFolder);
+                // Act
+                var result = sut.IsFile(test);
+                // Assert
+                Expect(result)
+                    .To.Be.False();
             }
         }
 
@@ -89,41 +84,37 @@ namespace bitsplat.Tests.Storage
             public void WhenDirectoryExists_RelativeToCtorPath_ShouldReturnTrue()
             {
                 // Arrange
-                using (var tempDir = new AutoTempFolder())
-                {
-                    var test = Guid.NewGuid()
-                        .ToString();
-                    var sub = Path.Combine(tempDir.Path, test);
-                    Directory.CreateDirectory(sub);
-                    Expect(sub)
-                        .To.Be.A.Directory();
-                    var sut = Create(tempDir.Path);
-                    // Act
-                    var result = sut.IsDirectory(test);
-                    // Assert
-                    Expect(result)
-                        .To.Be.True();
-                }
+                using var tempDir = new AutoTempFolder();
+                var test = Guid.NewGuid()
+                    .ToString();
+                var sub = Path.Combine(tempDir.Path, test);
+                Directory.CreateDirectory(sub);
+                Expect(sub)
+                    .To.Be.A.Directory();
+                var sut = Create(tempDir.Path);
+                // Act
+                var result = sut.IsDirectory(test);
+                // Assert
+                Expect(result)
+                    .To.Be.True();
             }
 
             [Test]
             public void WhenDirectoryDoesNotExist_RelativeToCtorPath_ShouldReturnFalse()
             {
                 // Arrange
-                using (var tempDir = new AutoTempFolder())
-                {
-                    var test = Guid.NewGuid()
-                        .ToString();
-                    var sub = Path.Combine(tempDir.Path, test);
-                    Expect(sub)
-                        .Not.To.Exist();
-                    var sut = Create(tempDir.Path);
-                    // Act
-                    var result = sut.IsDirectory(test);
-                    // Assert
-                    Expect(result)
-                        .To.Be.False();
-                }
+                using var tempDir = new AutoTempFolder();
+                var test = Guid.NewGuid()
+                    .ToString();
+                var sub = Path.Combine(tempDir.Path, test);
+                Expect(sub)
+                    .Not.To.Exist();
+                var sut = Create(tempDir.Path);
+                // Act
+                var result = sut.IsDirectory(test);
+                // Assert
+                Expect(result)
+                    .To.Be.False();
             }
         }
 
@@ -134,46 +125,40 @@ namespace bitsplat.Tests.Storage
             public void WhenFileExists_ShouldReturnTrue()
             {
                 // Arrange
-                using (var tempFile = new AutoTempFile())
-                {
-                    var sut = Create(Path.GetDirectoryName(tempFile.Path));
-                    // Act
-                    var result = sut.Exists(tempFile.Path);
-                    // Assert
-                    Expect(result)
-                        .To.Be.True();
-                }
+                using var tempFile = new AutoTempFile();
+                var sut = Create(Path.GetDirectoryName(tempFile.Path));
+                // Act
+                var result = sut.Exists(tempFile.Path);
+                // Assert
+                Expect(result)
+                    .To.Be.True();
             }
 
             [Test]
             public void WhenDirectoryExists_ShouldReturnTrue()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var sut = Create(tempFolder.Path);
-                    // Act
-                    var result = sut.Exists(tempFolder.Path);
-                    // Assert
-                    Expect(result)
-                        .To.Be.True();
-                }
+                using var tempFolder = new AutoTempFolder();
+                var sut = Create(tempFolder.Path);
+                // Act
+                var result = sut.Exists(tempFolder.Path);
+                // Assert
+                Expect(result)
+                    .To.Be.True();
             }
 
             [Test]
             public void WhenNothingFound_ShouldReturnFalse()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var sut = Create(tempFolder);
-                    // Act
-                    var result = sut.Exists(Guid.NewGuid()
-                        .ToString());
-                    // Assert
-                    Expect(result)
-                        .To.Be.False();
-                }
+                using var tempFolder = new AutoTempFolder();
+                var sut = Create(tempFolder);
+                // Act
+                var result = sut.Exists(Guid.NewGuid()
+                    .ToString());
+                // Assert
+                Expect(result)
+                    .To.Be.False();
             }
         }
 
@@ -184,60 +169,56 @@ namespace bitsplat.Tests.Storage
             public void WhenFileDoesNotExist_AndModeIs_OpenOrCreate_ShouldCreateFile()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
+                using var tempFolder = new AutoTempFolder();
+                var fileName = Guid.NewGuid()
+                    .ToString();
+                Expect(Path.Combine(tempFolder.Path, fileName))
+                    .Not.To.Exist();
+                var expected = GetRandomBytes(1024);
+                var sut = Create(tempFolder);
+                // Act
+                using (var stream = sut.Open(fileName, FileMode.OpenOrCreate))
                 {
-                    var fileName = Guid.NewGuid()
-                        .ToString();
-                    Expect(Path.Combine(tempFolder.Path, fileName))
-                        .Not.To.Exist();
-                    var expected = GetRandomBytes(1024);
-                    var sut = Create(tempFolder);
-                    // Act
-                    using (var stream = sut.Open(fileName, FileMode.OpenOrCreate))
-                    {
-                        stream.Write(expected);
-                    }
-
-                    // Assert
-                    var written = File.ReadAllBytes(
-                        Path.Combine(
-                            tempFolder.Path,
-                            fileName
-                        )
-                    );
-                    Expect(written)
-                        .To.Equal(expected);
+                    stream.Write(expected);
                 }
+
+                // Assert
+                var written = File.ReadAllBytes(
+                    Path.Combine(
+                        tempFolder.Path,
+                        fileName
+                    )
+                );
+                Expect(written)
+                    .To.Equal(expected);
             }
 
             [Test]
             public void WhenFileDoesNotExist_AndModeIs_Append_ShouldCreateFile()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
+                using var tempFolder = new AutoTempFolder();
+                var fileName = Guid.NewGuid()
+                    .ToString();
+                Expect(Path.Combine(tempFolder.Path, fileName))
+                    .Not.To.Exist();
+                var expected = GetRandomBytes(1024);
+                var sut = Create(tempFolder);
+                // Act
+                using (var stream = sut.Open(fileName, FileMode.Append))
                 {
-                    var fileName = Guid.NewGuid()
-                        .ToString();
-                    Expect(Path.Combine(tempFolder.Path, fileName))
-                        .Not.To.Exist();
-                    var expected = GetRandomBytes(1024);
-                    var sut = Create(tempFolder);
-                    // Act
-                    using (var stream = sut.Open(fileName, FileMode.Append))
-                    {
-                        stream.Write(expected);
-                    }
-
-                    // Assert
-                    var written = File.ReadAllBytes(
-                        Path.Combine(
-                            tempFolder.Path,
-                            fileName
-                        )
-                    );
-                    Expect(written)
-                        .To.Equal(expected);
+                    stream.Write(expected);
                 }
+
+                // Assert
+                var written = File.ReadAllBytes(
+                    Path.Combine(
+                        tempFolder.Path,
+                        fileName
+                    )
+                );
+                Expect(written)
+                    .To.Equal(expected);
             }
         }
 
@@ -248,155 +229,170 @@ namespace bitsplat.Tests.Storage
             public void ShouldReturnEmptyCollectionForEmptyBase()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(results)
-                        .Not.To.Be.Null();
-                    Expect(results)
-                        .To.Be.Empty();
-                }
+                using var tempFolder = new AutoTempFolder();
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                // Assert
+                Expect(results)
+                    .Not.To.Be.Null();
+                Expect(results)
+                    .To.Be.Empty();
             }
 
             [Test]
             public void ShouldReturnSingleFileUnderBasePath()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var filePath = tempFolder.CreateRandomFile();
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(results)
-                        .To.Contain.Exactly(1)
-                        .Matched.By(r => r.Path == filePath);
-                }
+                using var tempFolder = new AutoTempFolder();
+                var filePath = tempFolder.CreateRandomFile();
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                // Assert
+                Expect(results)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(r => r.Path == filePath);
             }
 
             [Test]
             public void FirstLevelResultsShouldHaveCorrectRelativePath()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var path = tempFolder.CreateRandomFile();
-                    var expected = Path.GetFileName(path);
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(results)
-                        .To.Contain.Exactly(1)
-                        .Matched.By(r => r.RelativePath == expected);
-                }
+                using var tempFolder = new AutoTempFolder();
+                var path = tempFolder.CreateRandomFile();
+                var expected = Path.GetFileName(path);
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                // Assert
+                Expect(results)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(r => r.RelativePath == expected);
             }
 
             [Test]
             public void ShouldIgnoreEmptyFoldersUnderBase()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var path = tempFolder.CreateRandomFolder();
-                    var sut = Create(tempFolder);
-                    Expect(path)
-                        .To.Exist();
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(results)
-                        .To.Be.Empty();
-                }
+                using var tempFolder = new AutoTempFolder();
+                var path = tempFolder.CreateRandomFolder();
+                var sut = Create(tempFolder);
+                Expect(path)
+                    .To.Exist();
+                // Act
+                var results = sut.ListResourcesRecursive();
+                // Assert
+                Expect(results)
+                    .To.Be.Empty();
             }
 
             [Test]
             public void ShouldListResourcesUnderFolders()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var file1 = tempFolder.CreateRandomFile();
-                    var sub1 = tempFolder.CreateRandomFolder();
-                    var file2 = Path.Combine(sub1, CreateRandomFileIn(sub1));
-                    var file3 = Path.Combine(sub1, CreateRandomFileIn(sub1));
-                    var sub2 = Path.Combine(sub1, CreateRandomFolderIn(sub1));
-                    var file4 = Path.Combine(sub2, CreateRandomFileIn(sub2));
+                using var tempFolder = new AutoTempFolder();
+                var file1 = tempFolder.CreateRandomFile();
+                var sub1 = tempFolder.CreateRandomFolder();
+                var file2 = Path.Combine(sub1, CreateRandomFileIn(sub1));
+                var file3 = Path.Combine(sub1, CreateRandomFileIn(sub1));
+                var sub2 = Path.Combine(sub1, CreateRandomFolderIn(sub1));
+                var file4 = Path.Combine(sub2, CreateRandomFileIn(sub2));
 
-                    new[]
-                    {
-                        file1,
-                        sub1,
-                        file2,
-                        file3,
-                        sub2,
-                        file4
-                    }.ForEach(o => Expect(o)
-                        .To.Exist());
-                    var sut = Create(tempFolder);
-                    // Act
-                    var result = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(result).To.Contain.Only(4).Items();
-                    Expect(result).To.Contain.Exactly(1)
-                        .Matched.By(o => o.Path == file1);
-                    Expect(result).To.Contain.Exactly(1)
-                        .Matched.By(o => o.Path == file2);
-                    Expect(result).To.Contain.Exactly(1)
-                        .Matched.By(o => o.Path == file3);
-                    Expect(result).To.Contain.Exactly(1)
-                        .Matched.By(o => o.Path == file4);
-                }
+                new[]
+                {
+                    file1,
+                    sub1,
+                    file2,
+                    file3,
+                    sub2,
+                    file4
+                }.ForEach(o => Expect(o)
+                    .To.Exist());
+                var sut = Create(tempFolder);
+                // Act
+                var result = sut.ListResourcesRecursive();
+                // Assert
+                Expect(result)
+                    .To.Contain.Only(4)
+                    .Items();
+                Expect(result)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.Path == file1);
+                Expect(result)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.Path == file2);
+                Expect(result)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.Path == file3);
+                Expect(result)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.Path == file4);
+            }
+
+            [Test]
+            public void ShouldIgnoreDotFilesByDefault()
+            {
+                // Arrange
+                using var folder = new AutoTempFolder();
+                var fileName = ".{GetRandomString(1)}";
+                File.WriteAllBytes(
+                    Path.Combine(folder.Path, fileName),
+                    GetRandomBytes()
+                );
+                var sut = Create(folder);
+                // Act
+                var result = sut.ListResourcesRecursive();
+                // Assert
+                Expect(result)
+                    .To.Be.Empty();
             }
 
             [Test]
             public void ShouldSupplyRelativePathOnDemand()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var file1 = tempFolder.CreateRandomFile();
-                    var sub = tempFolder.CreateRandomFolder();
-                    var file2 = Path.Combine(sub, CreateRandomFileIn(sub));
-                    var expected1 = Path.GetRelativePath(tempFolder.Path, file1);
-                    var expected2 = Path.GetRelativePath(tempFolder.Path, file2);
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    // Assert
-                    Expect(results).To.Contain.Only(2).Items();
-                    Expect(results).To.Contain.Exactly(1)
-                        .Matched.By(o => o.RelativePath == expected1 &&
-                                         o.Path == file1);
-                    Expect(results).To.Contain.Exactly(1)
-                        .Matched.By(o => o.RelativePath == expected2 &&
-                                         o.Path == file2);
-                }
+                using var tempFolder = new AutoTempFolder();
+                var file1 = tempFolder.CreateRandomFile();
+                var sub = tempFolder.CreateRandomFolder();
+                var file2 = Path.Combine(sub, CreateRandomFileIn(sub));
+                var expected1 = Path.GetRelativePath(tempFolder.Path, file1);
+                var expected2 = Path.GetRelativePath(tempFolder.Path, file2);
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                // Assert
+                Expect(results)
+                    .To.Contain.Only(2)
+                    .Items();
+                Expect(results)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.RelativePath == expected1 &&
+                                     o.Path == file1);
+                Expect(results)
+                    .To.Contain.Exactly(1)
+                    .Matched.By(o => o.RelativePath == expected2 &&
+                                     o.Path == file2);
             }
 
             [Test]
             public void ShouldSupplySizeOnDemand()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var file = tempFolder.CreateRandomFile();
-                    var stat = new FileInfo(file);
-                    var newData = GetRandomBytes((int)stat.Length + 1, (int)stat.Length + 100);
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    File.WriteAllBytes(file, newData);
-                    // Assert
-                    Expect(results.Single().Size)
-                        .To.Equal(newData.Length);
-                }
+                using var tempFolder = new AutoTempFolder();
+                var file = tempFolder.CreateRandomFile();
+                var stat = new FileInfo(file);
+                var newData = GetRandomBytes((int) stat.Length + 1, (int) stat.Length + 100);
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                File.WriteAllBytes(file, newData);
+                // Assert
+                Expect(results.Single()
+                        .Size)
+                    .To.Equal(newData.Length);
             }
-            
+
             [Test]
             public void ShouldSupplyMinusOneForSizeIfUnableToStat()
             {
@@ -410,7 +406,8 @@ namespace bitsplat.Tests.Storage
                     var results = sut.ListResourcesRecursive();
                     File.Delete(file);
                     // Assert
-                    Expect(results.Single().Size)
+                    Expect(results.Single()
+                            .Size)
                         .To.Equal(-1);
                 }
             }
@@ -468,51 +465,6 @@ namespace bitsplat.Tests.Storage
         private static IFileSystem Create(AutoTempFolder baseFolder)
         {
             return Create(baseFolder.Path);
-        }
-    }
-
-    [TestFixture]
-    public class TestFileSystem
-    {
-        [Test]
-        public void ShouldProvideLocalFileSystemForLocalPath()
-        {
-            // Arrange
-            using var folder = new AutoTempFolder();
-            // Act
-            var result = FileSystem.For(folder.Path);
-            // Assert
-            Expect(result)
-                .To.Be.An.Instance.Of<LocalFileSystem>();
-            Expect(result.BasePath)
-                .To.Equal(folder.Path);
-        }
-
-        [Test]
-        public void ShouldProvideLocalFileSystemForFileProtocol()
-        {
-            // Arrange
-            using var folder = new AutoTempFolder();
-            var uri = new Uri(folder.Path);
-            // Act
-            var result = FileSystem.For(uri.AbsoluteUri);
-            // Assert
-            Expect(result)
-                .To.Be.An.Instance.Of<LocalFileSystem>();
-            Expect(result.BasePath)
-                .To.Equal(folder.Path);
-        }
-
-        [Test]
-        public void ShouldNotYetKnowHowToProvideFtpFileSystem()
-        {
-            // Arrange
-            var uri = "ftp://some.server/some/path";
-            // Act
-            Expect(() => FileSystem.For(uri))
-                .To.Throw<NotSupportedException>()
-                .With.Message.Containing("Protocol not supported: ftp");
-            // Assert
         }
     }
 }

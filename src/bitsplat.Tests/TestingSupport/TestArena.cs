@@ -8,7 +8,7 @@ using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests.TestingSupport
 {
-    public class ArenaFile: BasicFileResource
+    public class ArenaFile : BasicFileResource
     {
         public override string Path { get; }
         public override long Size => Data?.Length ?? 0;
@@ -28,10 +28,22 @@ namespace bitsplat.Tests.TestingSupport
 
     public class TestArena : IDisposable
     {
-        public IFileSystem SourceFileSystem { get; }
-        public IFileSystem TargetFileSystem { get; }
+        public IFileSystem SourceFileSystem
+            => _sourceFileSystem ??= new LocalFileSystem(SourcePath);
+
+        public IFileSystem TargetFileSystem
+            => _targetFileSystem ??= new LocalFileSystem(TargetPath);
+
+        public IFileSystem ArchiveFileSystem
+            => _archiveFileSystem ??= new LocalFileSystem(ArchivePath);
+
+        private IFileSystem _sourceFileSystem;
+        private IFileSystem _targetFileSystem;
+        private IFileSystem _archiveFileSystem;
+
         public string SourcePath { get; }
         public string TargetPath { get; }
+        public string ArchivePath { get; }
         public string ContainerPath => _container.Path;
 
         private AutoTempFolder _container;
@@ -41,10 +53,10 @@ namespace bitsplat.Tests.TestingSupport
             _container = new AutoTempFolder();
             SourcePath = Path.Combine(_container.Path, "source");
             TargetPath = Path.Combine(_container.Path, "target");
-            Directory.CreateDirectory(SourcePath);
-            Directory.CreateDirectory(TargetPath);
-            SourceFileSystem = new LocalFileSystem(SourcePath);
-            TargetFileSystem = new LocalFileSystem(TargetPath);
+            ArchivePath = Path.Combine(_container.Path, "archive");
+
+            new[] { SourcePath, TargetPath, ArchivePath }
+                .ForEach(p => Directory.CreateDirectory(p));
         }
 
         public void Dispose()
@@ -90,51 +102,93 @@ namespace bitsplat.Tests.TestingSupport
             var fullPath = Path.Combine(
                 new[] { TargetPath }.And(folderPath)
             );
-            EnsureFolderExists(fullPath);
+            LocalFileSystem.EnsureFolderExists(fullPath);
             return Path.Combine(folderPath);
         }
 
-        public string SourcePathFor(string relative)
+        public string SourcePathFor(params string[] relative)
         {
-            return Path.Combine(SourcePath, relative);
+            return Path.Combine(
+                SourcePath
+                    .AsArray()
+                    .Concat(relative)
+                    .ToArray()
+            );
         }
 
-        public string TargetPathFor(string relative)
+        public string TargetPathFor(params string[] relative)
         {
-            return Path.Combine(TargetPath, relative);
+            return Path.Combine(
+                TargetPath
+                    .AsArray()
+                    .Concat(relative)
+                    .ToArray()
+            );
+        }
+
+        public string ArchivePathFor(params string[] relative)
+        {
+            return Path.Combine(
+                ArchivePath
+                    .AsArray()
+                    .Concat(relative)
+                    .ToArray()
+            );
         }
 
         public ArenaFile CreateSourceFile(
             string path = null,
             byte[] data = null)
         {
-            var subFolder = null as string;
-            var name = null as string;
-            if (path != null)
-            {
-                var parts = Regex.Split(path, "[/|\\\\]");
-                if (parts.Length > 1)
-                {
-                    subFolder = parts.Take(
-                            parts.Length - 1
-                        )
-                        .JoinWith(Path.DirectorySeparatorChar.ToString());
-                    name = parts.Last();
-                }
-                else
-                {
-                    name = parts.First();
-                }
-            }
-
-            return CreateFileIn(
+            var (subFolder, name) = GrokPathParts(path);
+            return CreateFile(
                 SourcePath,
                 subFolder,
                 name,
                 data);
         }
 
-        public static ArenaFile CreateFileIn(
+        public ArenaFile CreateTargetFile(
+            string path = null,
+            byte[] data = null)
+        {
+            var (subFolder, name) = GrokPathParts(path);
+            return CreateFile(
+                TargetPath,
+                subFolder,
+                name,
+                data
+            );
+        }
+
+        private (string subFolder, string name) GrokPathParts(
+            string path)
+        {
+            var subFolder = null as string;
+            var name = null as string;
+            if (path is null)
+            {
+                return (subFolder, name);
+            }
+
+            var parts = Regex.Split(path, "[/|\\\\]");
+            if (parts.Length > 1)
+            {
+                subFolder = parts.Take(
+                        parts.Length - 1
+                    )
+                    .JoinWith(Path.DirectorySeparatorChar.ToString());
+                name = parts.Last();
+            }
+            else
+            {
+                name = parts.First();
+            }
+
+            return (subFolder, name);
+        }
+
+        private static ArenaFile CreateFile(
             string baseFolder,
             string subFolder = null,
             string name = null,
@@ -143,6 +197,9 @@ namespace bitsplat.Tests.TestingSupport
             data ??= GetRandomBytes();
             name ??= GetRandomString(4);
             var path = CombinePaths(baseFolder, subFolder, name);
+            var containingFolder = Path.GetDirectoryName(path);
+            LocalFileSystem.EnsureFolderExists(containingFolder);
+            
             File.WriteAllBytes(path, data);
             return new ArenaFile(
                 path,
@@ -157,30 +214,6 @@ namespace bitsplat.Tests.TestingSupport
                     .Where(e => !string.IsNullOrEmpty(e))
                     .ToArray()
             );
-        }
-
-        private void EnsureFolderExists(string fullPath)
-        {
-            var current = null as string;
-            fullPath.Split(Path.DirectorySeparatorChar.ToString())
-                .ForEach(part =>
-                {
-                    if (string.IsNullOrEmpty(current) ||
-                        current.EndsWith(":"))
-                    {
-                        current = part;
-                        if (string.IsNullOrWhiteSpace(current))
-                        {
-                            return;
-                        }
-                    }
-
-                    var partial = Path.Combine(current, part);
-                    if (!Directory.Exists(partial))
-                    {
-                        Directory.CreateDirectory(partial);
-                    }
-                });
         }
     }
 }

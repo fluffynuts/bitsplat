@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace bitsplat.CommandLine
 {
-    public class ParameterParser : ParserBase<ParameterParser>
+    public class ParameterParser : ParserBase<
+        ParameterParser,
+        string[]>
     {
-        public bool Optional { get; set; } = true;
-
         public ParameterParser(string name)
             : base(name)
         {
@@ -15,8 +16,15 @@ namespace bitsplat.CommandLine
         public string[] Parse(IList<string> args)
         {
             var result = args.FindParameters(Args);
+            if (result.Length == 0 && 
+                Default?.Length > 0)
+            {
+                // create a copy
+                result = Default.ToArray();
+            }
+
             if (result.Length == 0 &&
-                !Optional)
+                IsRequired)
             {
                 throw new ArgumentException(
                     $"{Name} is required"
@@ -28,7 +36,7 @@ namespace bitsplat.CommandLine
 
         public ParameterParser Required()
         {
-            Optional = false;
+            base.IsRequired = true;
             return this;
         }
     }

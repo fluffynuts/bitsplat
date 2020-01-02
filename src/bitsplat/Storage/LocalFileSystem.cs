@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using PeanutButter.Utils;
 
 namespace bitsplat.Storage
 {
@@ -45,7 +46,36 @@ namespace bitsplat.Storage
             string path,
             FileMode mode)
         {
-            return File.Open(FullPathFor(path), mode);
+            var fullPath = FullPathFor(path);
+            var containingFolder = Path.GetDirectoryName(fullPath);
+            EnsureFolderExists(containingFolder);
+            return File.Open(fullPath, mode);
+        }
+
+        public static void EnsureFolderExists(string fullPath)
+        {
+            var current = null as string;
+            fullPath.Split(Path.DirectorySeparatorChar.ToString())
+                .ForEach(part =>
+                {
+                    if (current is null)
+                    {
+                        current = part;
+                        if (Platform.IsUnixy &&
+                            current == "")
+                        {
+                            current = "/"; // Path.Combine chucks away a space :/
+                        }
+
+                        return;
+                    }
+
+                    current = Path.Combine(current, part);
+                    if (!Directory.Exists(current))
+                    {
+                        Directory.CreateDirectory(current);
+                    }
+                });
         }
 
         public long FetchSize(string path)
@@ -75,24 +105,41 @@ namespace bitsplat.Storage
             string possibleRelativePath)
         {
             return possibleRelativePath.StartsWith(_basePath)
-                ? possibleRelativePath
-                : Path.Combine(_basePath, possibleRelativePath);
+                       ? possibleRelativePath
+                       : Path.Combine(_basePath, possibleRelativePath);
+        }
+
+        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
+            ListOptions options
+        )
+        {
+            return ListResourcesUnder(BasePath, options);
         }
 
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
         {
-            return ListResourcesUnder(BasePath);
+            return ListResourcesUnder(BasePath, new ListOptions());
         }
 
-        private IEnumerable<IReadWriteFileResource> ListResourcesUnder(string path)
+        private IEnumerable<IReadWriteFileResource> ListResourcesUnder(
+            string path,
+            ListOptions options)
         {
             return Directory.GetFiles(path)
                 .Select(p => new LocalReadWriteFileResource(p, BasePath, this))
+                .Where(p =>
+                    options.IncludeDotFiles ||
+                    !p.Name.StartsWith(".")
+                )
                 .Union(
                     Directory.GetDirectories(path)
-                        .SelectMany(dir => ListResourcesUnder(Path.Combine(path, dir)))
+                        .SelectMany(
+                            dir => ListResourcesUnder(
+                                Path.Combine(path, dir),
+                                options
+                            )
+                        )
                 );
         }
-
     }
 }

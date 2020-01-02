@@ -6,6 +6,7 @@ using NExpect.Implementations;
 using NExpect.Interfaces;
 using NExpect.MatcherLogic;
 using NUnit.Framework;
+using static NExpect.Expectations;
 
 namespace bitsplat.Tests.History
 {
@@ -22,7 +23,7 @@ namespace bitsplat.Tests.History
             // Arrange
             var sut = typeof(bitsplat.History.HistoryItem);
             // Act
-            Expectations.Expect(sut)
+            Expect(sut)
                 .To.Have.Property(name)
                 .With.Type(type);
             // Assert
@@ -38,7 +39,7 @@ namespace bitsplat.Tests.History
             // Act
             sut.Path = windowsPath;
             // Assert
-            Expectations.Expect(sut.Path).To.Equal(unixPath);
+            Expect(sut.Path).To.Equal(unixPath);
         }
 
         private bitsplat.History.HistoryItem Create()
@@ -60,7 +61,7 @@ namespace bitsplat.Tests.History
             this WithType wt,
             Type expected)
         {
-            Expectations.Expect(wt.PropertyInfo.PropertyType)
+            Expect(wt.PropertyInfo.PropertyType)
                 .To.Equal(expected,
                     () => $"Expected {wt.ParentType}.{wt.PropertyInfo.Name} to have type {expected}");
         }

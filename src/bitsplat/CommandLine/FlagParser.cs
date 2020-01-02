@@ -2,10 +2,8 @@ using System.Collections.Generic;
 
 namespace bitsplat.CommandLine
 {
-    public class FlagParser : ParserBase<FlagParser>
+    public class FlagParser : ParserBase<FlagParser, bool>
     {
-        private bool _default;
-
         public FlagParser(string name)
             : base(name)
         {
@@ -13,13 +11,13 @@ namespace bitsplat.CommandLine
 
         public FlagParser WithDefault(bool value)
         {
-            _default = value;
+            Default = value;
             return this;
         }
 
         public bool Parse(IList<string> args)
         {
-            return args.TryFindFlag(Args) ?? _default;
+            return args.TryFindFlag(Args) ?? Default;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
+using bitsplat.Storage;
 using DryIoc;
 using NExpect;
 using NUnit.Framework;
@@ -136,6 +137,36 @@ namespace bitsplat.Tests
                     // Assert
                     Expect(result.Foos)
                         .To.Be.Empty();
+                }
+
+                [Test]
+                [Explicit("Discovery")]
+                public void KeyedResolutions()
+                {
+                    // Arrange
+                    var fs1 = new NullFileSystem();
+                    var fs2 = new NullFileSystem();
+                    var container = new Container();
+                    container.RegisterDelegate(
+                        typeof(IFileSystem),
+                        c => fs1,
+                        Reuse.Singleton,
+                        serviceKey: "one"
+                    );
+                    container.RegisterDelegate(
+                        typeof(IFileSystem),
+                        c => fs2,
+                        Reuse.Singleton,
+                        serviceKey: "two"
+                    );
+                    // Act
+                    var first = container.Resolve<IFileSystem>("one");
+                    var second = container.Resolve<IFileSystem>("two");
+                    // Assert
+                    Expect(first)
+                        .To.Be(fs1);
+                    Expect(second)
+                        .To.Be(fs2);
                 }
 
                 public interface IConsumer

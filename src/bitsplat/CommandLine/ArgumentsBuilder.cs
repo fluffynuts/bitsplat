@@ -78,14 +78,39 @@ namespace bitsplat.CommandLine
                 kvp => MapParameter(
                     result,
                     kvp.Key,
-                    kvp.Value.Value
+                    kvp.Value
                 )
+            );
+
+            result.Flags.ForEach(
+                kvp => MapFlag(result, kvp.Key, kvp.Value)
             );
         }
 
-        private void MapParameter<T>(T result,
+        private void MapFlag<T>(
+            T result,
             string key,
-            string[] values
+            ParsedArgument<bool> arg)
+        {
+            if (!PropertiesOf(typeof(T))
+                    .TryGetValue(key, out var propertyInfo))
+            {
+                return;
+            }
+
+            if (propertyInfo.PropertyType != typeof(bool))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot map flag {key} onto property of type {propertyInfo.PropertyType}"
+                );
+            }
+            propertyInfo.SetValue(result, arg.Value);
+        }
+
+        private void MapParameter<T>(
+            T result,
+            string key,
+            ParsedArgument<string[]> arg
         ) where T : ParsedArguments
         {
             if (!PropertiesOf(typeof(T))
@@ -96,16 +121,27 @@ namespace bitsplat.CommandLine
 
             var wasMapped = Mappers.Aggregate(
                 false,
-                (acc, cur) => acc || cur(propInfo, values, result)
+                (acc, cur) => acc || cur(propInfo, arg, result)
             );
 
-            if (!wasMapped)
+            if (wasMapped)
             {
-                // TODO
+                return;
+            }
+
+            if (arg.IsRequired)
+            {
+                throw new ArgumentException(
+                    $"Argument: {key} is required"
+                );
             }
         }
 
-        private static Func<PropertyInfo, string[], ParsedArguments, bool>[]
+        private static Func<
+                PropertyInfo,
+                ParsedArgument<string[]>,
+                ParsedArguments,
+                bool>[]
             Mappers =
             {
                 MapEnum,
@@ -115,8 +151,8 @@ namespace bitsplat.CommandLine
 
         private static bool MapMulti(
             PropertyInfo pi,
-            string[] values,
-            ParsedArguments parsedArguments)
+            ParsedArgument<string[]> parsed,
+            ParsedArguments result)
         {
             var underlyingType = pi.PropertyType.GetCollectionItemType();
             if (underlyingType == null)
@@ -124,7 +160,7 @@ namespace bitsplat.CommandLine
                 return false;
             }
 
-            var converted = values.Select(
+            var converted = parsed.Value.Select(
                     stringValue =>
                     {
                         var couldConvert = TryChangeType(stringValue, underlyingType, out var convertedValue);
@@ -133,7 +169,7 @@ namespace bitsplat.CommandLine
                 .Where(o => o.couldConvert)
                 .Select(o => o.convertedValue)
                 .ToArray();
-            if (converted.Length != values.Length)
+            if (converted.Length != parsed.Value.Length)
             {
                 // TODO: throw: one or more items could not be converted
             }
@@ -143,19 +179,19 @@ namespace bitsplat.CommandLine
                 pi.PropertyType.IsArray);
 
             // TODO: handle other collection types
-            pi.SetValue(parsedArguments, propertyValue);
+            pi.SetValue(result, propertyValue);
             return true;
         }
 
         private static bool MapSingle(
             PropertyInfo pi,
-            string[] values,
-            ParsedArguments parsedArguments)
+            ParsedArgument<string[]> parsed,
+            ParsedArguments result)
         {
             return MapSingle(
                 pi,
-                values,
-                parsedArguments,
+                parsed,
+                result,
                 () => !pi.PropertyType.IsCollection(),
                 (desiredType, value) => TryChangeType(value, desiredType, out var converted)
                                             ? (true, converted)
@@ -165,13 +201,13 @@ namespace bitsplat.CommandLine
 
         private static bool MapEnum(
             PropertyInfo pi,
-            string[] values,
-            ParsedArguments parsedArguments)
+            ParsedArgument<string[]> parsed,
+            ParsedArguments result)
         {
             return MapSingle(
                 pi,
-                values,
-                parsedArguments,
+                parsed,
+                result,
                 () => pi.PropertyType.IsEnum,
                 (type, value) => Enum.TryParse(type, value, out var converted)
                                      ? (true, value: converted)
@@ -181,8 +217,8 @@ namespace bitsplat.CommandLine
 
         private static bool MapSingle(
             PropertyInfo pi,
-            string[] values,
-            ParsedArguments parsedArguments,
+            ParsedArgument<string[]> parsed,
+            ParsedArguments result,
             Func<bool> propertyTypeCheck,
             Func<Type, string, (bool success, object converted)> parser)
         {
@@ -191,7 +227,12 @@ namespace bitsplat.CommandLine
                 return false;
             }
 
-            if (values.Length != 1)
+            if (parsed.Value.Length == 0)
+            {
+                return true;
+            }
+
+            if (parsed.Value.Length > 1)
             {
                 throw new ArgumentException(
                     $"{pi.Name} expects exactly ONE value"
@@ -200,15 +241,15 @@ namespace bitsplat.CommandLine
 
             var parseResult = parser.Invoke(
                 pi.PropertyType,
-                values[0]);
+                parsed.Value[0]);
             if (!parseResult.success)
             {
                 throw new ArgumentException(
-                    $"Unable to parse '{values[0]}' as a value for {pi.Name}"
+                    $"Unable to parse '{parsed.Value[0]}' as a value for {pi.Name}"
                 );
             }
 
-            pi.SetValue(parsedArguments, parseResult.converted);
+            pi.SetValue(result, parseResult.converted);
             return true;
         }
 
@@ -269,7 +310,8 @@ namespace bitsplat.CommandLine
             configure(parser);
             result.Parameters[name] = new ParsedArgument<string[]>()
             {
-                Value = parser.Parse(args)
+                Value = parser.Parse(args),
+                IsRequired = parser.IsRequired
             };
         }
 
@@ -283,7 +325,8 @@ namespace bitsplat.CommandLine
             configure(parser);
             result.Flags[name] = new ParsedArgument<bool>()
             {
-                Value = parser.Parse(args)
+                Value = parser.Parse(args),
+                IsRequired = parser.IsRequired
             };
         }
     }

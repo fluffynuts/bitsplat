@@ -5,9 +5,7 @@ using System.IO;
 
 namespace bitsplat.Storage
 {
-    public class CachingFileSystem
-        : ISourceFileSystem,
-          ITargetFileSystem
+    public class CachingFileSystem : IFileSystem
     {
         public static IFileSystem For(string uri)
         {
@@ -62,6 +60,15 @@ namespace bitsplat.Storage
             return Resolve(
                 nameof(ListResourcesRecursive),
                 () => _underlying.ListResourcesRecursive()
+            );
+        }
+
+        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
+            ListOptions options)
+        {
+            return Resolve(
+                $"{nameof(ListResourcesRecursive)}-{options.GetHashCode()}",
+                () => _underlying.ListResourcesRecursive(options)
             );
         }
 
