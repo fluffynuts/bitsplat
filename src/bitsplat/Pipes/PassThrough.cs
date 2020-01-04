@@ -4,7 +4,7 @@ namespace bitsplat.Pipes
 {
     public abstract class PassThrough : IPassThrough
     {
-        private IPipeElement _source;
+        protected IPipeElement _source;
         private readonly List<ISink> _sinks = new List<ISink>();
 
         public void Drain()
@@ -59,7 +59,7 @@ namespace bitsplat.Pipes
             return pipe;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
         }
     }

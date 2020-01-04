@@ -72,10 +72,11 @@ namespace bitsplat.Archivers
                 new NullTargetHistoryRepository(),
                 new AlwaysResumeStrategy(),
                 _intermediatePipes,
-                new[] { archiverFilter }
+                new IFilter[] { archiverFilter }
             );
 
             synchronizer.Synchronize(
+                $"Start archive: {source.BasePath} => {target.BasePath}",
                 source,
                 target
             );

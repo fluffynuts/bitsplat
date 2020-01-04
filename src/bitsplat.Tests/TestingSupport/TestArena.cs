@@ -194,7 +194,7 @@ namespace bitsplat.Tests.TestingSupport
             string name = null,
             byte[] data = null)
         {
-            data ??= GetRandomBytes();
+            data ??= GetRandomBytes(MIN_FILE_SIZE, MAX_FILE_SIZE);
             name ??= GetRandomString(4);
             var path = CombinePaths(baseFolder, subFolder, name);
             var containingFolder = Path.GetDirectoryName(path);
@@ -206,6 +206,9 @@ namespace bitsplat.Tests.TestingSupport
                 CombinePaths(subFolder, name),
                 data);
         }
+        
+        private const int MIN_FILE_SIZE = 128 * 1024; // 128k
+        private const int MAX_FILE_SIZE = 1024 * 1024; // 1mb
 
         private static string CombinePaths(params string[] elements)
         {

@@ -44,12 +44,13 @@ namespace bitsplat.Tests
                 var reporter = Substitute.For<IProgressReporter>();
                 var sut = Create(reporter);
                 var resources = FakeResourcesUnder();
+                var batchLabel = GetRandomString();
                 // Act
-                sut.NotifySyncBatchStart(resources);
+                sut.NotifySyncBatchStart(batchLabel, resources);
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(0, resources.Count());
+                    .NotifyOverall(batchLabel, 0, resources.Count());
             }
         }
 
@@ -71,13 +72,14 @@ namespace bitsplat.Tests
                 var source = sources.First();
                 var total = sources.Count();
                 var target = targets.First();
+                var batchLabel = GetRandomString();
                 // Act
-                sut.NotifySyncBatchStart(sources);
+                sut.NotifySyncBatchStart(batchLabel, sources);
                 sut.NotifySyncStart(source, target);
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(1, total);
+                    .NotifyOverall(batchLabel, 1, total);
                 Expect(reporter)
                     .To.Have.Received(1)
                     .NotifyCurrent(source.RelativePath, 0);
@@ -101,13 +103,14 @@ namespace bitsplat.Tests
                 var secondSource = sources.Second();
                 var secondTarget = targets.Second();
                 // Act
-                sut.NotifySyncBatchStart(sources);
+                var batchLabel = GetRandomString();
+                sut.NotifySyncBatchStart(batchLabel, sources);
                 sut.NotifySyncStart(firstSource, firstTarget);
                 sut.NotifySyncStart(secondSource, secondTarget);
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(2, total);
+                    .NotifyOverall(batchLabel, 2, total);
                 Expect(reporter)
                     .To.Have.Received(1)
                     .NotifyCurrent(secondSource.RelativePath, 0);
@@ -133,7 +136,7 @@ namespace bitsplat.Tests
                 var firstSource = sources.First();
                 var firstTarget = targets.First();
                 // Act
-                sut.NotifySyncBatchStart(sources);
+                sut.NotifySyncBatchStart(GetRandomString(), sources);
                 sut.NotifySyncStart(firstSource, firstTarget);
                 sut.NotifySyncComplete(firstSource, firstTarget);
                 // Assert
@@ -164,16 +167,17 @@ namespace bitsplat.Tests
                     .Select(Duplicate)
                     .Select(o => SetBasePath(o, targetBase));
                 var total = sources.Count();
+                var batchLabel = GetRandomString();
                 // Act
-                sut.NotifySyncBatchStart(sources);
-                sut.NotifySyncBatchComplete(sources);
+                sut.NotifySyncBatchStart(batchLabel, sources);
+                sut.NotifySyncBatchComplete(batchLabel, sources);
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(0, total);
+                    .NotifyOverall(batchLabel, 0, total);
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(total, total);
+                    .NotifyOverall(batchLabel, total, total);
             }
         }
 

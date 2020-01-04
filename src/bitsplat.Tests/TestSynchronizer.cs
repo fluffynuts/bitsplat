@@ -468,32 +468,32 @@ namespace bitsplat.Tests
                         .To.Contain.Only(1)
                         .Item(); // should only have one initial notification
                     var initial = notifyable.BatchStartedNotifications.Single();
-                    Expect(initial)
+                    Expect(initial.resources)
                         .To.Contain
                         .Only(2)
                         .Items(); // should only have partial and missing in sync queue
-                    Expect(initial)
+                    Expect(initial.resources)
                         .To.Contain.Exactly(1)
                         .Matched.By(
                             resource => resource.RelativePath == "missing"
                         );
-                    Expect(initial)
+                    Expect(initial.resources)
                         .To.Contain.Exactly(1)
                         .Matched.By(
                             resource => resource.RelativePath == "partial"
                         );
 
                     var batchComplete = notifyable.BatchCompletedNotifications.Single();
-                    Expect(batchComplete)
+                    Expect(batchComplete.resources)
                         .To.Contain
                         .Only(2)
                         .Items(); // should only have partial and missing in sync queue
-                    Expect(batchComplete)
+                    Expect(batchComplete.resources)
                         .To.Contain.Exactly(1)
                         .Matched.By(
                             resource => resource.RelativePath == "missing"
                         );
-                    Expect(batchComplete)
+                    Expect(batchComplete.resources)
                         .To.Contain.Exactly(1)
                         .Matched.By(
                             resource => resource.RelativePath == "partial"
@@ -550,17 +550,20 @@ namespace bitsplat.Tests
             : GenericPassThrough,
               ISyncQueueNotifiable
         {
-            public List<IEnumerable<IFileResource>> BatchStartedNotifications { get; }
-                = new List<IEnumerable<IFileResource>>();
+            public List<(string label, IEnumerable<IFileResource> resources)> BatchStartedNotifications { get; }
+                = new List<(string label, IEnumerable<IFileResource> resources)>();
 
-            public List<IEnumerable<IFileResource>> BatchCompletedNotifications { get; }
-                = new List<IEnumerable<IFileResource>>();
+            public List<(string label, IEnumerable<IFileResource> resources)> BatchCompletedNotifications { get; }
+                = new List<(string label, IEnumerable<IFileResource> resources)>();
 
             public List<(IFileResource source, IFileResource target)> ResourceNotifications { get; }
                 = new List<(IFileResource source, IFileResource target)>();
 
             public List<(IFileResource source, IFileResource target)> CompletedNotifications { get; }
                 = new List<(IFileResource source, IFileResource target)>();
+
+            public List<(IFileResource source, IFileResource target, Exception ex)> ErrorNotifications { get; }
+                = new List<(IFileResource source, IFileResource target, Exception ex)>();
 
             public NotifiableGenericPassThrough(
                 Action<byte[], int> onWrite,
@@ -570,15 +573,17 @@ namespace bitsplat.Tests
             }
 
             public void NotifySyncBatchStart(
+                string label,
                 IEnumerable<IFileResource> sourceResources)
             {
-                BatchStartedNotifications.Add(sourceResources);
+                BatchStartedNotifications.Add((label, sourceResources));
             }
 
             public void NotifySyncBatchComplete(
+                string label,
                 IEnumerable<IFileResource> sourceResources)
             {
-                BatchCompletedNotifications.Add(sourceResources);
+                BatchCompletedNotifications.Add((label, sourceResources));
             }
 
             public void NotifySyncStart(
@@ -593,6 +598,22 @@ namespace bitsplat.Tests
                 IFileResource targetResource)
             {
                 CompletedNotifications.Add((sourceResource, targetResource));
+            }
+
+            public void NotifyError(
+                IFileResource sourceResource,
+                IFileResource targetResource,
+                Exception ex)
+            {
+                // TODO: test me
+                ErrorNotifications.Add((sourceResource, targetResource, ex));
+            }
+
+            public void NotifySyncBatchPrepare(string label,
+                IFileSystem source,
+                IFileSystem target)
+            {
+                // TODO: test me
             }
         }
 

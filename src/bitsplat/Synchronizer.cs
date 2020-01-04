@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,14 +7,24 @@ using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResumeStrategies;
 using bitsplat.Storage;
+using PeanutButter.Utils;
 
 namespace bitsplat
 {
+    public delegate string OnSynchronisationStart();
+
     public interface ISynchronizer
     {
         void Synchronize(
             IFileSystem from,
-            IFileSystem to);
+            IFileSystem to
+        );
+
+        void Synchronize(
+            string label,
+            IFileSystem from,
+            IFileSystem to
+        );
     }
 
     public class Synchronizer
@@ -24,6 +35,7 @@ namespace bitsplat
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IFilter[] _filters;
         private readonly ISyncQueueNotifiable[] _notifiables;
+        private string _label;
 
         public Synchronizer(
             ITargetHistoryRepository targetHistoryRepository,
@@ -40,28 +52,13 @@ namespace bitsplat
             _filters = filters;
         }
 
-        private class FileSystemComparison
+        public void Synchronize(
+            string label,
+            IFileSystem from,
+            IFileSystem to)
         {
-            public List<IReadWriteFileResource> SyncQueue { get; } = new List<IReadWriteFileResource>();
-            public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
-        }
-
-        private class FileResource : BasicFileResource, IFileResource
-        {
-            public override string Path { get; }
-            public override long Size { get; }
-            public override string RelativePath { get; }
-
-            public FileResource(
-                IFileSystem targetFileSystem,
-                IReadWriteFileResource sourceResource)
-            {
-                Path = System.IO.Path.Combine(
-                    targetFileSystem.BasePath,
-                    sourceResource.RelativePath);
-                RelativePath = sourceResource.RelativePath;
-                Size = sourceResource.Size;
-            }
+            _label = label;
+            Synchronize(from, to);
         }
 
         public void Synchronize(
@@ -69,6 +66,7 @@ namespace bitsplat
             IFileSystem target
         )
         {
+            NotifySyncPrepare(source, target);
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
@@ -104,18 +102,51 @@ namespace bitsplat
                         : null);
 
                 var composition = ComposePipeline(sourceStream, targetStream);
-                composition.Drain();
-                NotifySyncComplete(
-                    sourceResource,
-                    targetResource ??
-                    CreateFileResourcePropertiesFor(
-                        target,
-                        sourceResource)
-                );
-                RecordHistory(sourceResource);
+                try
+                {
+                    composition.Drain();
+                    NotifySyncComplete(
+                        sourceResource,
+                        targetResource ??
+                        CreateFileResourcePropertiesFor(
+                            target,
+                            sourceResource)
+                    );
+                    RecordHistory(sourceResource);
+                }
+                catch (Exception ex)
+                {
+                    NotifyError(sourceResource, targetResource, ex);
+                }
             });
 
             NotifySyncBatchComplete(syncQueue);
+        }
+
+        private class FileSystemComparison
+        {
+            public List<IReadWriteFileResource> SyncQueue { get; } = new List<IReadWriteFileResource>();
+            public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
+        }
+
+        private class FileResource
+            : BasicFileResource,
+              IFileResource
+        {
+            public override string Path { get; }
+            public override long Size { get; }
+            public override string RelativePath { get; }
+
+            public FileResource(
+                IFileSystem targetFileSystem,
+                IReadWriteFileResource sourceResource)
+            {
+                Path = System.IO.Path.Combine(
+                    targetFileSystem.BasePath,
+                    sourceResource.RelativePath);
+                RelativePath = sourceResource.RelativePath;
+                Size = sourceResource.Size;
+            }
         }
 
         private IFileResource CreateFileResourcePropertiesFor(
@@ -127,21 +158,50 @@ namespace bitsplat
                 sourceResource);
         }
 
-        private void NotifySyncBatchComplete(IReadWriteFileResource[] syncQueue)
+        private void NotifySyncPrepare(
+            IFileSystem source,
+            IFileSystem target)
         {
             _notifiables.ForEach(
-                notifiable => notifiable.NotifySyncBatchComplete(syncQueue)
+                notifiable => notifiable.NotifySyncBatchPrepare(
+                    _label,
+                    source,
+                    target
+                )
             );
         }
 
-        private void NotifySyncComplete(
-            IFileResource sourceResource,
-            IFileResource targetResource)
+        private void NotifyError(
+            IFileResource source,
+            IFileResource target,
+            Exception ex)
         {
             _notifiables.ForEach(
-                notifiable => notifiable.NotifySyncComplete(
-                    sourceResource,
-                    targetResource)
+                notifiable => notifiable.NotifyError(
+                    source,
+                    target,
+                    ex
+                )
+            );
+        }
+
+        private void NotifySyncBatchStart(IEnumerable<IReadWriteFileResource> resources)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncBatchStart(
+                    _label,
+                    resources
+                )
+            );
+        }
+
+        private void NotifySyncBatchComplete(IReadWriteFileResource[] syncQueue)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifySyncBatchComplete(
+                    _label,
+                    syncQueue
+                )
             );
         }
 
@@ -156,10 +216,15 @@ namespace bitsplat
             );
         }
 
-        private void NotifySyncBatchStart(IEnumerable<IReadWriteFileResource> resources)
+        private void NotifySyncComplete(
+            IFileResource sourceResource,
+            IFileResource targetResource
+        )
         {
             _notifiables.ForEach(
-                notifiable => notifiable.NotifySyncBatchStart(resources)
+                notifiable => notifiable.NotifySyncComplete(
+                    sourceResource,
+                    targetResource)
             );
         }
 
@@ -192,7 +257,7 @@ namespace bitsplat
                         targetResources,
                         sourceResource
                     );
-                    
+
                     var list = filterResult == FilterResult.Include
                                    ? acc.SyncQueue
                                    : acc.Skipped;
@@ -219,7 +284,7 @@ namespace bitsplat
                         sourceResource,
                         targetResources,
                         _targetHistoryRepository);
-                    
+
                     return CurrentFilterIsAmbivalent()
                                ? acc1
                                : thisResult; // otherwise return whatever this filter wants

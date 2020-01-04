@@ -20,4 +20,10 @@
       <Folder Include="ResourceMatchers" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="bitsplat">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
