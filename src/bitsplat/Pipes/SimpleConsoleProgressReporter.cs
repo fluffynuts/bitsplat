@@ -18,6 +18,7 @@ namespace bitsplat.Pipes
             _lastMessage = null;
             Console.WriteLine(message);
         }
+        
 
         public void Rewrite(string message)
         {
@@ -41,34 +42,28 @@ namespace bitsplat.Pipes
         }
 
         public void NotifyCurrent(
-            string label,
-            int percentComplete)
+            NotificationDetails details)
         {
-            if (label == null)
-            {
-                label = "(unknown)";
-            }
+            var label = details.Label ?? "(unknown)";
+            var isStart = details.CurrentBytesTransferred == 0;
+            var isEnd = details.CurrentBytesTransferred == details.CurrentTotalBytes;
 
-            switch (percentComplete)
+            if (isStart)
             {
-                case 0:
-                    NotifyStart(label);
-                    break;
-                case 100:
-                    NotifyComplete(label);
-                    break;
-                default:
-                    ReportIntermediateState(
-                        label,
-                        percentComplete
-                    );
-                    break;
+                NotifyStart(label);
+            }
+            else if (isEnd)
+            {
+                NotifyComplete(label);
+            }
+            else
+            {
+                ReportIntermediateState(details);
             }
         }
 
         protected virtual void ReportIntermediateState(
-            string label,
-            int percentageComplete)
+            NotificationDetails details)
         {
             // intentionally left blank - this reporter is quiet
         }
@@ -125,13 +120,13 @@ namespace bitsplat.Pipes
             var required = _maxLabelLength - start.Length - (end ?? "").Length;
             if (required < 1)
             {
-                var cutFrom = start.Length + required - 4;
+                var cutFrom = start.Length + required - 2;
                 if (cutFrom < 0)
                 {
                     cutFrom = 0;
                 }
 
-                start = $"...{start.Substring(cutFrom)}";
+                start = $"…{start.Substring(cutFrom)}";
                 required = 1;
             }
 
@@ -140,16 +135,21 @@ namespace bitsplat.Pipes
             return fullLine;
         }
 
-        public void NotifyError(string label)
+        public void NotifyError(NotificationDetails details)
         {
-            Write(label, "[FAIL]");
+            Write(details.Label, "[FAIL]");
+            Write(details.Exception.Message, "");
+            Write(details.Exception.StackTrace, "");
         }
+
+        // add 2 spaces and 6 chars for [ -- ]
+        protected virtual int DetailPadding { get; set; } = 8;
 
         public void SetMaxLabelLength(int chars)
         {
             try
             {
-                _maxLabelLength = chars + 8; // add 2 spaces and 6 chars for [ -- ]
+                _maxLabelLength = chars + DetailPadding; 
                 // if Console.WindowWidth is available, limit to that value with a space
                 if (_maxLabelLength >= Console.WindowWidth)
                 {
@@ -172,10 +172,10 @@ namespace bitsplat.Pipes
         }
 
         public void NotifyOverall(
-            string label,
-            int current,
-            int total)
+            NotificationDetails details)
         {
+            var (label, current, total) =
+                (details.Label, details.CurrentItem, details.TotalItems);
             if (string.IsNullOrWhiteSpace(label))
             {
                 return;

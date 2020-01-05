@@ -11,13 +11,14 @@ namespace bitsplat.Pipes
           ISyncQueueNotifiable
     {
         private readonly IProgressReporter _reporter;
-        private int _current;
-        private int _totalBatchResources;
+        private int _currentItem;
+        private int _totalBatchItems;
         private IFileResource _currentSource;
         private IFileResource _currentTarget;
-        private long _totalWritten = 0;
+        private long _batchBytesTransferred = 0;
         private long _currentWritten = 0;
         private string _batchLabel;
+        private long _totalBatchBytes;
 
         public SynchronisationProgressPipe(
             IProgressReporter reporter
@@ -35,34 +36,22 @@ namespace bitsplat.Pipes
                 return;
             }
 
-            _totalWritten += count;
+            _batchBytesTransferred += count;
             _currentWritten += count;
 
-            var percentageComplete =
-                BoundValue(
-                    1,
-                    99,
-                    (int) Math.Floor((100M * _currentWritten) / _currentSource.Size)
-                );
             _reporter.NotifyCurrent(
-                _currentSource?.RelativePath,
-                percentageComplete
+                new NotificationDetails()
+                {
+                    Label = _currentSource.RelativePath,
+                    CurrentBytesTransferred = _currentWritten,
+                    CurrentTotalBytes = _currentSource.Size,
+                    CurrentItem = _currentItem,
+                    TotalItems = _totalBatchItems,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                    // TODO: current / total items?
+                }
             );
-        }
-
-        private int BoundValue(
-            int min,
-            int max,
-            int current)
-        {
-            if (current > max)
-            {
-                return max;
-            }
-
-            return current < min
-                       ? min
-                       : current;
         }
 
         protected override void OnEnd()
@@ -74,26 +63,35 @@ namespace bitsplat.Pipes
             IEnumerable<IFileResource> sourceResources
         )
         {
-            var (total, longestName) = sourceResources.Aggregate(
-                (total: 0, longest: 0),
-                (acc, cur) => (acc.total + 1,
-                               acc.longest > cur.RelativePath.Length
-                                   ? acc.longest
-                                   : cur.RelativePath.Length)
+            var (totalItems, longestName, totalBytes) = sourceResources.Aggregate(
+                (totalItems: 0, longestName: 0, totalBytes: 0L),
+                (acc, cur) => (acc.totalItems + 1,
+                               acc.longestName > cur.RelativePath.Length
+                                   ? acc.longestName
+                                   : cur.RelativePath.Length,
+                               acc.totalBytes + cur.Size
+                              )
             );
-            if (total == 0)
+            if (totalItems == 0)
             {
                 return; // nothing to do
             }
 
             _batchLabel = label;
-            _totalBatchResources = total;
+            _totalBatchItems = totalItems;
+            _totalBatchBytes = totalBytes;
             _reporter.SetMaxLabelLength(longestName);
             _reporter.NotifyOverall(
-                label,
-                _current,
-                _totalBatchResources
-            );
+                new NotificationDetails()
+                {
+                    Label = label,
+                    CurrentItem = _currentItem,
+                    TotalItems = _totalBatchItems,
+                    CurrentBytesTransferred = 0,
+                    CurrentTotalBytes = totalBytes,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                });
         }
 
         public void NotifySyncBatchComplete(
@@ -108,10 +106,14 @@ namespace bitsplat.Pipes
             }
 
             _reporter.NotifyOverall(
-                label,
-                total,
-                total
-            );
+                new NotificationDetails()
+                {
+                    Label = label,
+                    TotalItems = total,
+                    CurrentItem = total,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                });
             ClearBatch();
         }
 
@@ -121,12 +123,29 @@ namespace bitsplat.Pipes
         )
         {
             Clear();
-            _reporter.NotifyOverall(_batchLabel, ++_current, _totalBatchResources);
+            _reporter.NotifyOverall(
+                new NotificationDetails()
+                {
+                    Label = _batchLabel,
+                    CurrentItem = ++_currentItem,
+                    TotalItems = _totalBatchItems,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                }
+            );
             _currentSource = sourceResource;
             _currentTarget = targetResource;
             _reporter.NotifyCurrent(
-                sourceResource.RelativePath,
-                0
+                new NotificationDetails()
+                {
+                    Label = sourceResource.RelativePath,
+                    CurrentItem = _currentItem,
+                    TotalItems = _totalBatchItems,
+                    CurrentBytesTransferred = 0,
+                    CurrentTotalBytes = sourceResource.Size,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                }
             );
         }
 
@@ -135,8 +154,16 @@ namespace bitsplat.Pipes
             IFileResource targetResource)
         {
             _reporter.NotifyCurrent(
-                sourceResource.RelativePath,
-                100
+                new NotificationDetails()
+                {
+                    Label = sourceResource.RelativePath,
+                    CurrentItem = _currentItem,
+                    TotalItems = _totalBatchItems,
+                    CurrentBytesTransferred = sourceResource.Size,
+                    CurrentTotalBytes = sourceResource.Size,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes
+                }
             );
             Clear();
         }
@@ -147,11 +174,18 @@ namespace bitsplat.Pipes
             Exception ex)
         {
             _reporter.NotifyError(
-                sourceResource.RelativePath
+                new NotificationDetails()
+                {
+                    Label = sourceResource.RelativePath,
+                    CurrentBytesTransferred = _currentWritten,
+                    CurrentTotalBytes = sourceResource.Size,
+                    CurrentItem = _currentItem,
+                    TotalItems = _totalBatchItems,
+                    TotalBytesTransferred = _batchBytesTransferred,
+                    TotalBytes = _totalBatchBytes,
+                    Exception = ex
+                }
             );
-            // TODO: do something with the exception
-            // -> this is likely to end up in logs, so it may be useful to log
-            //     and allow continuation after error?
         }
 
         public void NotifySyncBatchPrepare(string label,
@@ -173,7 +207,7 @@ namespace bitsplat.Pipes
         private void ClearBatch()
         {
             Clear();
-            _totalWritten = 0;
+            _batchBytesTransferred = 0;
             _batchLabel = null;
         }
 

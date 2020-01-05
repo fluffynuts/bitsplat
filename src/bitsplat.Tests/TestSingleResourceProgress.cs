@@ -50,7 +50,13 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(batchLabel, 0, resources.Count());
+                    .NotifyOverall(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == batchLabel &&
+                            o.CurrentItem == 0 &&
+                            o.TotalItems == resources.Count()
+                        )
+                    );
             }
         }
 
@@ -79,12 +85,23 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(batchLabel, 1, total);
+                    .NotifyOverall(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == batchLabel &&
+                            o.CurrentItem == 1 &&
+                            o.TotalItems == total
+                        )
+                    );
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyCurrent(source.RelativePath, 0);
+                    .NotifyCurrent(Arg.Is<NotificationDetails>(o =>
+                            o.Label == source.RelativePath &&
+                            o.CurrentBytesTransferred == 0 &&
+                            o.CurrentTotalBytes == source.Size
+                        )
+                    );
             }
-            
+
             [Test]
             public void ShouldNotifyOfSecondResourceStarting()
             {
@@ -110,10 +127,22 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(batchLabel, 2, total);
+                    .NotifyOverall(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == batchLabel &&
+                            o.CurrentItem == 2 &&
+                            o.TotalItems == total
+                        )
+                    );
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyCurrent(secondSource.RelativePath, 0);
+                    .NotifyCurrent(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == secondSource.RelativePath &&
+                            o.CurrentBytesTransferred == 0 &&
+                            o.CurrentTotalBytes == secondSource.Size
+                        )
+                    );
             }
         }
 
@@ -142,12 +171,22 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyCurrent(firstSource.RelativePath, 0);
+                    .NotifyCurrent(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == firstSource.RelativePath &&
+                            o.CurrentBytesTransferred == 0 &&
+                            o.CurrentTotalBytes == firstSource.Size
+                        )
+                    );
                 Expect(reporter)
                     .To.Have.Received()
                     .NotifyCurrent(
-                        firstSource.RelativePath,
-                        100);
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == firstSource.RelativePath &&
+                            o.CurrentBytesTransferred == firstSource.Size &&
+                            o.CurrentTotalBytes == firstSource.Size
+                        )
+                    );
             }
         }
 
@@ -174,10 +213,22 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(batchLabel, 0, total);
+                    .NotifyOverall(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == batchLabel &&
+                            o.CurrentItem == 0 &&
+                            o.TotalItems == total
+                            )
+                        );
                 Expect(reporter)
                     .To.Have.Received(1)
-                    .NotifyOverall(batchLabel, total, total);
+                    .NotifyOverall(
+                        Arg.Is<NotificationDetails>(o =>
+                            o.Label == batchLabel &&
+                            o.CurrentItem == total &&
+                            o.TotalItems == total
+                            )
+                        );
             }
         }
 
@@ -185,7 +236,6 @@ namespace bitsplat.Tests
         [Ignore("WIP")]
         public class OnWrite
         {
-            
         }
 
         private static IFileResource Duplicate(IFileResource arg)
