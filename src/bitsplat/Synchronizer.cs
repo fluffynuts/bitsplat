@@ -169,7 +169,7 @@ namespace bitsplat
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncBatchPrepare(
-                    _label,
+                    $"{_label} (prepare)",
                     source,
                     target
                 )
