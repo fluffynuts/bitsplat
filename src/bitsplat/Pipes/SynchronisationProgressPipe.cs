@@ -193,6 +193,17 @@ namespace bitsplat.Pipes
             IFileSystem target)
         {
             _reporter.NotifyPrepare(
+                label,
+                source,
+                target
+            );
+        }
+
+        public void NotifyNoWork(
+            IFileSystem source,
+            IFileSystem target)
+        {
+            _reporter.NotifyNoWork(
                 source,
                 target
             );

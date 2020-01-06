@@ -4,10 +4,12 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using bitsplat.History;
+using bitsplat.Pipes;
 using bitsplat.Tests.TestingSupport;
 using Dapper;
 using NExpect;
 using NExpect.Implementations;
+using NSubstitute;
 using NUnit.Framework;
 using PeanutButter.Utils;
 using static NExpect.Expectations;
@@ -362,10 +364,12 @@ namespace bitsplat.Tests.History
         }
 
         private static ITargetHistoryRepository Create(
-            string targetFolder
+            string targetFolder,
+            IMessageWriter messageWriter = null
         )
         {
             return new TargetHistoryRepository(
+                messageWriter ?? Substitute.For<IMessageWriter>(),
                 targetFolder
             );
         }

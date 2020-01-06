@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
+using bitsplat.Pipes;
 using bitsplat.Storage;
+using NSubstitute;
 using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 
@@ -28,18 +30,22 @@ namespace bitsplat.Tests.TestingSupport
 
     public class TestArena : IDisposable
     {
+        public IMessageWriter MessageWriter
+            => _messageWriter ??= Substitute.For<IMessageWriter>();
+        
         public IFileSystem SourceFileSystem
-            => _sourceFileSystem ??= new LocalFileSystem(SourcePath);
+            => _sourceFileSystem ??= new LocalFileSystem(SourcePath, MessageWriter);
 
         public IFileSystem TargetFileSystem
-            => _targetFileSystem ??= new LocalFileSystem(TargetPath);
+            => _targetFileSystem ??= new LocalFileSystem(TargetPath, MessageWriter);
 
         public IFileSystem ArchiveFileSystem
-            => _archiveFileSystem ??= new LocalFileSystem(ArchivePath);
+            => _archiveFileSystem ??= new LocalFileSystem(ArchivePath, MessageWriter);
 
         private IFileSystem _sourceFileSystem;
         private IFileSystem _targetFileSystem;
         private IFileSystem _archiveFileSystem;
+        private IMessageWriter _messageWriter;
 
         public string SourcePath { get; }
         public string TargetPath { get; }

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using bitsplat.Archivers;
 using bitsplat.Filters;
 using bitsplat.History;
@@ -14,8 +15,11 @@ namespace bitsplat
         public static IContainer Create()
         {
             var result = new Container();
-            result.Register<ISynchronizer, Synchronizer>();
-            return result;
+            return result
+                .WithRegistration<ISynchronizer, Synchronizer>()
+                .WithRegistration<IFileSystemFactory, FileSystemFactory>(
+                    Reuse.Singleton
+                );
         }
 
         public static IContainer WithArchive(
@@ -25,6 +29,7 @@ namespace bitsplat
             return string.IsNullOrWhiteSpace(archive)
                        ? container.WithNullArchiver()
                        : container.WithMede8erArchiverTargeting(archive);
+
             // TODO: allow different archivers
             // - eg Kodi, which can also mark media as "watched"
         }
@@ -44,24 +49,10 @@ namespace bitsplat
             this IContainer container,
             string archive)
         {
-            return container.WithRegistration(
-                    typeof(IFileSystem),
-                    CachingFileSystem.For(archive),
-                    ServiceKeys.ARCHIVE
-                )
+            return container.WithArchiveFileSystem(archive)
                 // TODO: allow different archivers
                 // - eg Kodi, which can also mark media as "watched"
                 .WithRegistration<IArchiver, Mede8erArchiver>();
-        }
-
-        public static IContainer WithArchiver(
-            this IContainer container,
-            Type implementation)
-        {
-            return container.WithRegistration(
-                typeof(IArchiver),
-                implementation
-            );
         }
 
         public static IContainer WithFilter(
@@ -90,8 +81,10 @@ namespace bitsplat
         {
             return container.WithRegistration(
                 typeof(IFileSystem),
-                CachingFileSystem.For(uri),
-                "source"
+                r => r.Resolve<IFileSystemFactory>()
+                    .CachingFileSystemFor(uri),
+                ServiceKeys.SOURCE,
+                Reuse.Singleton
             );
         }
 
@@ -101,8 +94,23 @@ namespace bitsplat
         {
             return container.WithRegistration(
                 typeof(IFileSystem),
-                CachingFileSystem.For(uri),
-                "target"
+                r => r.Resolve<IFileSystemFactory>()
+                    .CachingFileSystemFor(uri),
+                ServiceKeys.TARGET,
+                Reuse.Singleton
+            );
+        }
+
+        private static IContainer WithArchiveFileSystem(
+            this IContainer container,
+            string uri)
+        {
+            return container.WithRegistration(
+                typeof(IFileSystem),
+                r => r.Resolve<IFileSystemFactory>()
+                    .CachingFileSystemFor(uri),
+                ServiceKeys.ARCHIVE,
+                Reuse.Singleton
             );
         }
 
@@ -118,9 +126,40 @@ namespace bitsplat
                 );
             }
 
-            return container.WithRegistration(
+            return container.WithRegistration<ITargetHistoryRepository>(
                 typeof(ITargetHistoryRepository),
-                new TargetHistoryRepository(opts.Target)
+                r =>
+                {
+                    if (opts.NoHistory)
+                    {
+                        return new NullTargetHistoryRepository();
+                    }
+
+                    var targetFolder = opts.Target;
+                    if (string.IsNullOrWhiteSpace(opts.HistoryDatabase))
+                    {
+                        opts.HistoryDatabase = TargetHistoryRepository.DB_NAME;
+                    }
+                    else
+                    {
+                        targetFolder = Path.GetDirectoryName(opts.HistoryDatabase);
+                        opts.HistoryDatabase = Path.GetFileName(opts.HistoryDatabase);
+                    }
+
+                    LocalFileSystem.EnsureFolderExists(
+                        Path.GetDirectoryName(
+                            targetFolder
+                        )
+                    );
+
+                    return new TargetHistoryRepository(
+                        r.Resolve<IMessageWriter>(),
+                        targetFolder,
+                        opts.HistoryDatabase
+                    );
+                },
+                null,
+                Reuse.Singleton
             );
         }
 
@@ -182,8 +221,8 @@ namespace bitsplat
             Options opts)
         {
             return opts.Quiet
-                ? container.WithRegistration<IProgressReporter, SimpleConsoleProgressReporter>()
-                : container.WithRegistration<IProgressReporter, SimplePercentageConsoleProgressReporter>();
+                       ? container.WithRegistration<IProgressReporter, SimpleConsoleProgressReporter>()
+                       : container.WithRegistration<IProgressReporter, SimplePercentageConsoleProgressReporter>();
         }
 
         public static IFileSystem ResolveSourceFileSystem(
@@ -238,6 +277,24 @@ namespace bitsplat
                     serviceType,
                     c => implementation,
                     Reuse.Singleton,
+                    serviceKey: serviceKey
+                )
+            );
+        }
+
+        private static IContainer WithRegistration<T>(
+            this IContainer container,
+            Type serviceType,
+            Func<IResolverContext, T> factory,
+            string serviceKey,
+            IReuse reuse
+        )
+        {
+            return container.With(
+                o => o.RegisterDelegate(
+                    serviceType,
+                    c => factory(c),
+                    reuse,
                     serviceKey: serviceKey
                 )
             );

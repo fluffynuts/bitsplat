@@ -17,9 +17,9 @@ namespace bitsplat.Pipes
 
         public int CurrentPercentageCompleteBySize =>
             Percentage(CurrentBytesTransferred, CurrentTotalBytes);
+
         public int TotalPercentageCompleteBySize =>
             Percentage(TotalBytesTransferred, TotalBytes);
-        
 
         public int PercentageCompleteByItems =>
             Percentage(CurrentItem, TotalItems);
@@ -57,6 +57,16 @@ namespace bitsplat.Pipes
         void NotifyOverall(NotificationDetails details);
         void NotifyError(NotificationDetails details);
         void SetMaxLabelLength(int longestName);
-        void NotifyPrepare(IFileSystem source, IFileSystem target);
+
+        void NotifyPrepare(
+            string operation,
+            IFileSystem source,
+            IFileSystem target
+        );
+
+        void NotifyNoWork(
+            IFileSystem source,
+            IFileSystem target
+        );
     }
 }

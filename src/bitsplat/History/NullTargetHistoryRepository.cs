@@ -8,6 +8,10 @@ namespace bitsplat.History
         {
         }
 
+        public void Upsert(IEnumerable<IHistoryItem> items)
+        {
+        }
+
         public HistoryItem Find(string path)
         {
             return null;

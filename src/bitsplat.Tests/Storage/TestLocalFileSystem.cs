@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Linq;
 using bitsplat.CommandLine;
+using bitsplat.Pipes;
 using bitsplat.Storage;
 using bitsplat.Tests.TestingSupport;
 using NExpect;
+using NSubstitute;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using PeanutButter.Utils;
@@ -459,7 +461,7 @@ namespace bitsplat.Tests.Storage
 
         private static IFileSystem Create(string baseFolder)
         {
-            return new LocalFileSystem(baseFolder);
+            return new LocalFileSystem(baseFolder, Substitute.For<IMessageWriter>());
         }
 
         private static IFileSystem Create(AutoTempFolder baseFolder)

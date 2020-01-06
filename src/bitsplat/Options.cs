@@ -13,6 +13,7 @@ namespace bitsplat
         public SyncStrategy SyncStrategy { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
+        public string HistoryDatabase { get; set; }
         public string Archive { get; set; }
 
         public bool Resume { get; set; }

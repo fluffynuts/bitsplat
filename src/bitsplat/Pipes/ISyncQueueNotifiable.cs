@@ -21,7 +21,7 @@ namespace bitsplat.Pipes
         void NotifySyncComplete(
             IFileResource sourceResource,
             IFileResource targetResource);
-        
+
         void NotifyError(
             IFileResource sourceResource,
             IFileResource targetResource,
@@ -31,5 +31,10 @@ namespace bitsplat.Pipes
             string label,
             IFileSystem source,
             IFileSystem target);
+
+        void NotifyNoWork(
+            IFileSystem source,
+            IFileSystem target
+        );
     }
 }

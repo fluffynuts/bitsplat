@@ -84,8 +84,8 @@ namespace bitsplat.Tests
                     var keepData = GetRandomBytes();
                     var toKeep = GetRandomFileName();
                     var keepFile = arena.CreateSourceFile(toKeep, keepData);
-                    var source = new LocalFileSystem(arena.SourcePath);
-                    var target = new LocalFileSystem(arena.TargetPath);
+                    var source = arena.SourceFileSystem; //  new LocalFileSystem(arena.SourcePath);
+                    var target = arena.TargetFileSystem; // new LocalFileSystem(arena.TargetPath);
                     var expectedFile = Path.Combine(arena.TargetPath, toArchive);
 
                     Expect(source.ListResourcesRecursive())

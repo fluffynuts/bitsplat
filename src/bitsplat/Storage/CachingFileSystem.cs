@@ -7,13 +7,6 @@ namespace bitsplat.Storage
 {
     public class CachingFileSystem : IFileSystem
     {
-        public static IFileSystem For(string uri)
-        {
-            return new CachingFileSystem(
-                FileSystem.For(uri)
-            );
-        }
-
         public string BasePath => _underlying.BasePath;
 
         private readonly IFileSystem _underlying;

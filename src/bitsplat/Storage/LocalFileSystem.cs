@@ -1,12 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.Pipes;
 using PeanutButter.Utils;
 
 namespace bitsplat.Storage
 {
     public class LocalFileSystem : IFileSystem
     {
+        private readonly IMessageWriter _messageWriter;
         public string BasePath => _basePath;
         private readonly string _basePath;
 
@@ -15,7 +18,10 @@ namespace bitsplat.Storage
         ///   which all relative paths are resolved
         /// </summary>
         /// <param name="basePath"></param>
-        public LocalFileSystem(string basePath)
+        /// <param name="messageWriter"></param>
+        public LocalFileSystem(
+            string basePath,
+            IMessageWriter messageWriter)
         {
             if (!Directory.Exists(basePath))
             {
@@ -23,6 +29,7 @@ namespace bitsplat.Storage
             }
 
             _basePath = basePath;
+            _messageWriter = messageWriter;
         }
 
         public bool Exists(string path)
@@ -113,7 +120,25 @@ namespace bitsplat.Storage
             ListOptions options
         )
         {
-            return ListResourcesUnder(BasePath, options);
+            return Run($"Listing resources under {BasePath}",
+                () => ListResourcesUnder(BasePath, options)
+            );
+        }
+
+        private T Run<T>(string message, Func<T> toRun)
+        {
+            _messageWriter.Rewrite($"{message} ...");
+            try
+            {
+                var result = toRun();
+                _messageWriter.Write($"{message} ... done!");
+                return result;
+            }
+            catch
+            {
+                _messageWriter.Write($"{message} ... failed!");
+                throw;
+            }
         }
 
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
@@ -125,7 +150,7 @@ namespace bitsplat.Storage
             string path,
             ListOptions options)
         {
-            return Directory.GetFiles(path)
+            var result = Directory.GetFiles(path)
                 .Select(p => new LocalReadWriteFileResource(p, BasePath, this))
                 .Where(p =>
                     options.IncludeDotFiles ||
@@ -140,6 +165,7 @@ namespace bitsplat.Storage
                             )
                         )
                 );
+            return result;
         }
     }
 }

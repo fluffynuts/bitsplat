@@ -72,13 +72,18 @@ namespace bitsplat
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
                                   targetResourcesCollection.ToArray();
             var comparison = CompareResources(sourceResources, targetResources);
-            comparison.Skipped.ForEach(RecordHistory);
+            RecordHistory(comparison.Skipped);
 
             var syncQueue = comparison.SyncQueue
                 .OrderBy(resource => resource.RelativePath)
                 .ToArray();
 
             NotifySyncBatchStart(syncQueue);
+            if (syncQueue.IsEmpty())
+            {
+                NotifyNoWork(source, target);
+                return;
+            }
 
             syncQueue.ForEach(sourceResource =>
             {
@@ -165,6 +170,18 @@ namespace bitsplat
             _notifiables.ForEach(
                 notifiable => notifiable.NotifySyncBatchPrepare(
                     _label,
+                    source,
+                    target
+                )
+            );
+        }
+
+        private void NotifyNoWork(
+            IFileSystem source,
+            IFileSystem target)
+        {
+            _notifiables.ForEach(
+                notifiable => notifiable.NotifyNoWork(
                     source,
                     target
                 )
@@ -314,6 +331,16 @@ namespace bitsplat
         {
             _targetHistoryRepository.Upsert(
                 new HistoryItem(readWriteFileResource)
+            );
+        }
+
+        private void RecordHistory(
+            IEnumerable<IReadWriteFileResource> resources
+        )
+        {
+            _targetHistoryRepository.Upsert(
+                resources.Select(r => new HistoryItem(r))
+                    .ToArray()
             );
         }
 

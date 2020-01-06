@@ -25,7 +25,7 @@ namespace bitsplat
                 archive);
 
             var synchronizer = container.Resolve<ISynchronizer>();
-            
+
             synchronizer.Synchronize(
                 $"Start sync: {source.BasePath} => {target.BasePath}",
                 source,
@@ -77,6 +77,11 @@ namespace bitsplat
         {
             var opts = Args.Configure()
                 .WithParameter(
+                    nameof(Options.Archive),
+                    o => o.WithArg("-a")
+                        .WithArg("--archive")
+                )
+                .WithParameter(
                     nameof(Options.Source),
                     o => o.WithArg("-s")
                         .WithArg("--source")
@@ -86,6 +91,11 @@ namespace bitsplat
                     nameof(Options.Target),
                     o => o.WithArg("-t")
                         .WithArg("--target")
+                )
+                .WithParameter(
+                    nameof(Options.HistoryDatabase),
+                    o => o.WithArg("-h")
+                        .WithArg("--history-db")
                 )
                 .WithFlag(
                     nameof(Options.Resume),
@@ -101,11 +111,6 @@ namespace bitsplat
                     nameof(Options.NoHistory),
                     o => o.WithArg("-n")
                         .WithArg("--no-history")
-                )
-                .WithParameter(
-                    nameof(Options.Archive),
-                    o => o.WithArg("-a")
-                        .WithArg("--archive")
                 )
                 .WithParameter(
                     nameof(Options.SyncStrategy),

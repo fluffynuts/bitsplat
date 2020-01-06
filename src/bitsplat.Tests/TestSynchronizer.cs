@@ -236,9 +236,9 @@ namespace bitsplat.Tests
                             // Assert
                             Expect(historyRepo)
                                 .To.Have.Received(1)
-                                .Upsert(Arg.Is<IHistoryItem>(
-                                    o => o.Path == relPath &&
-                                         o.Size == data.Length
+                                .Upsert(Arg.Is<IEnumerable<IHistoryItem>>(
+                                    o => o.Single().Path == relPath &&
+                                         o.Single().Size == data.Length
                                 ));
                         }
                     }
@@ -614,6 +614,12 @@ namespace bitsplat.Tests
                 IFileSystem target)
             {
                 // TODO: test me
+            }
+
+            public void NotifyNoWork(
+                IFileSystem source, 
+                IFileSystem target)
+            {
             }
         }
 
