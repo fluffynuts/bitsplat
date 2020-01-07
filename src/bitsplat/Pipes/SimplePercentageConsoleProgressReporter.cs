@@ -117,7 +117,7 @@ namespace bitsplat.Pipes
                 suffix++;
             }
 
-            return $"{rate:F0}{_suffixes[suffix]}/s";
+            return $"{rate:F1}{_suffixes[suffix]}/s";
         }
 
         private static string HumanReadableTimeFor(

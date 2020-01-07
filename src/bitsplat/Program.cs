@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
 using bitsplat.ResumeStrategies;

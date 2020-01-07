@@ -40,6 +40,21 @@ namespace bitsplat.Pipes
             int count)
         {
             _target?.Write(buffer, 0, count);
+            if (_target is FileStream fs)
+            {
+                // force disk flush to better reflect
+                // progress, esp across network shares
+                // also caching here in the case of
+                // device-to-device where the user is
+                // likely to want to to remove the target
+                // simply means having to wait for sync
+                // at target dismount / eject
+                fs.Flush(true);
+            }
+            else
+            {
+                _target?.Flush();
+            }
         }
 
         public void End()
