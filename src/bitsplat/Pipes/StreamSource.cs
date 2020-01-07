@@ -26,13 +26,23 @@ namespace bitsplat.Pipes
             _disposeAtEnd = disposeAtEnd;
         }
 
-        private const int MAX_BUFFER = 16 * 1024 * 1024;
+        private const int MAX_BUFFER = 5 * 1024 * 1024;
         private const int READ_CHUNK_INCREMENT = 32768;
 
         public bool Pump()
         {
             using var pooledBuffer = BufferPool.Borrow(MAX_BUFFER);
             var buffer = pooledBuffer.Data;
+            
+            // TODO: instead of just increasing buffer sizes
+            //       to a max, since sinks flush at write
+            //       the read buffer size should work towards about
+            //       what can be written in a second to keep the
+            //       app interactive to, eg, SIGINT
+            // -> use case: copying over wifi, smb, max rate is 4mb/s
+            //    but buffer size is 16, so the app is waiting for 4 seconds
+            //    per flush, which translates into a 4 second delay when
+            //    attempting to exit as streams are 
             var toRead = _lastRead < _readSize
                          ? _lastRead
                          : _lastRead + READ_CHUNK_INCREMENT;
