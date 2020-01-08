@@ -70,7 +70,7 @@ namespace bitsplat.Pipes
                         BrailleProgressBarGenerator.CompositeProgressBarFor(
                             details.CurrentPercentageCompleteBySize,
                             details.TotalPercentageCompleteBySize
-                        )
+                        ) + " "
                     }.Where(s => s != "")
                 )
             );
