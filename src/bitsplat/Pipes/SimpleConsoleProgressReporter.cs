@@ -11,6 +11,9 @@ namespace bitsplat.Pipes
         private readonly IMessageWriter _messageWriter;
         private string _current;
         private int _maxLabelLength;
+        
+        private const string OK = "[ OK ]";
+        private const string FAIL = "[FAIL]";
 
         public SimpleConsoleProgressReporter(
             IMessageWriter messageWriter)
@@ -61,7 +64,7 @@ namespace bitsplat.Pipes
             }
 
             _current = null;
-            Write(label, "[ OK ]");
+            Write(label, OK);
         }
 
         private void NotifyStart(string label)
@@ -126,7 +129,7 @@ namespace bitsplat.Pipes
 
         public void NotifyError(NotificationDetails details)
         {
-            Write(details.Label, "[FAIL]");
+            Write(details.Label, FAIL);
             Write(details.Exception.Message, "");
             Write(details.Exception.StackTrace, "");
         }
@@ -308,11 +311,11 @@ namespace bitsplat.Pipes
         {
             if (Quiet)
             {
-                Write(message, "[ OK ]");
+                Write(message, OK);
             }
             else
             {
-                _messageWriter.StopProgress(RenderMessageLine(message, "[ OK ]"));
+                _messageWriter.StopProgress(RenderMessageLine(message, OK));
             }
         }
 
@@ -320,11 +323,11 @@ namespace bitsplat.Pipes
         {
             if (Quiet)
             {
-                Write(message, "[FAIL]");
+                Write(message, FAIL);
             }
             else
             {
-                _messageWriter.StopProgress(RenderMessageLine(message, "[FAIL]"));
+                _messageWriter.StopProgress(RenderMessageLine(message, FAIL));
             }
         }
 
