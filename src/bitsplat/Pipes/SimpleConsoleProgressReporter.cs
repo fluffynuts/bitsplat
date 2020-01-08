@@ -184,9 +184,40 @@ namespace bitsplat.Pipes
 
             if (current == 0)
             {
-                _messageWriter.Write($"{label} ({total})");
+                _messageWriter.Write($"{label}");
+                _messageWriter.Write($@"Overall transfer: {details.TotalItems} files, {
+                        HumanReadableSizeFor(
+                            details.TotalBytes
+                        )
+                    }");
             }
         }
+
+        protected string HumanReadableSizeFor(double size)
+        {
+            var suffix = 0;
+            while (size > 1024 &&
+                   suffix < _lastSuffix)
+            {
+                size /= 1024;
+                suffix++;
+            }
+
+            return $"{size:F1}{_suffixes[suffix]}";
+        }
+
+        private static readonly string[] _suffixes =
+        {
+            "b",
+            "K",
+            "M",
+            "G",
+            "T",
+            "P"
+            // TODO: is this likely to be used in > 1Pb/s arenas?
+        };
+
+        private static readonly int _lastSuffix = _suffixes.Length - 1;
 
         public T Bookend<T>(string message, Func<T> toRun)
         {

@@ -110,15 +110,7 @@ namespace bitsplat.Pipes
 
         private string HumanReadableRateFor(double rate)
         {
-            var suffix = 0;
-            while (rate > 1024 &&
-                   suffix < _lastSuffix)
-            {
-                rate /= 1024;
-                suffix++;
-            }
-
-            return $"{rate:F1}{_suffixes[suffix]}/s";
+            return $"{HumanReadableSizeFor(rate)}/s";
         }
 
         private static string HumanReadableTimeFor(
@@ -144,18 +136,5 @@ namespace bitsplat.Pipes
                 parts
             );
         }
-
-        private static readonly string[] _suffixes =
-        {
-            "b",
-            "K",
-            "M",
-            "G",
-            "T",
-            "P"
-            // TODO: is this likely to be used in > 1Pb/s arenas?
-        };
-
-        private static readonly int _lastSuffix = _suffixes.Length - 1;
     }
 }
