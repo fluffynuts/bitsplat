@@ -29,7 +29,7 @@ namespace bitsplat.Filters
                 RelativeBaseExistsInHistory(targetHistoryRepository, primaryAncestor);
             return shouldInclude
                        ? FilterResult.Include
-                       : FilterResult.Ambivalent; // allow another filter to opt-in
+                       : FilterResult.Exclude;
         }
 
         private static bool RelativeBaseExistsInHistory(ITargetHistoryRepository targetHistoryRepository,

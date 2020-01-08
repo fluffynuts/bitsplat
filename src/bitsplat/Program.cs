@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
 using bitsplat.ResumeStrategies;
@@ -115,8 +114,7 @@ namespace bitsplat
                 )
                 .WithParameter(
                     nameof(Options.SyncStrategy),
-                    o => o.WithArg("-s")
-                        .WithArg("--sync-strategy")
+                    o => o.WithArg("--sync-strategy")
                 )
                 .Parse<Options>(args);
             return opts;

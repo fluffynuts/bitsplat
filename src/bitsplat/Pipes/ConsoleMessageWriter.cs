@@ -76,7 +76,15 @@ namespace bitsplat.Pipes
         {
             _lastMessage = message;
             _cancellationTokenSource?.Cancel();
-            _indeterminateTask?.Wait();
+            try
+            {
+                _indeterminateTask?.Wait();
+            }
+            catch
+            {
+                /* ignore: this happens if the task is cancelled early */
+            }
+
             _cancellationTokenSource = null;
             _indeterminateTask = null;
         }

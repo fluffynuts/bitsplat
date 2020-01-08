@@ -139,6 +139,7 @@ namespace bitsplat
         {
             public List<IReadWriteFileResource> SyncQueue { get; } = new List<IReadWriteFileResource>();
             public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
+            public List<IReadWriteFileResource> Excluded { get; } = new List<IReadWriteFileResource>();
         }
 
         private class FileResource
@@ -284,9 +285,21 @@ namespace bitsplat
                             sourceResource
                         );
 
-                        var list = filterResult == FilterResult.Include
-                                       ? acc.SyncQueue
-                                       : acc.Skipped;
+                        List<IReadWriteFileResource> list = null;
+                        switch (filterResult)
+                        {
+                            case FilterResult.Include:
+                                list = acc.SyncQueue;
+                                break;
+                            case FilterResult.Ambivalent:
+                                list = acc.Skipped;
+                                break;
+                            case FilterResult.Exclude:
+                            default:
+                                list = acc.Excluded;
+                                break;
+                        }
+
                         list.Add(sourceResource);
                         return acc;
                     })

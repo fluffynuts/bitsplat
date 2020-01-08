@@ -7,7 +7,6 @@ using NUnit.Framework;
 using static NExpect.Expectations;
 using NExpect;
 using NSubstitute;
-using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using static bitsplat.Tests.RandomValueGen;
 
@@ -38,7 +37,7 @@ namespace bitsplat.Tests.History
                     ).ToArray();
                 // Assert
                 Expect(results).To.Contain.All()
-                    .Matched.By(o => o == FilterResult.Ambivalent);
+                    .Matched.By(o => o == FilterResult.Exclude);
             }
         }
 
@@ -93,7 +92,7 @@ namespace bitsplat.Tests.History
                     .To.Equal(FilterResult.Include);
                 
                 Expect(result2)
-                    .To.Equal(FilterResult.Ambivalent);
+                    .To.Equal(FilterResult.Exclude);
             }
         }
 
@@ -136,7 +135,7 @@ namespace bitsplat.Tests.History
                 Expect(result1)
                     .To.Equal(FilterResult.Include);
                 Expect(result2)
-                    .To.Equal(FilterResult.Ambivalent);
+                    .To.Equal(FilterResult.Exclude);
             }
         }
 

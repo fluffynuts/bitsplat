@@ -209,7 +209,7 @@ namespace bitsplat.CommandLine
                 parsed,
                 result,
                 () => pi.PropertyType.IsEnum,
-                (type, value) => Enum.TryParse(type, value, out var converted)
+                (type, value) => Enum.TryParse(type, value, true, out var converted)
                                      ? (true, value: converted)
                                      : (false, value: converted)
             );

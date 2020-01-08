@@ -20,6 +20,7 @@ namespace bitsplat.Tests
                 .To.Exist();
             var args = new[]
             {
+                "-q",
                 "-s",
                 arena.SourcePath,
                 "-t",
@@ -49,6 +50,7 @@ namespace bitsplat.Tests
                 .To.Exist();
             var args = new[]
             {
+                "-q",
                 "-n",
                 "-s",
                 arena.SourcePath,
@@ -107,7 +109,8 @@ namespace bitsplat.Tests
                 "-t",
                 arena.TargetPath,
                 "-a",
-                arena.ArchivePath
+                arena.ArchivePath,
+                "-q"
             };
             // Act
             Program.Main(args);
