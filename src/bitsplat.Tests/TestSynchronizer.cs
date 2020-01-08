@@ -669,13 +669,15 @@ namespace bitsplat.Tests
             IResumeStrategy resumeStrategy = null,
             IPassThrough[] intermediatePipes = null,
             ITargetHistoryRepository targetHistoryRepository = null,
-            IFilter[] filters = null)
+            IFilter[] filters = null,
+            IProgressReporter progressReporter = null)
         {
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
-                filters ?? DefaultFilters
+                filters ?? DefaultFilters,
+                progressReporter ?? new FakeProgressReporter()
             );
         }
 

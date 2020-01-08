@@ -34,6 +34,7 @@ namespace bitsplat
         private readonly IResumeStrategy _resumeStrategy;
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IFilter[] _filters;
+        private readonly IProgressReporter _progressReporter;
         private readonly ISyncQueueNotifiable[] _notifiables;
         private string _label;
 
@@ -41,7 +42,8 @@ namespace bitsplat
             ITargetHistoryRepository targetHistoryRepository,
             IResumeStrategy resumeStrategy,
             IPassThrough[] intermediatePipes,
-            IFilter[] filters)
+            IFilter[] filters,
+            IProgressReporter progressReporter)
         {
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
@@ -50,6 +52,7 @@ namespace bitsplat
                 .OfType<ISyncQueueNotifiable>()
                 .ToArray();
             _filters = filters;
+            _progressReporter = progressReporter;
         }
 
         public void Synchronize(
@@ -71,8 +74,12 @@ namespace bitsplat
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
                                   targetResourcesCollection.ToArray();
+
             var comparison = CompareResources(sourceResources, targetResources);
-            RecordHistory(comparison.Skipped);
+            _progressReporter.Bookend(
+                "Recording skipped item history",
+                () => RecordHistory(comparison.Skipped)
+            );
 
             var syncQueue = comparison.SyncQueue
                 .OrderBy(resource => resource.RelativePath)
@@ -266,22 +273,24 @@ namespace bitsplat
             IEnumerable<IReadWriteFileResource> sourceResources,
             IEnumerable<IReadWriteFileResource> targetResources)
         {
-            var comparison = sourceResources.Aggregate(
-                new FileSystemComparison(),
-                (acc, sourceResource) =>
-                {
-                    var filterResult = ApplyAllFilters(
-                        targetResources,
-                        sourceResource
-                    );
+            return _progressReporter.Bookend(
+                "Comparing source and target",
+                () => sourceResources.Aggregate(
+                    new FileSystemComparison(),
+                    (acc, sourceResource) =>
+                    {
+                        var filterResult = ApplyAllFilters(
+                            targetResources,
+                            sourceResource
+                        );
 
-                    var list = filterResult == FilterResult.Include
-                                   ? acc.SyncQueue
-                                   : acc.Skipped;
-                    list.Add(sourceResource);
-                    return acc;
-                });
-            return comparison;
+                        var list = filterResult == FilterResult.Include
+                                       ? acc.SyncQueue
+                                       : acc.Skipped;
+                        list.Add(sourceResource);
+                        return acc;
+                    })
+            );
         }
 
         private FilterResult ApplyAllFilters(

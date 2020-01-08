@@ -461,7 +461,7 @@ namespace bitsplat.Tests.Storage
 
         private static IFileSystem Create(string baseFolder)
         {
-            return new LocalFileSystem(baseFolder, Substitute.For<IMessageWriter>());
+            return new LocalFileSystem(baseFolder, new FakeProgressReporter());
         }
 
         private static IFileSystem Create(AutoTempFolder baseFolder)

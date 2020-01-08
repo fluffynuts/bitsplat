@@ -31,15 +31,18 @@ namespace bitsplat.Archivers
     public class Mede8erArchiver : IArchiver
     {
         private readonly IPassThrough[] _intermediatePipes;
+        private readonly IProgressReporter _progressReporter;
 
         // TODO: test if it makes sense to have any pass-through
         // pipes from the caller -- perhaps progress makes sense
         // at least?
         public Mede8erArchiver(
-            IPassThrough[] intermediatePipes
+            IPassThrough[] intermediatePipes,
+            IProgressReporter progressReporter
         )
         {
             _intermediatePipes = intermediatePipes;
+            _progressReporter = progressReporter;
         }
 
         public void RunArchiveOperations(
@@ -72,7 +75,8 @@ namespace bitsplat.Archivers
                 new NullTargetHistoryRepository(),
                 new AlwaysResumeStrategy(),
                 _intermediatePipes,
-                new IFilter[] { archiverFilter }
+                new IFilter[] { archiverFilter },
+                _progressReporter
             );
 
             synchronizer.Synchronize(

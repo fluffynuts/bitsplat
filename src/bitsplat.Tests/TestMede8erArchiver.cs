@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using bitsplat.Archivers;
 using bitsplat.Pipes;
@@ -80,7 +79,7 @@ namespace bitsplat.Tests
                     var archiveData = GetRandomBytes();
                     var archiveFile = arena.CreateSourceFile(toArchive, archiveData);
                     var archiveMarker = arena.CreateSourceFile($"{archiveFile.Name}.t", new byte[0]);
-                    
+
                     var keepData = GetRandomBytes();
                     var toKeep = GetRandomFileName();
                     var keepFile = arena.CreateSourceFile(toKeep, keepData);
@@ -105,13 +104,13 @@ namespace bitsplat.Tests
                         .Not.To.Exist();
                     Expect(archiveMarker.Path)
                         .Not.To.Exist();
-                    
+
                     // keep file should still be there
                     Expect(keepFile.Path)
                         .To.Exist();
                     Expect(keepFile.Path)
                         .To.Have.Data(keepFile.Data);
-                    
+
                     // archive target should have archived file
                     Expect(expectedFile)
                         .To.Exist();
@@ -124,9 +123,13 @@ namespace bitsplat.Tests
             }
         }
 
-        private IArchiver Create()
+        private IArchiver Create(
+            IProgressReporter progressReporter = null)
         {
-            return new Mede8erArchiver(new IPassThrough[0]);
+            return new Mede8erArchiver(
+                new IPassThrough[0],
+                progressReporter ?? new FakeProgressReporter()
+            );
         }
     }
 }

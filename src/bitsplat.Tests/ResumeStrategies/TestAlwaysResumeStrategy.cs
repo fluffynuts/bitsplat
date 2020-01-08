@@ -51,13 +51,15 @@ namespace bitsplat.Tests.ResumeStrategies
         private static ISynchronizer Create(
             IResumeStrategy resumeStrategy = null,
             ITargetHistoryRepository targetHistoryRepository = null,
+            IProgressReporter progressReporter = null,
             params IPassThrough[] intermediatePipes)
         {
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ?? new AlwaysResumeStrategy(),
                 intermediatePipes,
-                new IFilter[] { new TargetOptInFilter() }
+                new IFilter[] { new TargetOptInFilter() },
+                progressReporter ?? new FakeProgressReporter()
             );
         }
     }

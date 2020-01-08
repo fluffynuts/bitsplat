@@ -9,19 +9,19 @@ namespace bitsplat.Storage
 {
     public class LocalFileSystem : IFileSystem
     {
-        private readonly IMessageWriter _messageWriter;
         public string BasePath => _basePath;
         private readonly string _basePath;
+        private readonly IProgressReporter _progressReporter;
 
         /// <summary>
         /// Creates the LocalFileSystem object with the provided baseFolder from
         ///   which all relative paths are resolved
         /// </summary>
         /// <param name="basePath"></param>
-        /// <param name="messageWriter"></param>
+        /// <param name="progressReporter"></param>
         public LocalFileSystem(
             string basePath,
-            IMessageWriter messageWriter)
+            IProgressReporter progressReporter)
         {
             if (!Directory.Exists(basePath))
             {
@@ -29,7 +29,7 @@ namespace bitsplat.Storage
             }
 
             _basePath = basePath;
-            _messageWriter = messageWriter;
+            _progressReporter = progressReporter;
         }
 
         public bool Exists(string path)
@@ -120,37 +120,26 @@ namespace bitsplat.Storage
             ListOptions options
         )
         {
-            return Run($"Listing resources under {BasePath}",
-                () => ListResourcesUnder(BasePath, options)
-            );
-        }
-
-        private T Run<T>(string message, Func<T> toRun)
-        {
-            _messageWriter.Rewrite($"{message} ...");
-            try
-            {
-                var result = toRun();
-                _messageWriter.Write($"{message} ... done!");
-                return result;
-            }
-            catch
-            {
-                _messageWriter.Write($"{message} ... failed!");
-                throw;
-            }
+            return ListResourcesUnder(BasePath, options);
         }
 
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
         {
-            return ListResourcesUnder(BasePath, new ListOptions());
+            return _progressReporter.Bookend(
+                $"Listing resources under {BasePath}",
+                () => ListResourcesUnder(
+                        BasePath,
+                        new ListOptions()
+                    )
+                    .ToArray()
+            );
         }
 
         private IEnumerable<IReadWriteFileResource> ListResourcesUnder(
             string path,
             ListOptions options)
         {
-            var result = Directory.GetFiles(path)
+            return Directory.GetFiles(path)
                 .Select(p => new LocalReadWriteFileResource(p, BasePath, this))
                 .Where(p =>
                     options.IncludeDotFiles ||
@@ -165,7 +154,6 @@ namespace bitsplat.Storage
                             )
                         )
                 );
-            return result;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using bitsplat.Pipes;
 using bitsplat.Storage;
+using NExpect.MatcherLogic;
 using NSubstitute;
 using PeanutButter.Utils;
 using static PeanutButter.RandomGenerators.RandomValueGen;
@@ -30,22 +31,22 @@ namespace bitsplat.Tests.TestingSupport
 
     public class TestArena : IDisposable
     {
-        public IMessageWriter MessageWriter
-            => _messageWriter ??= Substitute.For<IMessageWriter>();
+        public IProgressReporter ProgressReporter
+            => _progressReporter ??= new FakeProgressReporter();
         
         public IFileSystem SourceFileSystem
-            => _sourceFileSystem ??= new LocalFileSystem(SourcePath, MessageWriter);
+            => _sourceFileSystem ??= new LocalFileSystem(SourcePath, ProgressReporter);
 
         public IFileSystem TargetFileSystem
-            => _targetFileSystem ??= new LocalFileSystem(TargetPath, MessageWriter);
+            => _targetFileSystem ??= new LocalFileSystem(TargetPath, ProgressReporter);
 
         public IFileSystem ArchiveFileSystem
-            => _archiveFileSystem ??= new LocalFileSystem(ArchivePath, MessageWriter);
+            => _archiveFileSystem ??= new LocalFileSystem(ArchivePath, ProgressReporter);
 
         private IFileSystem _sourceFileSystem;
         private IFileSystem _targetFileSystem;
         private IFileSystem _archiveFileSystem;
-        private IMessageWriter _messageWriter;
+        private IProgressReporter _progressReporter;
 
         public string SourcePath { get; }
         public string TargetPath { get; }

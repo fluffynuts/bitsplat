@@ -14,6 +14,7 @@ namespace bitsplat.Pipes
         public SimplePercentageConsoleProgressReporter(IMessageWriter messageWriter)
             : base(messageWriter)
         {
+            Quiet = false;
             DetailPadding = base.DetailPadding + 28; // guess? we want to put more info in here
         }
 

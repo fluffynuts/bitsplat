@@ -109,10 +109,10 @@ namespace bitsplat.Tests.Storage
         }
 
         private static IFileSystemFactory Create(
-            IMessageWriter messageWriter = null)
+            IProgressReporter progressReporter = null)
         {
             return new FileSystemFactory(
-                messageWriter ?? Substitute.For<IMessageWriter>()
+                progressReporter ?? new FakeProgressReporter()
             );
         }
     }

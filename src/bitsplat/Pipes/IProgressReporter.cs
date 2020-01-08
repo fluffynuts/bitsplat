@@ -53,6 +53,8 @@ namespace bitsplat.Pipes
 
     public interface IProgressReporter
     {
+        public bool Quiet { get; set; }
+        
         void NotifyCurrent(NotificationDetails details);
         void NotifyOverall(NotificationDetails details);
         void NotifyError(NotificationDetails details);
@@ -68,5 +70,16 @@ namespace bitsplat.Pipes
             IFileSystem source,
             IFileSystem target
         );
+        
+        T Bookend<T>(
+            string message,
+            Func<T> toRun
+        );
+
+        void Bookend(
+            string message,
+            Action toRun
+        );
+        
     }
 }

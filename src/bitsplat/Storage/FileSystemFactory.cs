@@ -11,11 +11,11 @@ namespace bitsplat.Storage
 
     public class FileSystemFactory : IFileSystemFactory
     {
-        private readonly IMessageWriter _messageWriter;
+        private readonly IProgressReporter _progressReporter;
 
-        public FileSystemFactory(IMessageWriter messageWriter)
+        public FileSystemFactory(IProgressReporter progressReporter)
         {
-            _messageWriter = messageWriter;
+            _progressReporter = progressReporter;
         }
 
         public IFileSystem CachingFileSystemFor(string uri)
@@ -39,7 +39,7 @@ namespace bitsplat.Storage
             {
                 return new LocalFileSystem(
                     u.LocalPath,
-                    _messageWriter
+                    _progressReporter
                 );
             }
 

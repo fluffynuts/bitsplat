@@ -5,6 +5,8 @@ namespace bitsplat.Pipes
 {
     public class SimpleConsoleProgressReporter : IProgressReporter
     {
+        public bool Quiet { get; set; } = true;
+
         private readonly IMessageWriter _messageWriter;
         private string _current;
         private int _maxLabelLength;
@@ -13,6 +15,14 @@ namespace bitsplat.Pipes
             IMessageWriter messageWriter)
         {
             _messageWriter = messageWriter;
+            try
+            {
+                _maxLabelLength = (int) (Console.WindowWidth * 0.8);
+            }
+            catch
+            {
+                /* ignore */
+            }
         }
 
         public void NotifyCurrent(
@@ -92,7 +102,8 @@ namespace bitsplat.Pipes
         {
             start ??= "";
             var required = _maxLabelLength - start.Length - (end ?? "").Length;
-            if (required < 1)
+            if (required < 1 &&
+                _maxLabelLength > 0)
             {
                 var cutFrom = start.Length + required - 2;
                 if (cutFrom < 0)
@@ -104,7 +115,10 @@ namespace bitsplat.Pipes
                 required = 1;
             }
 
-            var spacing = new String(' ', required);
+            var spacing = new String(' ',
+                required > 0
+                    ? required
+                    : 1);
             var fullLine = $"\r{start}{spacing}{end}";
             return fullLine;
         }
@@ -121,18 +135,23 @@ namespace bitsplat.Pipes
 
         public void SetMaxLabelLength(int chars)
         {
+            var toSet = chars + DetailPadding;
             try
             {
-                _maxLabelLength = chars + DetailPadding; 
                 // if Console.WindowWidth is available, limit to that value with a space
-                if (_maxLabelLength >= Console.WindowWidth)
+                if (toSet >= Console.WindowWidth)
                 {
-                    _maxLabelLength = Console.WindowWidth - 1;
+                    toSet = Console.WindowWidth - 1;
                 }
             }
             catch
             {
                 /* intentionally left blank */
+            }
+
+            if (toSet > _maxLabelLength)
+            {
+                _maxLabelLength = toSet;
             }
         }
 
@@ -147,10 +166,10 @@ namespace bitsplat.Pipes
         }
 
         public void NotifyNoWork(
-            IFileSystem source, 
+            IFileSystem source,
             IFileSystem target)
         {
-            _messageWriter.Write("(nothing to do)");
+            _messageWriter.Write($"Up to date: {source.BasePath} => {target.BasePath}");
         }
 
         public void NotifyOverall(
@@ -167,6 +186,70 @@ namespace bitsplat.Pipes
             {
                 _messageWriter.Write($"{label} ({total})");
             }
+        }
+
+        public T Bookend<T>(string message, Func<T> toRun)
+        {
+            StartProgress(message);
+
+            try
+            {
+                var result = toRun();
+                StopProgress(message);
+                return result;
+            }
+            catch
+            {
+                FailProgress(message);
+                throw;
+            }
+        }
+
+        private void StartProgress(string message)
+        {
+            if (Quiet)
+            {
+                Rewrite(message, null);
+            }
+            else
+            {
+                _messageWriter.StartProgress(message);
+            }
+        }
+
+        private void StopProgress(string message)
+        {
+            if (Quiet)
+            {
+                Write(message, "[ OK ]");
+            }
+            else
+            {
+                _messageWriter.StopProgress(RenderMessageLine(message, "[ OK ]"));
+            }
+        }
+
+        private void FailProgress(string message)
+        {
+            if (Quiet)
+            {
+                Write(message, "[FAIL]");
+            }
+            else
+            {
+                _messageWriter.StopProgress(RenderMessageLine(message, "[FAIL]"));
+            }
+        }
+
+        public void Bookend(string message, Action toRun)
+        {
+            Bookend(
+                message,
+                () =>
+                {
+                    toRun();
+                    return 0;
+                });
         }
     }
 }
