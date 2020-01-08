@@ -36,7 +36,7 @@ namespace bitsplat.Tests.ResumeStrategies
                     .And(sourceData.Skip(targetData.Length)
                         .ToArray());
                 var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
-                var sut = Create(new AlwaysResumeStrategy());
+                var sut = Create(new AlwaysResumeWhenTargetSmallerStrategy());
                 // Act
                 sut.Synchronize(source, target);
                 // Assert
@@ -56,7 +56,7 @@ namespace bitsplat.Tests.ResumeStrategies
         {
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new AlwaysResumeStrategy(),
+                resumeStrategy ?? new AlwaysResumeWhenTargetSmallerStrategy(),
                 intermediatePipes,
                 new IFilter[] { new TargetOptInFilter() },
                 progressReporter ?? new FakeProgressReporter()

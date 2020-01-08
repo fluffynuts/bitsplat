@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using bitsplat.Storage;
 
 namespace bitsplat.Pipes
@@ -17,7 +18,7 @@ namespace bitsplat.Pipes
             _messageWriter = messageWriter;
             try
             {
-                _maxLabelLength = (int) (Console.WindowWidth * 0.8);
+                _maxLabelLength = Console.WindowWidth - 1;
             }
             catch
             {
@@ -173,23 +174,44 @@ namespace bitsplat.Pipes
         }
 
         public void NotifyOverall(
-            NotificationDetails details)
+            NotificationDetails details
+        )
         {
-            var (label, current, total) =
-                (details.Label, details.CurrentItem, details.TotalItems);
-            if (string.IsNullOrWhiteSpace(label))
+            if (string.IsNullOrWhiteSpace(details.Label))
             {
                 return;
             }
 
-            if (current == 0)
+            if (details.IsStarting)
             {
-                _messageWriter.Write($"{label}");
-                _messageWriter.Write($@"Overall transfer: {details.TotalItems} files, {
-                        HumanReadableSizeFor(
-                            details.TotalBytes
-                        )
-                    }");
+                _messageWriter.Write(details.Label);
+                _messageWriter.Write(
+                    $@"Overall transfer: {
+                            details.TotalItems
+                        } files, {
+                            HumanReadableSizeFor(
+                                details.TotalBytes
+                            )
+                        }");
+                _started = DateTime.Now;
+            }
+            else if (details.IsComplete &&
+                     _started != null)
+            {
+                var timeTaken = DateTime.Now - _started.Value;
+                _messageWriter.Write(details.Label);
+                _messageWriter.Write(
+                    $@"Transferred {
+                            details.TotalItems
+                        } files, {
+                            HumanReadableSizeFor(details.TotalBytes)
+                        }, {
+                            HumanReadableTimeFor((int) timeTaken.TotalSeconds)
+                        }, avg {
+                            HumanReadableRateFor(
+                                details.TotalBytes / timeTaken.TotalSeconds
+                            )
+                        }");
             }
         }
 
@@ -206,6 +228,35 @@ namespace bitsplat.Pipes
             return $"{size:F1}{_suffixes[suffix]}";
         }
 
+        protected string HumanReadableRateFor(double rate)
+        {
+            return $"{HumanReadableSizeFor(rate)}/s";
+        }
+
+        protected static string HumanReadableTimeFor(
+            int secondsRemaining)
+        {
+            var seconds = secondsRemaining % 60;
+            var minutes = (secondsRemaining / 60) % 60;
+            var hours = (secondsRemaining / 3600) % 3600;
+            var parts = new List<string>();
+            if (hours > 0)
+            {
+                parts.Add(hours.ToString());
+                parts.Add(minutes.ToString("D2"));
+            }
+            else
+            {
+                parts.Add(minutes.ToString());
+            }
+
+            parts.Add(seconds.ToString("D2"));
+
+            return string.Join(":",
+                parts
+            );
+        }
+
         private static readonly string[] _suffixes =
         {
             "b",
@@ -218,6 +269,7 @@ namespace bitsplat.Pipes
         };
 
         private static readonly int _lastSuffix = _suffixes.Length - 1;
+        private DateTime? _started;
 
         public T Bookend<T>(string message, Func<T> toRun)
         {

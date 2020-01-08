@@ -108,33 +108,5 @@ namespace bitsplat.Pipes
             return HumanReadableTimeFor(secondsRemaining);
         }
 
-        private string HumanReadableRateFor(double rate)
-        {
-            return $"{HumanReadableSizeFor(rate)}/s";
-        }
-
-        private static string HumanReadableTimeFor(
-            int secondsRemaining)
-        {
-            var seconds = secondsRemaining % 60;
-            var minutes = (secondsRemaining / 60) % 60;
-            var hours = (secondsRemaining / 3600) % 3600;
-            var parts = new List<string>();
-            if (hours > 0)
-            {
-                parts.Add(hours.ToString());
-                parts.Add(minutes.ToString("D2"));
-            }
-            else
-            {
-                parts.Add(minutes.ToString());
-            }
-
-            parts.Add(seconds.ToString("D2"));
-
-            return string.Join(":",
-                parts
-            );
-        }
     }
 }

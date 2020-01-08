@@ -60,9 +60,9 @@ namespace bitsplat
                     opts.Source
                 )
                 .WithResumeStrategy(
-                    opts.Resume
-                        ? typeof(AlwaysResumeStrategy)
-                        : typeof(NeverResumeStrategy)
+                    opts.NoResume
+                        ? typeof(NeverResumeStrategy)
+                        : typeof(AlwaysResumeWhenTargetSmallerStrategy)
                 )
                 .WithFilter(
                     FilterMap[opts.SyncStrategy]
@@ -98,9 +98,8 @@ namespace bitsplat
                         .WithArg("--history-db")
                 )
                 .WithFlag(
-                    nameof(Options.Resume),
-                    o => o.WithArg("-r")
-                        .WithArg("--resume")
+                    nameof(Options.NoResume),
+                    o => o.WithArg("--no-resume")
                 )
                 .WithFlag(
                     nameof(Options.Quiet),

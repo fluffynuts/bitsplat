@@ -1,9 +1,14 @@
 using System.IO;
+using bitsplat.Storage;
 
 namespace bitsplat.ResumeStrategies
 {
     public interface IResumeStrategy
     {
-        bool CanResume(Stream source, Stream target);
+        bool CanResume(
+            IFileResource sourceResource,
+            IFileResource targetResource,
+            Stream source, 
+            Stream target);
     }
 }

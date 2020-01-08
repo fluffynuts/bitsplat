@@ -237,8 +237,12 @@ namespace bitsplat.Tests
                             Expect(historyRepo)
                                 .To.Have.Received(1)
                                 .Upsert(Arg.Is<IEnumerable<IHistoryItem>>(
-                                    o => o.Single().Path == relPath &&
-                                         o.Single().Size == data.Length
+                                    o => o.Single()
+                                             .Path ==
+                                         relPath &&
+                                         o.Single()
+                                             .Size ==
+                                         data.Length
                                 ));
                         }
                     }
@@ -254,7 +258,12 @@ namespace bitsplat.Tests
                         using (var arena = new TestArena())
                         {
                             var resumeStrategy = Substitute.For<IResumeStrategy>();
-                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            resumeStrategy.CanResume(
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<Stream>(),
+                                    Arg.Any<Stream>()
+                                )
                                 .Returns(true);
                             var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                             var relPath = GetRandomString();
@@ -303,7 +312,11 @@ namespace bitsplat.Tests
                         using (var arena = new TestArena())
                         {
                             var resumeStrategy = Substitute.For<IResumeStrategy>();
-                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            resumeStrategy.CanResume(
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<Stream>(), 
+                                    Arg.Any<Stream>())
                                 .Returns(false);
                             var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                             var relPath = GetRandomString();
@@ -350,7 +363,11 @@ namespace bitsplat.Tests
                         using (var arena = new TestArena())
                         {
                             var resumeStrategy = Substitute.For<IResumeStrategy>();
-                            resumeStrategy.CanResume(Arg.Any<Stream>(), Arg.Any<Stream>())
+                            resumeStrategy.CanResume(
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<IFileResource>(),
+                                    Arg.Any<Stream>(), 
+                                    Arg.Any<Stream>())
                                 .Returns(false);
                             var (source, target) = (arena.SourceFileSystem, arena.TargetFileSystem);
                             var relPath = GetRandomString();
@@ -437,7 +454,7 @@ namespace bitsplat.Tests
                         {
                         });
                     var sut = Create(
-                        new AlwaysResumeStrategy(),
+                        new AlwaysResumeWhenTargetSmallerStrategy(),
                         new IPassThrough[] { notifyable, intermediate1 }
                             .Randomize()
                             .ToArray()
@@ -617,7 +634,7 @@ namespace bitsplat.Tests
             }
 
             public void NotifyNoWork(
-                IFileSystem source, 
+                IFileSystem source,
                 IFileSystem target)
             {
             }
@@ -674,7 +691,7 @@ namespace bitsplat.Tests
         {
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new AlwaysResumeStrategy(),
+                resumeStrategy ?? new AlwaysResumeWhenTargetSmallerStrategy(),
                 intermediatePipes ?? new IPassThrough[0],
                 filters ?? DefaultFilters,
                 progressReporter ?? new FakeProgressReporter()

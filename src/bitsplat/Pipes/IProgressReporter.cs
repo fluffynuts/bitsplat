@@ -5,6 +5,9 @@ namespace bitsplat.Pipes
 {
     public class NotificationDetails
     {
+        public bool IsComplete => TotalBytesTransferred == TotalBytes;
+        public bool IsStarting => TotalBytesTransferred == 0;
+        
         public string Label { get; set; }
         public long CurrentBytesTransferred { get; set; }
         public long CurrentTotalBytes { get; set; }
@@ -54,11 +57,12 @@ namespace bitsplat.Pipes
     public interface IProgressReporter
     {
         public bool Quiet { get; set; }
+
+        void SetMaxLabelLength(int longestName);
         
         void NotifyCurrent(NotificationDetails details);
         void NotifyOverall(NotificationDetails details);
         void NotifyError(NotificationDetails details);
-        void SetMaxLabelLength(int longestName);
 
         void NotifyPrepare(
             string operation,

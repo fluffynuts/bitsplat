@@ -16,7 +16,7 @@ namespace bitsplat
         public string HistoryDatabase { get; set; }
         public string Archive { get; set; }
 
-        public bool Resume { get; set; }
+        public bool NoResume { get; set; }
         public bool Quiet { get; set; }
         public bool NoHistory { get; set; }
     }

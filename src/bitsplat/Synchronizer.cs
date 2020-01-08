@@ -103,6 +103,7 @@ namespace bitsplat
                     FileMode.OpenOrCreate);
 
                 var resuming = ResumeIfPossible(
+                    sourceResource,
                     targetResource,
                     sourceStream,
                     targetStream);
@@ -253,12 +254,16 @@ namespace bitsplat
             );
         }
 
-        private bool ResumeIfPossible(IReadWriteFileResource targetResource,
+        private bool ResumeIfPossible(
+            IReadWriteFileResource sourceResource,
+            IReadWriteFileResource targetResource,
             Stream sourceStream,
             Stream targetStream)
         {
             var canResume = targetResource != null &&
                             _resumeStrategy.CanResume(
+                                sourceResource,
+                                targetResource,
                                 sourceStream,
                                 targetStream);
             if (canResume)

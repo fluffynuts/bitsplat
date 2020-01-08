@@ -24,15 +24,47 @@ namespace bitsplat.Filters
             var primaryAncestor = FindPrimaryAncestorFolder(
                 sourceResource.RelativePath
             );
+            var shouldExclude =
+                ResourceExistsAtTarget(targetResources, sourceResource) ||
+                ResourceExistsInHistory(targetHistoryRepository, sourceResource);
+
+            if (shouldExclude)
+            {
+                return FilterResult.Exclude;
+            }
+
             var shouldInclude =
                 RelativeBaseExistsAtTarget(targetResources, primaryAncestor) ||
                 RelativeBaseExistsInHistory(targetHistoryRepository, primaryAncestor);
+
             return shouldInclude
                        ? FilterResult.Include
                        : FilterResult.Exclude;
         }
 
-        private static bool RelativeBaseExistsInHistory(ITargetHistoryRepository targetHistoryRepository,
+        private static bool ResourceExistsAtTarget(
+            IEnumerable<IFileResource> targetResources,
+            IFileResource sourceResource)
+        {
+            return targetResources.Any(
+                o => o.RelativePath == sourceResource.RelativePath &&
+                     o.Size == sourceResource.Size
+            );
+        }
+
+        private static bool ResourceExistsInHistory(
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileResource sourceResource)
+        {
+            return targetHistoryRepository.Find(
+                           sourceResource.RelativePath
+                       )
+                       ?.Size ==
+                   sourceResource.Size;
+        }
+
+        private static bool RelativeBaseExistsInHistory(
+            ITargetHistoryRepository targetHistoryRepository,
             string relativeBase)
         {
             return targetHistoryRepository.FindAll(
