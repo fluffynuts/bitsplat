@@ -24,13 +24,13 @@ namespace bitsplat.Filters
             var primaryAncestor = FindPrimaryAncestorFolder(
                 sourceResource.RelativePath
             );
-            var shouldExclude =
+            var shouldRecordOnly =
                 ResourceExistsAtTarget(targetResources, sourceResource) ||
                 ResourceExistsInHistory(targetHistoryRepository, sourceResource);
-
-            if (shouldExclude)
+            
+            if (shouldRecordOnly)
             {
-                return FilterResult.Exclude;
+                return FilterResult.RecordOnly;
             }
 
             var shouldInclude =

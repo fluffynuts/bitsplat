@@ -173,6 +173,8 @@ namespace bitsplat.Pipes
             _messageWriter.Write($"Up to date: {source.BasePath} => {target.BasePath}");
         }
 
+        private bool _notifiedStart;
+        
         public void NotifyOverall(
             NotificationDetails details
         )
@@ -182,8 +184,9 @@ namespace bitsplat.Pipes
                 return;
             }
 
-            if (details.IsStarting)
+            if (details.IsStarting && !_notifiedStart)
             {
+                _notifiedStart = true;
                 _messageWriter.Write(details.Label);
                 _messageWriter.Write(
                     $@"Overall transfer: {
@@ -212,6 +215,7 @@ namespace bitsplat.Pipes
                                 details.TotalBytes / timeTaken.TotalSeconds
                             )
                         }");
+                _started = null;
             }
         }
 

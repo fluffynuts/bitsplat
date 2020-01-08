@@ -69,7 +69,6 @@ namespace bitsplat
             IFileSystem target
         )
         {
-            NotifySyncPrepare(source, target);
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
@@ -78,7 +77,13 @@ namespace bitsplat
             var comparison = CompareResources(sourceResources, targetResources);
             _progressReporter.Bookend(
                 "Recording skipped item history",
-                () => RecordHistory(comparison.Skipped)
+                () =>
+                {
+                    RecordHistory(
+                        comparison.Skipped
+                            .Union(comparison.RecordOnly)
+                    );
+                }
             );
 
             var syncQueue = comparison.SyncQueue
@@ -141,6 +146,7 @@ namespace bitsplat
             public List<IReadWriteFileResource> SyncQueue { get; } = new List<IReadWriteFileResource>();
             public List<IReadWriteFileResource> Skipped { get; } = new List<IReadWriteFileResource>();
             public List<IReadWriteFileResource> Excluded { get; } = new List<IReadWriteFileResource>();
+            public List<IReadWriteFileResource> RecordOnly { get; } = new List<IReadWriteFileResource>();
         }
 
         private class FileResource
@@ -170,19 +176,6 @@ namespace bitsplat
             return new FileResource(
                 target,
                 sourceResource);
-        }
-
-        private void NotifySyncPrepare(
-            IFileSystem source,
-            IFileSystem target)
-        {
-            _notifiables.ForEach(
-                notifiable => notifiable.NotifySyncBatchPrepare(
-                    $"{_label} (prepare)",
-                    source,
-                    target
-                )
-            );
         }
 
         private void NotifyNoWork(
@@ -300,8 +293,11 @@ namespace bitsplat
                                 list = acc.Skipped;
                                 break;
                             case FilterResult.Exclude:
-                            default:
                                 list = acc.Excluded;
+                                break;
+                            case FilterResult.RecordOnly:
+                            default:
+                                list = acc.RecordOnly;
                                 break;
                         }
 
@@ -319,7 +315,10 @@ namespace bitsplat
                 FilterResult.Ambivalent,
                 (acc1, cur1) =>
                 {
-                    if (AlreadyExcluded())
+                    if (AlreadyExcluded() ||
+                        // "record only" is a soft exclude
+                        // to ensure history happens for existing files
+                        AccumulatorIsRecordOnly())
                     {
                         return acc1;
                     }
@@ -331,7 +330,7 @@ namespace bitsplat
 
                     return CurrentFilterIsAmbivalent()
                                ? acc1
-                               : thisResult; // otherwise return whatever this filter wants
+                               : thisResult;
 
                     bool AlreadyExcluded()
                     {
@@ -341,6 +340,11 @@ namespace bitsplat
                     bool CurrentFilterIsAmbivalent()
                     {
                         return thisResult == FilterResult.Ambivalent;
+                    }
+
+                    bool AccumulatorIsRecordOnly()
+                    {
+                        return acc1 == FilterResult.RecordOnly;
                     }
                 });
             return filterResult;

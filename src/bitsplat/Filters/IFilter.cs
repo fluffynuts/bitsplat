@@ -8,7 +8,8 @@ namespace bitsplat.Filters
     {
         Ambivalent,
         Include,
-        Exclude
+        Exclude,
+        RecordOnly
     }
 
     /// <summary>

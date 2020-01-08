@@ -27,11 +27,6 @@ namespace bitsplat.Pipes
             IFileResource targetResource,
             Exception ex);
 
-        void NotifySyncBatchPrepare(
-            string label,
-            IFileSystem source,
-            IFileSystem target);
-
         void NotifyNoWork(
             IFileSystem source,
             IFileSystem target

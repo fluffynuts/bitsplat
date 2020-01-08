@@ -626,13 +626,6 @@ namespace bitsplat.Tests
                 ErrorNotifications.Add((sourceResource, targetResource, ex));
             }
 
-            public void NotifySyncBatchPrepare(string label,
-                IFileSystem source,
-                IFileSystem target)
-            {
-                // TODO: test me
-            }
-
             public void NotifyNoWork(
                 IFileSystem source,
                 IFileSystem target)

@@ -188,17 +188,6 @@ namespace bitsplat.Pipes
             );
         }
 
-        public void NotifySyncBatchPrepare(string label,
-            IFileSystem source,
-            IFileSystem target)
-        {
-            _reporter.NotifyPrepare(
-                label,
-                source,
-                target
-            );
-        }
-
         public void NotifyNoWork(
             IFileSystem source,
             IFileSystem target)
