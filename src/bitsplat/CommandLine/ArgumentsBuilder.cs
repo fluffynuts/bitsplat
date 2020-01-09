@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using PeanutButter.Utils;
@@ -30,6 +31,13 @@ namespace bitsplat.CommandLine
             return this;
         }
 
+        public ArgumentsBuilder WithHelp(
+            params string[] help)
+        {
+            _help = help;
+            return this;
+        }
+
         public ParsedArguments Parse(
             string[] args
         )
@@ -41,10 +49,15 @@ namespace bitsplat.CommandLine
             string[] args
         ) where T : ParsedArguments, new()
         {
-            var result = new T();
-            result.RawArguments = args.ToArray(); // copy
+            var result = new T
+            {
+                RawArguments = args.ToArray()
+            };
+            // copy
 
             var argsList = args.ToList();
+            result.ShowedHelp = argsList.TryFindFlag("--help", "-h") ?? false;
+
             _flags.ForEach(
                 kvp => ParseFlag(
                     result,
@@ -61,8 +74,58 @@ namespace bitsplat.CommandLine
                     kvp.Value
                 )
             );
-            MapCustomProperties(result);
+            if (result.ShowedHelp)
+            {
+                RenderHelp(result);
+            }
+            else
+            {
+                MapCustomProperties(result);
+            }
+
             return result;
+        }
+
+        private void RenderHelp(ParsedArguments result)
+        {
+            var flagHelp = result.Flags.Aggregate(
+                new Dictionary<string[], string[]>(),
+                (acc, kvp) =>
+                {
+                    acc[kvp.Value.Switches] = kvp.Value.Help;
+                    return acc;
+                });
+            var parameterHelp = result.Parameters.Aggregate(
+                new Dictionary<string[], string[]>(),
+                (acc, kvp) =>
+                {
+                    acc[kvp.Value.Switches] = kvp.Value.Help;
+                    return acc;
+                });
+            var sorted = flagHelp.Union(parameterHelp)
+                .OrderBy(kvp => kvp.Key.FirstOrDefault())
+                .ToArray();
+            
+            _help.ForEach(line =>
+            {
+                var available = Console.WindowWidth;
+                var subs = line.SplitLines(available);
+                subs.ForEach(s => Console.WriteLine(s));
+            });
+            sorted.ForEach(o => RenderHelpFor(o.Key, o.Value));
+        }
+
+        private void RenderHelpFor(
+            string[] switches,
+            string[] help)
+        {
+            Console.WriteLine($"  {switches.JoinWith(", ")}");
+            var available = Console.WindowWidth - 4 - 2; // allow 4 lead and 2 padding at the end
+            help.ForEach(line =>
+            {
+                var subLines = line.SplitLines(available);
+                subLines.ForEach(s => Console.WriteLine($"    {s}"));
+            });
         }
 
         private void MapCustomProperties<T>(T result)
@@ -290,6 +353,8 @@ namespace bitsplat.CommandLine
         private static readonly Dictionary<Type, Dictionary<string, PropertyInfo>>
             _propertyCache = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
 
+        private string[] _help;
+
         private Dictionary<string, PropertyInfo> ReadPropertiesOf(Type type)
         {
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -311,8 +376,20 @@ namespace bitsplat.CommandLine
             result.Parameters[name] = new ParsedArgument<string[]>()
             {
                 Value = parser.Parse(args),
-                IsRequired = parser.IsRequired
+                IsRequired = parser.IsRequired,
+                Help = parser.Help,
+                Switches = parser.Switches
             };
+            
+            if (!result.ShowedHelp &&
+                result.Parameters[name].Value.Length == 0 &&
+                result.Parameters[name].IsRequired)
+            {
+                throw new ArgumentException(
+                    $"{name} is required"
+                );
+            }
+
         }
 
         private void ParseFlag(
@@ -326,8 +403,31 @@ namespace bitsplat.CommandLine
             result.Flags[name] = new ParsedArgument<bool>()
             {
                 Value = parser.Parse(args),
-                IsRequired = parser.IsRequired
+                IsRequired = parser.IsRequired,
+                Help = parser.Help,
+                Switches = parser.Switches
             };
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string[] SplitLines(this string str, int maxLength)
+        {
+            var start = 0;
+            var result = new List<string>();
+            while (start < str.Length)
+            {
+                var end = maxLength;
+                if (start + end > str.Length)
+                {
+                    end = str.Length - start;
+                }
+
+                result.Add(str.Substring(start, end));
+                start += end;
+            }
+            return result.ToArray();
         }
     }
 }

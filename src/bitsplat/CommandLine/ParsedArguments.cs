@@ -6,6 +6,8 @@ namespace bitsplat.CommandLine
     {
         public T Value { get; set; }
         public bool IsRequired { get; set; }
+        public string[] Help { get; set; }
+        public string[] Switches { get; set; }
     }
 
     public class ParsedArguments
@@ -16,5 +18,7 @@ namespace bitsplat.CommandLine
             = new Dictionary<string, ParsedArgument<bool>>();
         public IDictionary<string, ParsedArgument<string[]>> Parameters { get; } 
             = new Dictionary<string, ParsedArgument<string[]>>();
+
+        public bool ShowedHelp { get; set; }
     }
 }

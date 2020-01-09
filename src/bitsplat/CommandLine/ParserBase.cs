@@ -9,12 +9,13 @@ namespace bitsplat.CommandLine
         public string Name { get; }
         public TValue Default { get; set; }
         public bool IsRequired { get; set; }
+        public string[] Help { get; set; }
 
-        public string[] Args =>
-            _argsArray ??= _args.ToArray();
+        public string[] Switches =>
+            _switchesArray ??= _switches.ToArray();
 
-        private List<string> _args = new List<string>();
-        private string[] _argsArray;
+        private readonly List<string> _switches = new List<string>();
+        private string[] _switchesArray;
 
         public ParserBase(string name)
         {
@@ -23,8 +24,8 @@ namespace bitsplat.CommandLine
 
         public TParser WithArg(string argument)
         {
-            _args.Add(argument);
-            _argsArray = null;
+            _switches.Add(argument);
+            _switchesArray = null;
             return this as TParser;
         }
     }

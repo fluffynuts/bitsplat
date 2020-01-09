@@ -15,9 +15,15 @@ namespace bitsplat.CommandLine
             return this;
         }
 
+        public FlagParser WithHelp(params string[] help)
+        {
+            Help = help;
+            return this;
+        }
+
         public bool Parse(IList<string> args)
         {
-            return args.TryFindFlag(Args) ?? Default;
+            return args.TryFindFlag(Switches) ?? Default;
         }
     }
 }

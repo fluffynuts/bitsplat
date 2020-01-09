@@ -15,7 +15,7 @@ namespace bitsplat.CommandLine
 
         public string[] Parse(IList<string> args)
         {
-            var result = args.FindParameters(Args);
+            var result = args.FindParameters(Switches);
             if (result.Length == 0 && 
                 Default?.Length > 0)
             {
@@ -23,20 +23,18 @@ namespace bitsplat.CommandLine
                 result = Default.ToArray();
             }
 
-            if (result.Length == 0 &&
-                IsRequired)
-            {
-                throw new ArgumentException(
-                    $"{Name} is required"
-                );
-            }
-
             return result;
         }
 
         public ParameterParser Required()
         {
-            base.IsRequired = true;
+            IsRequired = true;
+            return this;
+        }
+
+        public ParameterParser WithHelp(params string[] help)
+        {
+            Help = help;
             return this;
         }
     }
