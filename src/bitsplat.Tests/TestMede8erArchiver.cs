@@ -23,18 +23,24 @@ namespace bitsplat.Tests
             {
                 // Arrange
                 var source = Substitute.For<IFileSystem>();
-                source.ListResourcesRecursive()
-                    .Returns(new IReadWriteFileResource[0]);
+                    source.ListResourcesRecursive()
+                        .Returns(new IReadWriteFileResource[0]);
                 var target = Substitute.For<IFileSystem>();
+                target.ListResourcesRecursive()
+                    .Returns(new IReadWriteFileResource[0]);
+                var archive = Substitute.For<IFileSystem>();
                 var sut = Create();
                 // Act
-                Expect(() => sut.RunArchiveOperations(source, target))
+                Expect(() => sut.RunArchiveOperations(
+                        target, 
+                        archive, 
+                        source))
                     .Not.To.Throw();
                 // Assert
-                Expect(source)
+                Expect(target)
                     .To.Have.Received(2)
                     .ListResourcesRecursive();
-                Expect(target)
+                Expect(archive)
                     .Not.To.Have.Received()
                     .Open(Arg.Any<string>(), Arg.Any<FileMode>());
             }
@@ -49,15 +55,18 @@ namespace bitsplat.Tests
                 // Arrange
                 var sourceResource = Substitute.For<IReadWriteFileResource>();
                 sourceResource.Path.Returns("some.file");
+                var target = Substitute.For<IFileSystem>();
+                target.ListResourcesRecursive()
+                    .Returns(sourceResource.AsArray());
                 var source = Substitute.For<IFileSystem>();
                 source.ListResourcesRecursive()
                     .Returns(sourceResource.AsArray());
-                var target = Substitute.For<IFileSystem>();
+                var archive = Substitute.For<IFileSystem>();
                 var sut = Create();
                 // Act
-                sut.RunArchiveOperations(source, target);
+                sut.RunArchiveOperations(target, archive, source);
                 // Assert
-                Expect(target)
+                Expect(archive)
                     .Not.To.Have.Received()
                     .Open(Arg.Any<string>(), Arg.Any<FileMode>());
                 Expect(sourceResource)
@@ -72,54 +81,40 @@ namespace bitsplat.Tests
             [Test]
             public void ShouldArchiveOnlyThoseFiles()
             {
-                using (var arena = new TestArena())
-                {
-                    // Arrange
-                    var toArchive = $"{GetRandomFileName()}";
-                    var archiveData = GetRandomBytes();
-                    var archiveFile = arena.CreateSourceFile(toArchive, archiveData);
-                    var archiveMarker = arena.CreateSourceFile($"{archiveFile.Name}.t", new byte[0]);
+                using var arena = new TestArena();
+                // Arrange
+                var toArchive = $"{GetRandomFileName()}";
+                var archiveData = GetRandomBytes();
+                var sourceFile = arena.CreateSourceFile(toArchive, archiveData);
+                var targetFile = arena.CreateTargetFile(toArchive, archiveData);
+                var targetMarker = arena.CreateTargetFile($"{sourceFile.Name}.t", new byte[0]);
+                var archive = arena.ArchiveFileSystem;
+                var target = arena.TargetFileSystem;
+            var source = arena.SourceFileSystem;
 
-                    var keepData = GetRandomBytes();
-                    var toKeep = GetRandomFileName();
-                    var keepFile = arena.CreateSourceFile(toKeep, keepData);
-                    var source = arena.SourceFileSystem; //  new LocalFileSystem(arena.SourcePath);
-                    var target = arena.TargetFileSystem; // new LocalFileSystem(arena.TargetPath);
-                    var expectedFile = Path.Combine(arena.TargetPath, toArchive);
-
-                    Expect(source.ListResourcesRecursive())
-                        .To.Contain.Only(3)
-                        .Matched.By(f =>
-                            (f.Name == archiveMarker.Name && f.Size == 0) ||
-                            (f.Name == toArchive && f.Size == archiveData.Length) ||
-                            (f.Name == toKeep && f.Size == keepData.Length));
-                    var sut = Create();
-                    // Act
-                    sut.RunArchiveOperations(
-                        source,
-                        target);
-                    // Assert
-                    // archive file and marker should have moved
-                    Expect(archiveFile.Path)
-                        .Not.To.Exist();
-                    Expect(archiveMarker.Path)
-                        .Not.To.Exist();
-
-                    // keep file should still be there
-                    Expect(keepFile.Path)
-                        .To.Exist();
-                    Expect(keepFile.Path)
-                        .To.Have.Data(keepFile.Data);
-
-                    // archive target should have archived file
-                    Expect(expectedFile)
-                        .To.Exist();
-                    Expect(expectedFile)
-                        .To.Have.Data(archiveData);
-                    // archive marker should no longer exist
-                    Expect($"{expectedFile}.t")
-                        .Not.To.Exist();
-                }
+                var sut = Create();
+                // Act
+                sut.RunArchiveOperations(
+                    target,
+                    archive,
+                    source);
+                // Assert
+                // archive target should have archived file
+                // -> should not be at target
+                Expect(arena.TargetFileSystem.Exists(toArchive))
+                    .To.Be.False("Target file should not exist any more");
+                // -> should not be at source either
+                Expect(arena.SourceFileSystem.Exists(toArchive))
+                    .To.Be.False("Source file should not exist any more");
+                // archive marker should no longer exist
+                Expect(arena.TargetFileSystem.Exists($"{toArchive}.t"))
+                    .To.Be.False("Target file marker should not exist any more");
+                // resource file _should_ exist at archive
+                Expect(arena.ArchiveFileSystem.Exists(toArchive))
+                    .To.Be.True("Resource should be archived");
+                // marker file _should not_ exist at archive
+                Expect(arena.ArchiveFileSystem.Exists($"{toArchive}.t"))
+                    .To.Be.False("Marker should not be present in archive");
             }
         }
 

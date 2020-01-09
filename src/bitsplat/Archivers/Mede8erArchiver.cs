@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using bitsplat.Filters;
 using bitsplat.History;
@@ -14,17 +13,25 @@ namespace bitsplat.Archivers
     public interface IArchiver
     {
         void RunArchiveOperations(
-            IFileSystem source,
-            IFileSystem target
-        );
+            IFileSystem target,
+            IFileSystem archive,
+            IFileSystem source);
     }
 
-    public class NullArchiver : IArchiver
+    public class ArchiveFileSystems
     {
-        public void RunArchiveOperations(
-            IFileSystem source, 
-            IFileSystem target)
+        public IFileSystem Target { get; }
+        public IFileSystem Archive { get; }
+        public IFileSystem Source { get; }
+
+        public ArchiveFileSystems(
+            IFileSystem target,
+            IFileSystem archive,
+            IFileSystem source)
         {
+            Target = target;
+            Archive = archive;
+            Source = source;
         }
     }
 
@@ -46,20 +53,23 @@ namespace bitsplat.Archivers
         }
 
         public void RunArchiveOperations(
-            IFileSystem source,
-            IFileSystem target)
+            IFileSystem target,
+            IFileSystem archive,
+            IFileSystem source)
         {
-            var sourceResources = source.ListResourcesRecursive();
-            var archiveMarkers = sourceResources
+            var targetResources = target.ListResourcesRecursive();
+            var archiveMarkers = targetResources
                 .Where(r => r.Name?.EndsWith(".t") ?? false)
                 .Select(r => r.RelativePath)
                 .ToArray();
             var toArchive = archiveMarkers
                 .Select(p => p.RegexReplace(".t$", ""))
                 .ToArray();
-            SynchronizeArchiveFiles(source, target, toArchive);
+            
+            SynchronizeArchiveFiles(source, archive, toArchive);
             toArchive.ForEach(source.Delete);
-            archiveMarkers.ForEach(source.Delete);
+            toArchive.ForEach(target.Delete);
+            archiveMarkers.ForEach(target.Delete);
         }
 
         private void SynchronizeArchiveFiles(

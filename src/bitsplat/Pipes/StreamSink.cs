@@ -40,6 +40,7 @@ namespace bitsplat.Pipes
             int count)
         {
             _target?.Write(buffer, 0, count);
+
             if (_target is FileStream fs)
             {
                 // force disk flush to better reflect

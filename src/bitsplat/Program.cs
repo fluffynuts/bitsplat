@@ -22,7 +22,8 @@ namespace bitsplat
 
             archiver.RunArchiveOperations(
                 target,
-                archive);
+                archive,
+                source);
 
             var synchronizer = container.Resolve<ISynchronizer>();
 
@@ -114,6 +115,10 @@ namespace bitsplat
                 .WithParameter(
                     nameof(Options.SyncStrategy),
                     o => o.WithArg("--sync-strategy")
+                )
+                .WithFlag(
+                    nameof(Options.NoFlush),
+                    o => o.WithArg("--no-flush")
                 )
                 .Parse<Options>(args);
             return opts;
