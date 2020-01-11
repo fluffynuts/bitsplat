@@ -72,19 +72,10 @@ namespace bitsplat
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
-                                  targetResourcesCollection.ToArray();
+                targetResourcesCollection.ToArray();
 
             var comparison = CompareResources(sourceResources, targetResources);
-            _progressReporter.Bookend(
-                "Recording skipped item history",
-                () =>
-                {
-                    RecordHistory(
-                        comparison.Skipped
-                            .Union(comparison.RecordOnly)
-                    );
-                }
-            );
+            RecordSkipped(comparison);
 
             var syncQueue = comparison.SyncQueue
                 .OrderBy(resource => resource.RelativePath)
@@ -98,47 +89,76 @@ namespace bitsplat
             }
 
             syncQueue.ForEach(sourceResource =>
-            {
-                var targetResource = targetResources.FirstOrDefault(
-                    r => r.RelativePath == sourceResource.RelativePath);
-
-                var sourceStream = sourceResource.OpenForRead();
-                var targetStream = target.Open(
-                    sourceResource.RelativePath,
-                    FileMode.OpenOrCreate);
-
-                var resuming = ResumeIfPossible(
+                SynchroniseResource(
                     sourceResource,
-                    targetResource,
-                    sourceStream,
-                    targetStream);
-
-                NotifySyncStart(
-                    sourceResource,
-                    resuming
-                        ? targetResource
-                        : null);
-
-                var composition = ComposePipeline(sourceStream, targetStream);
-                try
-                {
-                    composition.Drain();
-                    NotifySyncComplete(
-                        sourceResource,
-                        targetResource ??
-                        CreateFileResourcePropertiesFor(
-                            target,
-                            sourceResource)
-                    );
-                    RecordHistory(sourceResource);
-                }
-                catch (Exception ex)
-                {
-                    NotifyError(sourceResource, targetResource, ex);
-                }
-            });
+                    target,
+                    targetResources
+                )
+            );
 
             NotifySyncBatchComplete(syncQueue);
+        }
+
+        private void SynchroniseResource(IReadWriteFileResource sourceResource,
+            IFileSystem target,
+            IReadWriteFileResource[] targetResources)
+        {
+            var targetResource = targetResources.FirstOrDefault(
+                r => r.RelativePath == sourceResource.RelativePath);
+
+            var sourceStream = sourceResource.OpenForRead();
+            var targetStream = target.Open(
+                sourceResource.RelativePath,
+                FileMode.OpenOrCreate);
+
+            var resuming = ResumeIfPossible(
+                sourceResource,
+                targetResource,
+                sourceStream,
+                targetStream);
+
+            NotifySyncStart(
+                sourceResource,
+                resuming
+                    ? targetResource
+                    : null);
+
+            var composition = ComposePipeline(sourceStream, targetStream);
+            try
+            {
+                composition.Drain();
+                NotifySyncComplete(
+                    sourceResource,
+                    targetResource ??
+                    CreateFileResourcePropertiesFor(
+                        target,
+                        sourceResource)
+                );
+                RecordHistory(sourceResource);
+            }
+            catch (Exception ex)
+            {
+                NotifyError(sourceResource, targetResource, ex);
+            }
+        }
+
+        private void RecordSkipped(FileSystemComparison comparison)
+        {
+            var toRecord = comparison.Skipped
+                .Union(comparison.RecordOnly)
+                .ToArray();
+            if (toRecord.Any())
+            {
+                _progressReporter.Bookend(
+                    "Recording skipped item history",
+                    () =>
+                    {
+                        RecordHistory(
+                            toRecord
+                        );
+                    }
+                );
+            }
         }
 
         private class FileSystemComparison
@@ -254,11 +274,11 @@ namespace bitsplat
             Stream targetStream)
         {
             var canResume = targetResource != null &&
-                            _resumeStrategy.CanResume(
-                                sourceResource,
-                                targetResource,
-                                sourceStream,
-                                targetStream);
+                _resumeStrategy.CanResume(
+                    sourceResource,
+                    targetResource,
+                    sourceStream,
+                    targetStream);
             if (canResume)
             {
                 sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
@@ -329,8 +349,8 @@ namespace bitsplat
                         _targetHistoryRepository);
 
                     return CurrentFilterIsAmbivalent()
-                               ? acc1
-                               : thisResult;
+                        ? acc1
+                        : thisResult;
 
                     bool AlreadyExcluded()
                     {
@@ -355,7 +375,7 @@ namespace bitsplat
         {
             var historyItem = _targetHistoryRepository.Find(resource.RelativePath);
             return historyItem != null &&
-                   historyItem.Size == resource.Size;
+                historyItem.Size == resource.Size;
         }
 
         private void RecordHistory(IReadWriteFileResource readWriteFileResource)
