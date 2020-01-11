@@ -133,13 +133,38 @@ namespace bitsplat.Tests
         public class WhenHistoryIsKept
         {
             [Test]
-            [Explicit("WIP")]
             public void ShouldNotRecopyFileInHistory()
             {
                 // Arrange
+                var arena = CreateArena();
+                var sourceFile = arena.CreateSourceFile();
+                var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
 
                 // Act
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath
+                    });
+                Expect(expectedTarget)
+                    .To.Exist();
+                File.Delete(expectedTarget);
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath
+                    });
                 // Assert
+                Expect(expectedTarget)
+                    .Not.To.Exist();
             }
         }
 
@@ -147,13 +172,39 @@ namespace bitsplat.Tests
         public class WhenHistoryIsNotKept
         {
             [Test]
-            [Explicit("WIP")]
             public void ShouldRecopyMissingTargetFile()
             {
                 // Arrange
+                var arena = CreateArena();
+                var sourceFile = arena.CreateSourceFile();
+                var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
 
                 // Act
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath
+                    });
+                Expect(expectedTarget)
+                    .To.Exist();
+                File.Delete(expectedTarget);
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath,
+                        "-n"
+                    });
                 // Assert
+                Expect(expectedTarget)
+                    .To.Exist();
             }
         }
 
