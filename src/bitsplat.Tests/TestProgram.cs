@@ -79,12 +79,16 @@ namespace bitsplat.Tests
             var series = "Some Series";
             var season = "Season 01";
             var episode1 = "Episode 1.mkv";
-            var episode2 = "Episdoe 2.mkv";
+            var episode2 = "Episode 2.mkv";
 
             var watchedMarker = arena.CreateTargetFile(
                 Path.Combine(series, season, $"{episode1}.t")
             );
             var watchedFile = arena.CreateTargetFile(
+                Path.Combine(series, season, episode1)
+            );
+            // it's expected that the file should still exist at the source
+            arena.CreateSourceFile(
                 Path.Combine(series, season, episode1)
             );
             arena.CreateSourceFile(
@@ -133,7 +137,7 @@ namespace bitsplat.Tests
             public void ShouldNotRecopyFileInHistory()
             {
                 // Arrange
-            
+
                 // Act
                 // Assert
             }
@@ -147,7 +151,7 @@ namespace bitsplat.Tests
             public void ShouldRecopyMissingTargetFile()
             {
                 // Arrange
-                
+
                 // Act
                 // Assert
             }

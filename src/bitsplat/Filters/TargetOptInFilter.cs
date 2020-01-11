@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using bitsplat.CommandLine;
 using bitsplat.History;
 using bitsplat.Storage;
 
@@ -89,7 +90,7 @@ namespace bitsplat.Filters
         private static string FindPrimaryAncestorFolder(
             string path)
         {
-            var parts = path.Split("/");
+            var parts = path.SplitPath();
             return parts.Length == 1
                        ? ""
                        : parts.First();

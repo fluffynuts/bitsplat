@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -5,6 +6,7 @@ using System.IO;
 using System.Linq;
 using bitsplat.Pipes;
 using Dapper;
+using PeanutButter.Utils;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
 
@@ -133,9 +135,15 @@ namespace bitsplat.History
 
         private string CreateConnectionString()
         {
+            var uri = new Uri(Path.Combine(_folder, _databaseName)).ToString();;
+            if (Platform.IsWindows)
+            {
+                uri = uri.Replace("file:///", "file://");
+            }
+
             return new SQLiteConnectionStringBuilder()
             {
-                Uri = Path.Combine(_folder, _databaseName)
+                Uri = uri
             }.ToString();
         }
     }

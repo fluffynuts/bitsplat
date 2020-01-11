@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using bitsplat.CommandLine;
 
 namespace bitsplat.Storage
 {
@@ -18,11 +19,7 @@ namespace bitsplat.Storage
         public abstract long Size { get; }
         public abstract string RelativePath { get; }
 
-        public virtual string Name => Regex.Split(
-                RelativePath ?? "",
-                "[/||\\\\]"
-            )
-            .Last();
+        public virtual string Name => RelativePath.SplitPath().Last();
     }
 
     public interface IReadWriteFileResource : IFileResource

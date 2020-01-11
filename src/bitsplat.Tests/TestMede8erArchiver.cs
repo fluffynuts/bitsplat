@@ -38,7 +38,10 @@ namespace bitsplat.Tests
                     .Not.To.Throw();
                 // Assert
                 Expect(target)
-                    .To.Have.Received(2)
+                    .To.Have.Received(1)
+                    .ListResourcesRecursive();
+                Expect(source)
+                    .To.Have.Received(1)
                     .ListResourcesRecursive();
                 Expect(archive)
                     .Not.To.Have.Received()
