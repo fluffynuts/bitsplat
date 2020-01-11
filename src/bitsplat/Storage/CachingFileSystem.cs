@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace bitsplat.Storage
 {
@@ -76,6 +77,26 @@ namespace bitsplat.Storage
         public void Delete(string path)
         {
             _underlying.Delete(path);
+            RemoveCachedListResultsFor(path);
+        }
+
+        private void RemoveCachedListResultsFor(string path)
+        {
+            var keys = _cache.Keys
+                .Where(k => k.StartsWith(nameof(ListResourcesRecursive)))
+                .ToArray();
+            keys.ForEach(k =>
+            {
+                if (!(_cache[k] is IEnumerable<IReadWriteFileResource> items))
+                {
+                    return;
+                }
+
+                var updated = items
+                    .Where(o => o.RelativePath != path)
+                    .ToArray();
+                _cache[k] = updated;
+            });
         }
 
         private T Resolve<T>(
