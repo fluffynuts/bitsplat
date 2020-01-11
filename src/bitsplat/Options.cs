@@ -19,5 +19,6 @@ namespace bitsplat
         public bool NoResume { get; set; }
         public bool Quiet { get; set; }
         public bool NoHistory { get; set; }
+        public bool KeepStaleFiles { get; set; }
     }
 }

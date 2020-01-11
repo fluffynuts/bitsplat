@@ -5,6 +5,7 @@ using bitsplat.Filters;
 using bitsplat.History;
 using bitsplat.Pipes;
 using bitsplat.ResumeStrategies;
+using bitsplat.StaleFileRemovers;
 using bitsplat.Storage;
 using DryIoc;
 
@@ -22,6 +23,15 @@ namespace bitsplat
                 );
         }
 
+        public static IContainer WithStaleFileRemoverFor(
+            this IContainer container,
+            Options options)
+        {
+            return options.KeepStaleFiles
+                ? container.WithRegistration<IStaleFileRemover, NullStaleFileRemover>()
+                : container.WithRegistration<IStaleFileRemover, DefaultStaleFileRemover>();
+        }
+
         public static IContainer WithArchive(
             this IContainer container,
             string archive)
@@ -29,9 +39,6 @@ namespace bitsplat
             return string.IsNullOrWhiteSpace(archive)
                        ? container.WithNullArchiver()
                        : container.WithMede8erArchiverTargeting(archive);
-
-            // TODO: allow different archivers
-            // - eg Kodi, which can also mark media as "watched"
         }
 
         private static IContainer WithNullArchiver(

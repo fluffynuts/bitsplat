@@ -2,6 +2,7 @@
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
 using bitsplat.ResumeStrategies;
+using bitsplat.StaleFileRemovers;
 using DryIoc;
 using static bitsplat.Filters.FilterRegistrations;
 
@@ -23,11 +24,14 @@ namespace bitsplat
             var target = container.ResolveTargetFileSystem();
             var archive = container.ResolveArchiveFileSystem();
             var archiver = container.Resolve<IArchiver>();
-
+            var staleFileRemover = container.Resolve<IStaleFileRemover>();
+            
             archiver.RunArchiveOperations(
                 target,
                 archive,
                 source);
+            
+            staleFileRemover.RemoveStaleFiles(source, target);
 
             var synchronizer = container.Resolve<ISynchronizer>();
 
@@ -75,6 +79,7 @@ namespace bitsplat
                 .WithArchive(opts.Archive)
                 .WithProgressReporterFor(opts)
                 .WithMessageWriterFor(opts)
+                .WithStaleFileRemoverFor(opts)
                 .OpenScope();
         }
 
@@ -142,6 +147,12 @@ namespace bitsplat
                                 "Greedy synchronises everything",
                                 "TargetOptIn only synchronises folders which alread exist or have been recorded in the history database"
                             )
+                    )
+                    .WithFlag(
+                        nameof(Options.KeepStaleFiles),
+                        o => o.WithArg("--keep-stale")
+                            .WithArg("-k")
+                            .WithHelp("Keep stale files (ie files removed from source and still at the target")
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
