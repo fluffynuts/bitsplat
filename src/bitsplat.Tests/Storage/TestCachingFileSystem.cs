@@ -282,10 +282,10 @@ namespace bitsplat.Tests.Storage
         }
 
         [TestFixture]
-        public class Delete: TestCachingFileSystem
+        public class WhenDeleting: TestCachingFileSystem
         {
             [TestFixture]
-            public class WhenNoOptions: Delete
+            public class WhenNoOptions: WhenDeleting
             {
                 [Test]
                 public void ShouldRemoveFromCachedList()
@@ -314,7 +314,7 @@ namespace bitsplat.Tests.Storage
             }
 
             [TestFixture]
-            public class WhenHaveOptions: Delete
+            public class WhenHaveOptions: WhenDeleting
             {
                 [Test]
                 public void ShouldRemoveFromCachedList()
