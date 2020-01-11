@@ -145,7 +145,7 @@ namespace bitsplat
                         o => o.WithArg("--sync-strategy")
                             .WithHelp("Set the sync strategy to one of: Greedy or TargetOptIn",
                                 "Greedy synchronises everything",
-                                "TargetOptIn only synchronises folders which alread exist or have been recorded in the history database"
+                                "TargetOptIn only synchronises folders which already exist or have been recorded in the history database"
                             )
                     )
                     .WithFlag(

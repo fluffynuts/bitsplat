@@ -166,6 +166,67 @@ namespace bitsplat.Tests
                 Expect(expectedTarget)
                     .Not.To.Exist();
             }
+            
+            [Test]
+            public void ShouldNotRecopyFileInHistoryFromRoot()
+            {
+                // Arrange
+                var arena = CreateArena();
+                var sourceFile = arena.CreateSourceFile("Movie.mkv");
+                var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
+                var expectedArchive = Path.Combine(arena.ArchivePath, sourceFile.RelativePath);
+
+                // Act
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath,
+                        "-a",
+                        arena.ArchivePath
+                    });
+                Expect(expectedTarget)
+                    .To.Exist();
+                arena.CreateTargetFile("Movie.mkv.t");
+                
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath,
+                        "-a",
+                        arena.ArchivePath
+                    });
+                Expect(expectedTarget)
+                    .Not.To.Exist();
+                Expect(expectedArchive)
+                    .To.Exist();
+                Expect(sourceFile.RelativePath)
+                    .Not.To.Exist();
+                
+                // recreate the source
+                arena.CreateSourceFile(sourceFile.RelativePath, sourceFile.Data);
+                Program.Main(
+                    new[]
+                    {
+                        "-q",
+                        "-s",
+                        arena.SourcePath,
+                        "-t",
+                        arena.TargetPath,
+                        "-a",
+                        arena.ArchivePath
+                    });
+                Expect(expectedTarget)
+                    .Not.To.Exist();
+                // Assert
+            }
         }
 
         [TestFixture]
