@@ -47,7 +47,9 @@ namespace bitsplat.Tests.StaleFileRemovers
 
         private static IStaleFileRemover Create()
         {
-            return new DefaultStaleFileRemover();
+            return new DefaultStaleFileRemover(
+                new FakeProgressReporter()
+            );
         }
     }
 

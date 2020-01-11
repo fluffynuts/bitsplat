@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using bitsplat.Pipes;
 using bitsplat.Storage;
 
 namespace bitsplat.StaleFileRemovers
@@ -18,8 +19,15 @@ namespace bitsplat.StaleFileRemovers
         }
     }
 
-    public class DefaultStaleFileRemover: IStaleFileRemover
+    public class DefaultStaleFileRemover : IStaleFileRemover
     {
+        private readonly IProgressReporter _progressReporter;
+
+        public DefaultStaleFileRemover(IProgressReporter progressReporter)
+        {
+            _progressReporter = progressReporter;
+        }
+
         public void RemoveStaleFiles(IFileSystem source, IFileSystem target)
         {
             var sourcePaths = source.ListResourcesRecursive()
@@ -27,7 +35,13 @@ namespace bitsplat.StaleFileRemovers
                 .AsHashSet();
             target.ListResourcesRecursive()
                 .Where(o => !sourcePaths.Contains(o.RelativePath))
-                .ForEach(o => target.Delete(o.RelativePath));
+                .ForEach(o =>
+                {
+                    _progressReporter.Bookend(
+                        $"Remove target: {o.RelativePath}",
+                        () => target.Delete(o.RelativePath)
+                    );
+                });
         }
     }
 
