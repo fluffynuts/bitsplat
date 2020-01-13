@@ -4,6 +4,7 @@ using bitsplat.Tests.TestingSupport;
 using static NExpect.Expectations;
 using NExpect;
 using NUnit.Framework;
+using static PeanutButter.RandomGenerators.RandomValueGen;
 
 namespace bitsplat.Tests
 {
@@ -18,17 +19,13 @@ namespace bitsplat.Tests
             var newFile = arena.CreateSourceFile();
             Expect(newFile.Path)
                 .To.Exist();
-            var args = new[]
-            {
-                "-q",
-                "-s",
-                arena.SourcePath,
-                "-t",
-                arena.TargetPath
-            };
             var expected = arena.TargetPathFor(newFile.RelativePath);
             // Act
-            Program.Main(args);
+            Program.Main(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath
+            );
             // Assert
             Expect(expected)
                 .To.Exist();
@@ -48,18 +45,14 @@ namespace bitsplat.Tests
             var newFile = arena.CreateSourceFile();
             Expect(newFile.Path)
                 .To.Exist();
-            var args = new[]
-            {
-                "-q",
-                "-n",
-                "-s",
-                arena.SourcePath,
-                "-t",
-                arena.TargetPath
-            };
             var expected = arena.TargetPathFor(newFile.RelativePath);
             // Act
-            Program.Main(args);
+            Program.Main(
+                "-q",
+                "-n",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath
+            );
             // Assert
             Expect(expected)
                 .To.Exist();
@@ -106,18 +99,13 @@ namespace bitsplat.Tests
                 episode2
             );
 
-            var args = new[]
-            {
-                "-s",
-                arena.SourcePath,
-                "-t",
-                arena.TargetPath,
-                "-a",
-                arena.ArchivePath,
-                "-q"
-            };
             // Act
-            Program.Main(args);
+            Program.Main(
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                "-a", arena.ArchivePath,
+                "-q"
+            );
             // Assert
             Expect(watchedMarker.Path)
                 .Not.To.Exist();
@@ -136,42 +124,34 @@ namespace bitsplat.Tests
             public void ShouldNotRecopyFileInHistory()
             {
                 // Arrange
-                var arena = CreateArena();
+                using var arena = CreateArena();
                 var sourceFile = arena.CreateSourceFile();
                 var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
 
                 // Act
                 Program.Main(
-                    new[]
-                    {
-                        "-q",
-                        "-s",
-                        arena.SourcePath,
-                        "-t",
-                        arena.TargetPath
-                    });
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
                 Expect(expectedTarget)
                     .To.Exist();
                 File.Delete(expectedTarget);
                 Program.Main(
-                    new[]
-                    {
-                        "-q",
-                        "-s",
-                        arena.SourcePath,
-                        "-t",
-                        arena.TargetPath
-                    });
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
                 // Assert
                 Expect(expectedTarget)
                     .Not.To.Exist();
             }
-            
+
             [Test]
             public void ShouldNotRecopyFileInHistoryFromRoot()
             {
                 // Arrange
-                var arena = CreateArena();
+                using var arena = CreateArena();
                 var sourceFile = arena.CreateSourceFile("Movie.mkv");
                 var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
                 var expectedArchive = Path.Combine(arena.ArchivePath, sourceFile.RelativePath);
@@ -191,7 +171,7 @@ namespace bitsplat.Tests
                 Expect(expectedTarget)
                     .To.Exist();
                 arena.CreateTargetFile("Movie.mkv.t");
-                
+
                 Program.Main(
                     new[]
                     {
@@ -209,20 +189,15 @@ namespace bitsplat.Tests
                     .To.Exist();
                 Expect(sourceFile.RelativePath)
                     .Not.To.Exist();
-                
+
                 // recreate the source
                 arena.CreateSourceFile(sourceFile.RelativePath, sourceFile.Data);
                 Program.Main(
-                    new[]
-                    {
-                        "-q",
-                        "-s",
-                        arena.SourcePath,
-                        "-t",
-                        arena.TargetPath,
-                        "-a",
-                        arena.ArchivePath
-                    });
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-a", arena.ArchivePath
+                );
                 Expect(expectedTarget)
                     .Not.To.Exist();
                 // Assert
@@ -236,7 +211,7 @@ namespace bitsplat.Tests
             public void ShouldRecopyMissingTargetFile()
             {
                 // Arrange
-                var arena = CreateArena();
+                using var arena = CreateArena();
                 var sourceFile = arena.CreateSourceFile();
                 var expectedTarget = Path.Combine(arena.TargetPath, sourceFile.RelativePath);
 
@@ -245,27 +220,74 @@ namespace bitsplat.Tests
                     new[]
                     {
                         "-q",
-                        "-s",
-                        arena.SourcePath,
-                        "-t",
-                        arena.TargetPath
+                        "-s", arena.SourcePath,
+                        "-t", arena.TargetPath
                     });
                 Expect(expectedTarget)
                     .To.Exist();
                 File.Delete(expectedTarget);
                 Program.Main(
-                    new[]
-                    {
-                        "-q",
-                        "-s",
-                        arena.SourcePath,
-                        "-t",
-                        arena.TargetPath,
-                        "-n"
-                    });
+                    "-q", "-s", arena.SourcePath, "-t", arena.TargetPath, "-n"
+                );
                 // Assert
                 Expect(expectedTarget)
                     .To.Exist();
+            }
+        }
+
+        [TestFixture]
+        public class WhenRunningInOptInMode
+        {
+            [TestFixture]
+            public class WhenNoHistory
+            {
+                [Test]
+                public void ShouldOnlySyncCommonFoldersAndRoot()
+                {
+                    // Arrange
+                    using var arena = CreateArena();
+                    var rootFileName = GetRandomString(2);
+                    var include = GetRandomString(2);
+                    var exclude = GetAnother(include);
+
+                    var seasonNumber = GetRandomInt(1, 9);
+                    var season = $"Season 0{seasonNumber}";
+                    var epi = $"S0{seasonNumber}E01 Epic Title.mkv";
+
+                    var includeFile = arena.CreateSourceFile(
+                        Path.Combine(include, season, epi)
+                    );
+
+                    var rootFile = arena.CreateSourceFile(
+                        rootFileName
+                    );
+
+                    var excludeFile = arena.CreateSourceFile(
+                        Path.Combine(exclude, season, epi),
+                        includeFile.Data
+                    );
+
+                    arena.CreateTargetFolder(include);
+                    Expect(arena.TargetPathFor(include))
+                        .To.Exist();
+                    var expected = arena.TargetPathFor(includeFile.RelativePath);
+                    var unexpected = arena.TargetPathFor(excludeFile.RelativePath);
+
+                    // Act
+                    Program.Main(
+                        "-m", "opt-in",
+                        "-s", arena.SourcePath,
+                        "-t", arena.TargetPath,
+                        "-q"
+                    );
+                    // Assert
+                    Expect(expected)
+                        .To.Exist();
+                    Expect(unexpected)
+                        .Not.To.Exist();
+                    Expect(arena.TargetPathFor(rootFileName))
+                        .To.Exist();
+                }
             }
         }
 

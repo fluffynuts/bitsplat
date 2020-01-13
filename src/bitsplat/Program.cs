@@ -10,7 +10,7 @@ namespace bitsplat
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static int Main(params string[] args)
         {
             Console.CancelKeyPress += OnCancel;
             if (!TryParseOptionsFrom(args, out var opts))
@@ -74,7 +74,7 @@ namespace bitsplat
                         : typeof(AlwaysResumeWhenTargetSmallerStrategy)
                 )
                 .WithFilter(
-                    FilterMap[opts.SyncStrategy]
+                    FilterMap[opts.SyncMode]
                 )
                 .WithArchive(opts.Archive)
                 .WithProgressReporterFor(opts)
@@ -141,11 +141,12 @@ namespace bitsplat
                             )
                     )
                     .WithParameter(
-                        nameof(Options.SyncStrategy),
-                        o => o.WithArg("--sync-strategy")
-                            .WithHelp("Set the sync strategy to one of: Greedy or TargetOptIn",
-                                "Greedy synchronises everything",
-                                "TargetOptIn only synchronises folders which already exist or have been recorded in the history database"
+                        nameof(Options.SyncMode),
+                        o => o.WithArg("-m")
+                            .WithArg("--mode")
+                            .WithHelp("Set the sync mode to one of: All or Opt-In (case-insensitive)",
+                                "All synchronises everything",
+                                "OptIn only synchronises folders which already exist or have been recorded in the history database"
                             )
                     )
                     .WithFlag(

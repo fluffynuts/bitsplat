@@ -74,7 +74,11 @@ namespace bitsplat
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
                 targetResourcesCollection.ToArray();
 
-            var comparison = CompareResources(sourceResources, targetResources);
+            var comparison = CompareResources(
+                sourceResources, 
+                targetResources,
+                source,
+                target);
             RecordSkipped(comparison);
 
             var syncQueue = comparison.SyncQueue
@@ -290,7 +294,9 @@ namespace bitsplat
 
         private FileSystemComparison CompareResources(
             IEnumerable<IReadWriteFileResource> sourceResources,
-            IEnumerable<IReadWriteFileResource> targetResources)
+            IEnumerable<IReadWriteFileResource> targetResources,
+            IFileSystem source,
+            IFileSystem target)
         {
             return _progressReporter.Bookend(
                 "Comparing source and target",
@@ -300,7 +306,9 @@ namespace bitsplat
                     {
                         var filterResult = ApplyAllFilters(
                             targetResources,
-                            sourceResource
+                            sourceResource,
+                            source,
+                            target
                         );
 
                         List<IReadWriteFileResource> list = null;
@@ -329,7 +337,9 @@ namespace bitsplat
 
         private FilterResult ApplyAllFilters(
             IEnumerable<IReadWriteFileResource> targetResources,
-            IReadWriteFileResource sourceResource)
+            IReadWriteFileResource sourceResource,
+            IFileSystem source,
+            IFileSystem target)
         {
             var filterResult = _filters.Aggregate(
                 FilterResult.Ambivalent,
@@ -346,7 +356,9 @@ namespace bitsplat
                     var thisResult = cur1.Filter(
                         sourceResource,
                         targetResources,
-                        _targetHistoryRepository);
+                        _targetHistoryRepository,
+                        source,
+                        target);
 
                     return CurrentFilterIsAmbivalent()
                         ? acc1

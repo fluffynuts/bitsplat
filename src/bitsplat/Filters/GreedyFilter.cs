@@ -8,11 +8,11 @@ namespace bitsplat.Filters
 {
     public static class FilterRegistrations
     {
-        public static readonly Dictionary<SyncStrategy, Type>
-            FilterMap = new Dictionary<SyncStrategy, Type>()
+        public static readonly Dictionary<SyncMode, Type>
+            FilterMap = new Dictionary<SyncMode, Type>()
             {
-                [SyncStrategy.Greedy] = typeof(GreedyFilter),
-                [SyncStrategy.TargetOptIn] = typeof(TargetOptInFilter)
+                [SyncMode.All] = typeof(GreedyFilter),
+                [SyncMode.OptIn] = typeof(TargetOptInFilter)
             };
     }
 
@@ -21,7 +21,9 @@ namespace bitsplat.Filters
         public FilterResult Filter(
             IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository)
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target)
         {
             return HaveMatchingTargetResource() ||
                    HaveMatchingHistoryItem()

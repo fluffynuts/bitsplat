@@ -10,7 +10,9 @@ namespace bitsplat.Filters
     {
         public FilterResult Filter(IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository)
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target)
         {
             var shouldExclude =
                 TargetFileExists(targetResources, sourceResource) ||

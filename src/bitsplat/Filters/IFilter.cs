@@ -21,6 +21,8 @@ namespace bitsplat.Filters
         FilterResult Filter(
             IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository);
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target);
     }
 }

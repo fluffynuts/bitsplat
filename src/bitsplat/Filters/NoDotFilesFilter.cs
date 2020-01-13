@@ -8,7 +8,9 @@ namespace bitsplat.Filters
     {
         public FilterResult Filter(IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository)
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target)
         {
             return sourceResource.Name.StartsWith(".")
                        ? FilterResult.Exclude

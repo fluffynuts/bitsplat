@@ -43,6 +43,25 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
+        public class EnumParsing
+        {
+            [Test]
+            [Explicit("Discovery")]
+            public void WhenStringHasDashes()
+            {
+                // Arrange
+                var str = "opt-in";
+                // Act
+                var parsed = Enum.TryParse(typeof(SyncMode), str, true, out var result);
+                // Assert
+                Expect(parsed)
+                    .To.Be.True();
+                Expect(result)
+                    .To.Equal(SyncMode.OptIn);
+            }
+        }
+
+        [TestFixture]
         public class DryIocDiscovery : DiscoveryTests
         {
             [Test]

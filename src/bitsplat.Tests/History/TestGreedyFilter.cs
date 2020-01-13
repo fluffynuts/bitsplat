@@ -32,7 +32,9 @@ namespace bitsplat.Tests.History
                     var result = sut.Filter(
                         sourceResource,
                         targetResources,
-                        historyRepo
+                        historyRepo,
+                        Substitute.For<IFileSystem>(),
+                        Substitute.For<IFileSystem>()
                     );
                     // Assert
                     Expect(result)
@@ -67,7 +69,9 @@ namespace bitsplat.Tests.History
                     var result = sut.Filter(
                         sourceResource,
                         targetResources,
-                        historyRepo
+                        historyRepo,
+                        Substitute.For<IFileSystem>(),
+                        Substitute.For<IFileSystem>()
                     );
                     // Assert
                     Expect(result)
@@ -93,7 +97,9 @@ namespace bitsplat.Tests.History
                     var result = sut.Filter(
                         sourceResource,
                         targetResources,
-                        historyRepo
+                        historyRepo,
+                        Substitute.For<IFileSystem>(),
+                        Substitute.For<IFileSystem>()
                     );
                     // Assert
                     Expect(result)
@@ -137,7 +143,9 @@ namespace bitsplat.Tests.History
                     var result = sut.Filter(
                         sourceResource,
                         targetResources,
-                        historyRepo
+                        historyRepo,
+                        Substitute.For<IFileSystem>(),
+                        Substitute.For<IFileSystem>()
                     );
                     // Assert
                     Expect(result)
@@ -166,7 +174,9 @@ namespace bitsplat.Tests.History
                     var result = sut.Filter(
                         sourceResource,
                         targetResources,
-                        historyRepo
+                        historyRepo,
+                        Substitute.For<IFileSystem>(),
+                        Substitute.For<IFileSystem>()
                     );
                     // Assert
                     Expect(result)

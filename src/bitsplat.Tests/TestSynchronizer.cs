@@ -663,7 +663,9 @@ namespace bitsplat.Tests
             filter.Filter(
                     Arg.Any<IFileResource>(),
                     Arg.Any<IEnumerable<IFileResource>>(),
-                    Arg.Any<ITargetHistoryRepository>()
+                    Arg.Any<ITargetHistoryRepository>(),
+                    Arg.Any<IFileSystem>(),
+                    Arg.Any<IFileSystem>()
                 )
                 .Returns(FilterResult.Include);
             return new[] { filter };

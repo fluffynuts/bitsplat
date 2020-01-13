@@ -20,7 +20,9 @@ namespace bitsplat.Filters
         public FilterResult Filter(
             IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository)
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target)
         {
             var primaryAncestor = FindPrimaryAncestorFolder(
                 sourceResource.RelativePath
@@ -35,7 +37,7 @@ namespace bitsplat.Filters
             }
 
             var shouldInclude =
-                RelativeBaseExistsAtTarget(targetResources, primaryAncestor) ||
+                target.IsDirectory(primaryAncestor) ||
                 RelativeBaseExistsInHistory(targetHistoryRepository, primaryAncestor);
 
             return shouldInclude
@@ -72,19 +74,6 @@ namespace bitsplat.Filters
                     $"{relativeBase}/*"
                 )
                 .Any();
-        }
-
-        private static bool RelativeBaseExistsAtTarget(
-            IEnumerable<IFileResource> targetResources,
-            string primaryAncestor)
-        {
-            // opts in if the primaryAncestor matches any ancestor
-            // in targetResources
-            // -> root files are always matched
-            // -> source Foo/Bar/file.ext matches Foo/*
-            return targetResources.Any(
-                target => FindPrimaryAncestorFolder(target.RelativePath) ==
-                          primaryAncestor);
         }
 
         private static string FindPrimaryAncestorFolder(

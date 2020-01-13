@@ -2,15 +2,15 @@ using bitsplat.CommandLine;
 
 namespace bitsplat
 {
-    public enum SyncStrategy
+    public enum SyncMode
     {
-        Greedy,
-        TargetOptIn
+        All,
+        OptIn
     }
 
     public class Options : ParsedArguments
     {
-        public SyncStrategy SyncStrategy { get; set; }
+        public SyncMode SyncMode { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
         public string HistoryDatabase { get; set; }

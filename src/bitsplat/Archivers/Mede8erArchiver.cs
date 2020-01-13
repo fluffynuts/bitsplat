@@ -113,7 +113,9 @@ namespace bitsplat.Archivers
         public FilterResult Filter(
             IFileResource sourceResource,
             IEnumerable<IFileResource> targetResources,
-            ITargetHistoryRepository targetHistoryRepository)
+            ITargetHistoryRepository targetHistoryRepository,
+            IFileSystem source,
+            IFileSystem target)
         {
             return _archiveFiles.Contains(sourceResource.RelativePath)
                        ? FilterResult.Include

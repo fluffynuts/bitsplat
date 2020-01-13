@@ -16,7 +16,7 @@ namespace bitsplat.Tests.History
     public class TestTargetOptInFilter
     {
         [TestFixture]
-        public class WhenNoTargetHistoryOrTargetResources
+        public class WhenNoTargetHistoryOrTargetFolders
         {
             [Test]
             public void ShouldReturnNoSourceResources()
@@ -27,13 +27,19 @@ namespace bitsplat.Tests.History
                 var targetHistoryRepository = Substitute.For<ITargetHistoryRepository>();
                 targetHistoryRepository.FindAll(Arg.Any<string>())
                     .Returns(new HistoryItem[0]);
+                var source = Substitute.For<IFileSystem>();
+                var target = Substitute.For<IFileSystem>();
+                target.IsDirectory(Arg.Any<string>())
+                    .Returns(false);
                 var sut = Create();
                 // Act
                 var results = sources.Select(
                     s => sut.Filter(
                         s,
                         targets,
-                        targetHistoryRepository)
+                        targetHistoryRepository,
+                        source,
+                        target)
                     ).ToArray();
                 // Assert
                 Expect(results).To.Contain.All()
@@ -46,7 +52,7 @@ namespace bitsplat.Tests.History
         {
             [Test]
             [Repeat(100)]
-            public void ShouldIncludeSourcesMatchingTargetFolder()
+            public void ShouldIncludeSources()
             {
                 // Arrange
                 var sourceBase = GetRandomPath();
@@ -74,6 +80,10 @@ namespace bitsplat.Tests.History
                         GetRandomInt()
                     )
                 };
+                var source = Substitute.For<IFileSystem>();
+                var target = Substitute.For<IFileSystem>();
+                target.IsDirectory(sourceRelativeBase)
+                    .Returns(true);
                 var targetHistoryRepository = Substitute.For<ITargetHistoryRepository>();
                 targetHistoryRepository.FindAll(Arg.Any<string>())
                     .Returns(new HistoryItem[0]);
@@ -82,11 +92,15 @@ namespace bitsplat.Tests.History
                 var result1 = sut.Filter(
                     source1,
                     targets,
-                    targetHistoryRepository);
+                    targetHistoryRepository,
+                    source,
+                    target);
                 var result2 = sut.Filter(
                     source2,
                     targets,
-                    targetHistoryRepository);
+                    targetHistoryRepository,
+                    source,
+                    target);
                 // Assert
                 Expect(result1)
                     .To.Equal(FilterResult.Include);
@@ -126,11 +140,15 @@ namespace bitsplat.Tests.History
                 var result1 = sut.Filter(
                     source1,
                     targets,
-                    targetHistoryRepository);
+                    targetHistoryRepository,
+                    Substitute.For<IFileSystem>(),
+                    Substitute.For<IFileSystem>());
                 var result2 = sut.Filter(
                     source2,
                     targets,
-                    targetHistoryRepository);
+                    targetHistoryRepository,
+                    Substitute.For<IFileSystem>(),
+                    Substitute.For<IFileSystem>());
                 // Assert
                 Expect(result1)
                     .To.Equal(FilterResult.Include);
