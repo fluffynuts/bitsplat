@@ -258,7 +258,7 @@ namespace bitsplat.Tests
                         Path.Combine(include, season, epi)
                     );
 
-                    var rootFile = arena.CreateSourceFile(
+                    arena.CreateSourceFile(
                         rootFileName
                     );
 
