@@ -39,17 +39,20 @@ namespace bitsplat.Archivers
     {
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IProgressReporter _progressReporter;
+        private readonly IOptions _options;
 
         // TODO: test if it makes sense to have any pass-through
         // pipes from the caller -- perhaps progress makes sense
         // at least?
         public Mede8erArchiver(
             IPassThrough[] intermediatePipes,
-            IProgressReporter progressReporter
+            IProgressReporter progressReporter,
+            IOptions options
         )
         {
             _intermediatePipes = intermediatePipes;
             _progressReporter = progressReporter;
+            _options = options;
         }
 
         public void RunArchiveOperations(
@@ -66,7 +69,7 @@ namespace bitsplat.Archivers
                 .Select(p => p.RegexReplace(".t$", ""))
                 .ToArray();
             
-            SynchronizeArchiveFiles(source, archive, toArchive);
+            SynchronizeArchiveFiles(source, archive, toArchive, _options);
             toArchive.ForEach(source.Delete);
             toArchive.ForEach(target.Delete);
             archiveMarkers.ForEach(target.Delete);
@@ -75,7 +78,8 @@ namespace bitsplat.Archivers
         private void SynchronizeArchiveFiles(
             IFileSystem source,
             IFileSystem target,
-            string[] toArchive)
+            string[] toArchive,
+            IOptions options)
         {
             var archiverFilter = new Mede8erArchiveFilter(
                 toArchive
@@ -86,7 +90,8 @@ namespace bitsplat.Archivers
                 new AlwaysResumeWhenTargetSmallerStrategy(),
                 _intermediatePipes,
                 new IFilter[] { archiverFilter },
-                _progressReporter
+                _progressReporter,
+                options
             );
 
             synchronizer.Synchronize(

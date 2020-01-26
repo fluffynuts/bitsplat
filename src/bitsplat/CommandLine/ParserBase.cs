@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace bitsplat.CommandLine
@@ -20,6 +21,12 @@ namespace bitsplat.CommandLine
         public ParserBase(string name)
         {
             Name = name;
+        }
+
+        public virtual TParser WithDefault(TValue value)
+        {
+            Default = value;
+            return this as TParser;
         }
 
         public TParser WithArg(string argument)

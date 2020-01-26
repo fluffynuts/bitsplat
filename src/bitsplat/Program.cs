@@ -25,12 +25,12 @@ namespace bitsplat
             var archive = container.ResolveArchiveFileSystem();
             var archiver = container.Resolve<IArchiver>();
             var staleFileRemover = container.Resolve<IStaleFileRemover>();
-            
+
             archiver.RunArchiveOperations(
                 target,
                 archive,
                 source);
-            
+
             staleFileRemover.RemoveStaleFiles(source, target);
 
             var synchronizer = container.Resolve<ISynchronizer>();
@@ -58,9 +58,10 @@ namespace bitsplat
             _cancelled = true;
         }
 
-        private static IResolverContext CreateContainerScopeFor(Options opts)
+        private static IResolverContext CreateContainerScopeFor(IOptions opts)
         {
             return AppContainer.Create()
+                .WithOptions(opts)
                 .WithTarget(
                     opts.Target
                 )
@@ -154,6 +155,13 @@ namespace bitsplat
                         o => o.WithArg("--keep-stale")
                             .WithArg("-k")
                             .WithHelp("Keep stale files (ie files removed from source and still at the target")
+                    )
+                    .WithParameter(
+                        nameof(Options.Retries),
+                        o => o.WithArg("-r")
+                            .WithArg("--retries")
+                            .WithDefault(new[] { "3" }) // TODO: this is a bit ugly -- can it be better?
+                            .WithHelp("Retry failed synchronisations at most this many times")
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);

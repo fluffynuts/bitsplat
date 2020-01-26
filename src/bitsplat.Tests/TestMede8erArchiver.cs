@@ -122,11 +122,13 @@ namespace bitsplat.Tests
         }
 
         private IArchiver Create(
-            IProgressReporter progressReporter = null)
+            IProgressReporter progressReporter = null,
+            IOptions options = null)
         {
             return new Mede8erArchiver(
                 new IPassThrough[0],
-                progressReporter ?? new FakeProgressReporter()
+                progressReporter ?? new FakeProgressReporter(),
+                Substitute.For<IOptions>()
             );
         }
     }

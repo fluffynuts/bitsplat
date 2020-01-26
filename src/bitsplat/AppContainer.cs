@@ -23,13 +23,22 @@ namespace bitsplat
                 );
         }
 
+        public static IContainer WithOptions(
+            this IContainer container,
+            IOptions options)
+        {
+            return container.With(
+                c => c.RegisterInstance(options)
+            );
+        }
+
         public static IContainer WithStaleFileRemoverFor(
             this IContainer container,
-            Options options)
+            IOptions options)
         {
             return options.KeepStaleFiles
-                ? container.WithRegistration<IStaleFileRemover, NullStaleFileRemover>()
-                : container.WithRegistration<IStaleFileRemover, DefaultStaleFileRemover>();
+                       ? container.WithRegistration<IStaleFileRemover, NullStaleFileRemover>()
+                       : container.WithRegistration<IStaleFileRemover, DefaultStaleFileRemover>();
         }
 
         public static IContainer WithArchive(
@@ -123,7 +132,7 @@ namespace bitsplat
 
         public static IContainer WithHistoryRepositoryFor(
             this IContainer container,
-            Options opts)
+            IOptions opts)
         {
             if (opts.NoHistory)
             {
@@ -206,7 +215,7 @@ namespace bitsplat
 
         public static IContainer WithMessageWriterFor(
             this IContainer container,
-            Options opts)
+            IOptions opts)
         {
             return container.WithRegistration<IMessageWriter, ConsoleMessageWriter>(
                 Reuse.Singleton
@@ -215,7 +224,7 @@ namespace bitsplat
 
         public static IContainer WithProgressReporterFor(
             this IContainer container,
-            Options opts)
+            IOptions opts)
         {
             return container.WithRegistration<IPassThrough, SynchronisationProgressPipe>(
                     Reuse.Singleton
@@ -225,7 +234,7 @@ namespace bitsplat
 
         private static IContainer WithConsoleReporterFor(
             this IContainer container,
-            Options opts)
+            IOptions opts)
         {
             return opts.Quiet
                        ? container.WithRegistration<IProgressReporter, SimpleConsoleProgressReporter>()

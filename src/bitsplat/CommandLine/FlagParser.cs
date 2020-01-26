@@ -9,12 +9,6 @@ namespace bitsplat.CommandLine
         {
         }
 
-        public FlagParser WithDefault(bool value)
-        {
-            Default = value;
-            return this;
-        }
-
         public FlagParser WithHelp(params string[] help)
         {
             Help = help;

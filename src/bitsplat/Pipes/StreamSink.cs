@@ -94,10 +94,12 @@ namespace bitsplat.Pipes
 
         public void Dispose()
         {
-            _source?.Dispose();
-            _target?.Dispose();
+            var source = _source;
+            var target = _target;
             _source = null;
             _target = null;
+            source?.Dispose();
+            target?.Dispose();
         }
     }
 }

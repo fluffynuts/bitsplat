@@ -44,7 +44,8 @@ namespace bitsplat.Tests.ResumeStrategies
                 Expect(result)
                     .To.Equal(
                         expected,
-                        "Should concatenated new data onto existing data, skipping existing bytes");
+                        () => "Should concatenated new data onto existing data, skipping existing bytes"
+                    );
             }
         }
 
@@ -59,7 +60,8 @@ namespace bitsplat.Tests.ResumeStrategies
                 resumeStrategy ?? new AlwaysResumeWhenTargetSmallerStrategy(),
                 intermediatePipes,
                 new IFilter[] { new TargetOptInFilter() },
-                progressReporter ?? new FakeProgressReporter()
+                progressReporter ?? new FakeProgressReporter(),
+                Substitute.For<IOptions>()
             );
         }
     }

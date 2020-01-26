@@ -14,8 +14,8 @@ namespace bitsplat.Pipes
         public StreamSource(Stream source)
             : this(source, true)
         {
-            _readSize = READ_CHUNK_INCREMENT;
-            _lastRead = READ_CHUNK_INCREMENT;
+            _readSize = ReadChunkIncrement;
+            _lastRead = ReadChunkIncrement;
         }
 
         public StreamSource(
@@ -25,13 +25,14 @@ namespace bitsplat.Pipes
             _source = source;
             _disposeAtEnd = disposeAtEnd;
         }
-
-        private const int MAX_BUFFER = 5 * 1024 * 1024;
-        private const int READ_CHUNK_INCREMENT = 32768;
+        
+        public static int MaxBuffer = 5 * 1024 * 1024;
+        public static int ReadChunkIncrement = 32768;
+        private bool _disposed;
 
         public bool Pump()
         {
-            using var pooledBuffer = BufferPool.Borrow(MAX_BUFFER);
+            using var pooledBuffer = BufferPool.Borrow(MaxBuffer);
             var buffer = pooledBuffer.Data;
             
             // TODO: instead of just increasing buffer sizes
@@ -42,13 +43,13 @@ namespace bitsplat.Pipes
             // -> use case: copying over wifi, smb, max rate is 4mb/s
             //    but buffer size is 16, so the app is waiting for 4 seconds
             //    per flush, which translates into a 4 second delay when
-            //    attempting to exit as streams are 
+            //    attempting to exit as streams are flushing
             var toRead = _lastRead < _readSize
                          ? _lastRead
-                         : _lastRead + READ_CHUNK_INCREMENT;
-            if (toRead > MAX_BUFFER)
+                         : _lastRead + ReadChunkIncrement;
+            if (toRead > MaxBuffer)
             {
-                toRead = MAX_BUFFER;
+                toRead = MaxBuffer;
             }
 
             _lastRead = _source?.Read(buffer, 0, toRead) ?? 0;
@@ -99,8 +100,12 @@ namespace bitsplat.Pipes
 
         public void Dispose()
         {
-            _source?.Dispose();
+            var sinks = _sinks.ToArray();
+            _sinks.Clear();
+            var source = _source;
             _source = null;
+            sinks.ForEach(s => s.Dispose());
+            source?.Dispose();
         }
     }
 }

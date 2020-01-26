@@ -225,5 +225,15 @@ namespace bitsplat.Tests.TestingSupport
                     .ToArray()
             );
         }
+
+        public string TargetPathFor(ArenaFile file)
+        {
+            return TargetPathFor(file.RelativePath);
+        }
+
+        public string SourcePathFor(ArenaFile file)
+        {
+            return SourcePathFor(file);
+        }
     }
 }

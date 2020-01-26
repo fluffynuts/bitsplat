@@ -61,6 +61,14 @@ namespace bitsplat.Pipes
 
         public virtual void Dispose()
         {
+            var source = _source;
+            var sinks = _sinks.ToArray();
+            
+            _source = null;
+            _sinks.Clear();
+            
+            source?.Dispose();
+            sinks.ForEach(s => s.Dispose());
         }
     }
 

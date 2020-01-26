@@ -11,8 +11,6 @@ using PeanutButter.Utils;
 
 namespace bitsplat
 {
-    public delegate string OnSynchronisationStart();
-
     public interface ISynchronizer
     {
         void Synchronize(
@@ -35,6 +33,7 @@ namespace bitsplat
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IFilter[] _filters;
         private readonly IProgressReporter _progressReporter;
+        private readonly IOptions _options;
         private readonly ISyncQueueNotifiable[] _notifiables;
         private string _label;
 
@@ -43,8 +42,10 @@ namespace bitsplat
             IResumeStrategy resumeStrategy,
             IPassThrough[] intermediatePipes,
             IFilter[] filters,
-            IProgressReporter progressReporter)
+            IProgressReporter progressReporter,
+            IOptions options)
         {
+            ValidateIntermediatePipes(intermediatePipes);
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
             _intermediatePipes = intermediatePipes;
@@ -53,6 +54,20 @@ namespace bitsplat
                 .ToArray();
             _filters = filters;
             _progressReporter = progressReporter;
+            _options = options;
+        }
+
+        private void ValidateIntermediatePipes(IPassThrough[] intermediatePipes)
+        {
+            intermediatePipes.ForEach(p =>
+            {
+                if (!(p is PassThrough))
+                {
+                    throw new InvalidOperationException(
+                        "PassThrough pipes _must_ inherit from the abstract PassThrough class to ensure correct pipeline disposal on error"
+                    );
+                }
+            });
         }
 
         public void Synchronize(
@@ -72,10 +87,10 @@ namespace bitsplat
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
-                targetResourcesCollection.ToArray();
+                                  targetResourcesCollection.ToArray();
 
             var comparison = CompareResources(
-                sourceResources, 
+                sourceResources,
                 targetResources,
                 source,
                 target);
@@ -103,7 +118,35 @@ namespace bitsplat
             NotifySyncBatchComplete(syncQueue);
         }
 
-        private void SynchroniseResource(IReadWriteFileResource sourceResource,
+        private void SynchroniseResource(
+            IReadWriteFileResource sourceResource,
+            IFileSystem target,
+            IReadWriteFileResource[] targetResources)
+        {
+            var attempts = 0;
+            var test = _options.Retries < 1
+                           ? new Func<bool>(() => true)
+                           : CanTryAgain;
+            do
+            {
+                if (TrySynchroniseResource(
+                    sourceResource,
+                    target,
+                    targetResources
+                ))
+                {
+                    return;
+                }
+            } while (test());
+
+            bool CanTryAgain()
+            {
+                return ++attempts < _options.Retries;
+            }
+        }
+
+        private bool TrySynchroniseResource(
+            IReadWriteFileResource sourceResource,
             IFileSystem target,
             IReadWriteFileResource[] targetResources)
         {
@@ -143,7 +186,11 @@ namespace bitsplat
             catch (Exception ex)
             {
                 NotifyError(sourceResource, targetResource, ex);
+                composition.Dispose();
+                return false;
             }
+
+            return true;
         }
 
         private void RecordSkipped(FileSystemComparison comparison)
@@ -278,11 +325,11 @@ namespace bitsplat
             Stream targetStream)
         {
             var canResume = targetResource != null &&
-                _resumeStrategy.CanResume(
-                    sourceResource,
-                    targetResource,
-                    sourceStream,
-                    targetStream);
+                            _resumeStrategy.CanResume(
+                                sourceResource,
+                                targetResource,
+                                sourceStream,
+                                targetStream);
             if (canResume)
             {
                 sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
@@ -361,8 +408,8 @@ namespace bitsplat
                         target);
 
                     return CurrentFilterIsAmbivalent()
-                        ? acc1
-                        : thisResult;
+                               ? acc1
+                               : thisResult;
 
                     bool AlreadyExcluded()
                     {
@@ -380,14 +427,6 @@ namespace bitsplat
                     }
                 });
             return filterResult;
-        }
-
-        private bool ExistsInHistory(
-            IReadWriteFileResource resource)
-        {
-            var historyItem = _targetHistoryRepository.Find(resource.RelativePath);
-            return historyItem != null &&
-                historyItem.Size == resource.Size;
         }
 
         private void RecordHistory(IReadWriteFileResource readWriteFileResource)
