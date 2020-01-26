@@ -28,7 +28,6 @@ namespace bitsplat.Pipes
         
         public static int MaxBuffer = 5 * 1024 * 1024;
         public static int ReadChunkIncrement = 32768;
-        private bool _disposed;
 
         public bool Pump()
         {
