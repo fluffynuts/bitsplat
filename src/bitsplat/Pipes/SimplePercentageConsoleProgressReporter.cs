@@ -23,7 +23,7 @@ namespace bitsplat.Pipes
         private readonly Queue<NotificationDetails> _notificationDetailHistory =
             new Queue<NotificationDetails>(HISTORY_SIZE + 1);
 
-        private bool TooEarly()
+        private bool ShouldWaitToOutput()
         {
             var now = DateTime.Now;
             if ((now - _lastReport).TotalMilliseconds < MIN_REPORT_WINDOW_MS)
@@ -35,6 +35,12 @@ namespace bitsplat.Pipes
             return false;
         }
 
+        protected override void NotifyStart(string label)
+        {
+            _notificationDetailHistory.Clear();
+            base.NotifyStart(label);
+        }
+
         protected override void ReportIntermediateState(
             NotificationDetails details)
         {
@@ -44,11 +50,7 @@ namespace bitsplat.Pipes
                 _notificationDetailHistory.Dequeue();
             }
 
-            var atStartOrEnd = details.CurrentBytesTransferred > 0 &&
-                               details.CurrentBytesTransferred < details.CurrentTotalBytes;
-
-            if (!atStartOrEnd ||
-                TooEarly())
+            if (ShouldWaitToOutput())
             {
                 return;
             }
@@ -86,6 +88,7 @@ namespace bitsplat.Pipes
             var last = _notificationDetailHistory.Last();
             var first = _notificationDetailHistory.First();
             var deltaBytes = last.CurrentBytesTransferred - first.CurrentBytesTransferred;
+
             var deltaTime = last.Timestamp - first.Timestamp;
             return deltaBytes / deltaTime.TotalSeconds;
         }

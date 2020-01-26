@@ -56,7 +56,7 @@ namespace bitsplat.Pipes
             // intentionally left blank - this reporter is quiet
         }
 
-        private void NotifyComplete(string label)
+        protected virtual void NotifyComplete(string label)
         {
             if (_current == null)
             {
@@ -67,7 +67,7 @@ namespace bitsplat.Pipes
             Write(label, OK);
         }
 
-        private void NotifyStart(string label)
+        protected virtual void NotifyStart(string label)
         {
             if (_current == label)
             {
