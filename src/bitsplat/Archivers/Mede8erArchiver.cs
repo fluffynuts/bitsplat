@@ -87,7 +87,7 @@ namespace bitsplat.Archivers
 
             var synchronizer = new Synchronizer(
                 new NullTargetHistoryRepository(),
-                new AlwaysResumeWhenTargetSmallerStrategy(),
+                new SimpleResumeStrategy(options),
                 _intermediatePipes,
                 new IFilter[] { archiverFilter },
                 _progressReporter,

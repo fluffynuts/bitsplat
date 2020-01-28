@@ -484,8 +484,10 @@ namespace bitsplat.Tests
                     () =>
                     {
                     });
+                var options = Substitute.For<IOptions>();
+                options.ResumeCheckBytes.Returns(512);
                 var sut = Create(
-                    new AlwaysResumeWhenTargetSmallerStrategy(),
+                    new SimpleResumeStrategy(options),
                     new IPassThrough[] { notifiable, intermediate1 }
                         .Randomize()
                         .ToArray()
@@ -748,14 +750,22 @@ namespace bitsplat.Tests
             IProgressReporter progressReporter = null,
             IOptions options = null)
         {
+            options ??= CreateDefaultOptions();
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new AlwaysResumeWhenTargetSmallerStrategy(),
+                resumeStrategy ?? new SimpleResumeStrategy(options),
                 intermediatePipes ?? new IPassThrough[0],
                 filters ?? DefaultFilters,
                 progressReporter ?? new FakeProgressReporter(),
                 options ?? Substitute.For<IOptions>()
             );
+        }
+
+        private static IOptions CreateDefaultOptions()
+        {
+            var opts = Substitute.For<IOptions>();
+            opts.ResumeCheckBytes.Returns(512);
+            return opts;
         }
 
         private static readonly IFilter[] DefaultFilters =

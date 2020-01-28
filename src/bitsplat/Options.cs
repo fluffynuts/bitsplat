@@ -20,11 +20,13 @@ namespace bitsplat
         bool NoHistory { get; set; }
         bool KeepStaleFiles { get; set; }
         int Retries { get; set; }
+        int ResumeCheckBytes { get; set; }
     }
 
     public class Options : ParsedArguments, IOptions
     {
         public int Retries { get; set; }
+        public int ResumeCheckBytes { get; set; }
         public SyncMode SyncMode { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }

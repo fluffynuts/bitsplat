@@ -72,7 +72,7 @@ namespace bitsplat
                 .WithResumeStrategy(
                     opts.NoResume
                         ? typeof(NeverResumeStrategy)
-                        : typeof(AlwaysResumeWhenTargetSmallerStrategy)
+                        : typeof(SimpleResumeStrategy)
                 )
                 .WithFilter(
                     FilterMap[opts.SyncMode]
@@ -126,6 +126,12 @@ namespace bitsplat
                             .WithHelp("Disable resume",
                                 "The default is to resume from the current target byte offset if less than the source size"
                             )
+                    )
+                    .WithParameter(
+                        nameof(Options.ResumeCheckBytes),
+                        o => o.WithArg("--resume-check-bytes")
+                            .WithDefault(new[] { "512" })
+                            .WithHelp("How many bytes to check at the end of a partial file when considering resume")
                     )
                     .WithFlag(
                         nameof(Options.Quiet),
