@@ -109,6 +109,7 @@ namespace bitsplat
 
             syncQueue.ForEach(sourceResource =>
                 SynchroniseResource(
+                    source,
                     sourceResource,
                     target,
                     targetResources
@@ -119,10 +120,23 @@ namespace bitsplat
         }
 
         private void SynchroniseResource(
+            IFileSystem source,
             IReadWriteFileResource sourceResource,
             IFileSystem target,
             IReadWriteFileResource[] targetResources)
         {
+            if (!source.IsFile(sourceResource.RelativePath))
+            {
+                NotifyError(
+                    sourceResource,
+                    null,
+                    new FileNotFoundException(
+                        $"source: {sourceResource.RelativePath}"
+                    )
+                );
+                return;
+            }
+
             var attempts = 0;
             var test = _options.Retries < 1
                            ? new Func<bool>(() => true)
