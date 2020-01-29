@@ -6,8 +6,11 @@ namespace bitsplat.ResumeStrategies
 {
     public class SimpleResumeStrategy: IResumeStrategy
     {
+        private readonly IOptions _options;
+
         public SimpleResumeStrategy(IOptions options)
         {
+            _options = options;
         }
 
         public bool CanResume(
@@ -21,7 +24,7 @@ namespace bitsplat.ResumeStrategies
                 return false;
             }
 
-            var toCheck = (int)Math.Min(512, targetResource.Size);
+            var toCheck = (int)Math.Min(_options.ResumeCheckBytes, targetResource.Size);
             var toSeek = targetResource.Size - toCheck;
             
             Span<byte> sourceData = stackalloc byte[toCheck];
