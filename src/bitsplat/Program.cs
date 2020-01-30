@@ -13,6 +13,8 @@ namespace bitsplat
         public static int Main(params string[] args)
         {
             Console.CancelKeyPress += OnCancel;
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            
             if (!TryParseOptionsFrom(args, out var opts))
             {
                 return -1;
@@ -131,7 +133,8 @@ namespace bitsplat
                         nameof(Options.ResumeCheckBytes),
                         o => o.WithArg("--resume-check-bytes")
                             .WithDefault(new[] { "512" })
-                            .WithHelp("How many bytes to check at the end of a partial file when considering resume")
+                            .WithHelp(
+                                "How many bytes to check at the end of a partial file when considering resume")
                     )
                     .WithFlag(
                         nameof(Options.Quiet),

@@ -40,8 +40,7 @@ namespace bitsplat.Pipes
             {
                 var overwrite = new String(' ', _lastMessage?.Length ?? 0);
                 _lastMessage = message;
-                Console.Out.Write($"\r{overwrite}\r{message}");
-                Console.Out.Flush();
+                Console.Write($"\r{overwrite}\r{message}");
             }
         }
 
