@@ -14,8 +14,9 @@ const
         cmd3 = `git tag v${next}`;
     console.log(`commit release v${next}`);
     await exec(cmd1);
-    console.log(`tagging at v${next}`);
     await exec(cmd2);
-    console.log(`pushing...`);
+    console.log(`tagging at v${next}`);
     await exec(cmd3);
+    console.log(`pushing...`);
+    await exec("git push --tags");
 })();
