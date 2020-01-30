@@ -5,11 +5,13 @@ const
     exec = promisify(require("child_process").exec);
 
     async function createZip(version, baseFolder, runtime, append) {
-        let src = path.join(baseFolder, runtime, publish, "bitsplat");
+        let src = path.join(baseFolder, runtime, "publish", "bitsplat");
         if (append) {
             src += append;
         }
-        await exec(`zip -9 releases/bitsplat-${runtime}-${version}.zip "${src}"`);
+        const zip = `bitsplat-${runtime}-${version}.zip`;
+        console.log(`create release zip: ${zip}`);
+        await exec(`zip -9 release/${zip} "${src}"`);
     }
 
 (async function() {
@@ -35,8 +37,8 @@ const
     await exec("git push --tags");
 
     const baseFolder = path.join("src", "bitsplat", "bin", "Release", "netcoreapp3.1");
-    await createZip(next, baseFolder, "linux-64");
-    await createZip(next, baseFolder, "osx-64");
+    await createZip(next, baseFolder, "linux-x64");
+    await createZip(next, baseFolder, "osx-x64");
     await createZip(next, baseFolder, "win-x64", ".exe");
 
 })();
