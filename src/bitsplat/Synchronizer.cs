@@ -455,7 +455,8 @@ namespace bitsplat
         )
         {
             _targetHistoryRepository.Upsert(
-                resources.Select(r => new HistoryItem(r))
+                resources
+                    .Select(r => new HistoryItem(r))
                     .ToArray()
             );
         }
@@ -479,8 +480,11 @@ namespace bitsplat
 
         private class HistoryItem : IHistoryItem
         {
+            public int Id { get; set; }
             public string Path { get; set; }
             public long Size { get; set; }
+            public DateTime Created { get; set; }
+            public DateTime? Modified { get; set; }
 
             public HistoryItem(IReadWriteFileResource resource)
             {

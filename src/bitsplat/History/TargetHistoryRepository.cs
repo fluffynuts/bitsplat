@@ -9,6 +9,7 @@ using Dapper;
 using PeanutButter.Utils;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
+// ReSharper disable AccessToDisposedClosure
 
 namespace bitsplat.History
 {
@@ -37,7 +38,7 @@ namespace bitsplat.History
 
         public void Upsert(IHistoryItem item)
         {
-            Upsert(new[] { item } );
+            Upsert(new[] { item });
         }
 
         public void Upsert(IEnumerable<IHistoryItem> items)
@@ -46,20 +47,55 @@ namespace bitsplat.History
             using var transaction = conn.BeginTransaction();
             items.ForEach(item =>
             {
-                conn.Execute(
-                    $@"replace into {
-                            Table.NAME
-                        } ({
-                            Columns.PATH
-                        }, {
-                            Columns.SIZE
-                        }, {
-                            Columns.MODIFIED
-                        })
-                    values (@Path, @Size, datetime('now'));",
-                    item);
+                var existing = conn.QueryFirstOrDefault<HistoryItem>(
+                    $"select * from {Table.NAME} where {Columns.PATH} = @Path;",
+                    new { item.Path }
+                );
+                if (existing == null)
+                {
+                    InsertNewFor(conn, item);
+                }
+                else
+                {
+                    UpdateExisting(conn, existing, item);
+                }
             });
             transaction.Commit();
+        }
+
+        private static void UpdateExisting(IDbConnection conn,
+            IHistoryItem existing,
+            IHistoryItem updated)
+        {
+            conn.Execute(
+                $@"update {
+                        Table.NAME
+                    } set
+                    Size = @Size,
+                    Modified = datetime('now')
+                   where id = @Id;",
+                new
+                {
+                    updated.Size,
+                    existing.Id
+                }
+            );
+        }
+
+        private static void InsertNewFor(IDbConnection conn, IHistoryItem item)
+        {
+            conn.Execute(
+                $@"replace into {
+                        Table.NAME
+                    } ({
+                        Columns.PATH
+                    }, {
+                        Columns.SIZE
+                    }, {
+                        Columns.MODIFIED
+                    })
+                    values (@Path, @Size, datetime('now'));",
+                item);
         }
 
         public HistoryItem Find(string path)
@@ -135,7 +171,8 @@ namespace bitsplat.History
 
         private string CreateConnectionString()
         {
-            var uri = new Uri(Path.Combine(_folder, _databaseName)).ToString();;
+            var uri = new Uri(Path.Combine(_folder, _databaseName)).ToString();
+            ;
             if (Platform.IsWindows)
             {
                 uri = uri.Replace("file:///", "file://");

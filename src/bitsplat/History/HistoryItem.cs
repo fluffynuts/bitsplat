@@ -4,8 +4,11 @@ namespace bitsplat.History
 {
     public interface IHistoryItem
     {
+        int Id { get; set; }
         string Path { get; set; }
         long Size { get; set; }
+        DateTime Created { get; set; }
+        DateTime? Modified { get; set; }
     }
 
     public class HistoryItem: IHistoryItem
