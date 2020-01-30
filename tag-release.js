@@ -28,9 +28,11 @@ async function createZip(version, baseFolder, runtime, append) {
         cmd3 = `git tag v${next}`;
     mkdirp("release");
     try {
-        console.log(`commit release v${next}`);
-        await exec(cmd1);
-        await exec(cmd2);
+        if (!process.env.SKIP_COMMIT) {
+            console.log(`commit release v${next}`);
+            await exec(cmd1);
+            await exec(cmd2);
+        }
         console.log(`tagging at v${next}`);
         await exec(cmd3);
         console.log(`pushing...`);

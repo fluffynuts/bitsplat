@@ -28,7 +28,7 @@ A simple file synchroniser aimed at media sync
     Keep stale files (ie files removed from source and still at the target
   --no-resume
     Disable resume
-    The default is to resume from the current target byte offset if less than 
+    The default is to resume from the current target byte offset if less than
     the source size
   --resume-check-bytes
     How many bytes to check at the end of a partial file when considering resu
@@ -41,7 +41,7 @@ A simple file synchroniser aimed at media sync
   -m, --mode
     Set the sync mode to one of: All or Opt-In (case-insensitive)
     All synchronises everything
-    OptIn only synchronises folders which already exist or have been recorded 
+    OptIn only synchronises folders which already exist or have been recorded
     in the history database
   -n, --no-history
     Disables the history database
