@@ -20,5 +20,6 @@ const
     console.log(`tagging at v${next}`);
     await exec(cmd3);
     console.log(`pushing...`);
-    await exec("git push --follow-tags");
+    await exec("git push");
+    await exec("git push --tags");
 })();
