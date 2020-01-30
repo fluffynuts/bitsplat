@@ -8,7 +8,7 @@
         "preuser-install": "run-s test",
         "user-install": "run-s publish-linux copy-local",
         "publish-all": "run-s publish-win32 publish-linux publish-osx",
-        "release": "run-s create-release copy-to-release tag-release",
+        "release": "run-s test create-release copy-to-release tag-release",
         "tag-release": "node tag-release.js",
         "copy-to-release": "run-p copy-osx-release copy-win32-release copy-linux-release",
         "ensure-release-folder-exists": "mkdirp release/linux-x64 release/osx-x64 release/win-x64",
