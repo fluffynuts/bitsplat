@@ -4,7 +4,7 @@ const
 
 (async function() {
     const 
-        execResult = await exec("git tag | head -n 1"),
+        execResult = await exec("git tag | tail -n 1"),
         latestTag = execResult.stdout.trim(),
         latestTagVersion = latestTag.replace(/[^0-9.]*/g, ""),
         asFloat = parseFloat(latestTagVersion),
