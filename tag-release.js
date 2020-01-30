@@ -1,5 +1,6 @@
 const 
     promisify = require("util").promisify,
+    mkdirp = require("mkdirp").sync,
     path = require("path"),
     exec = promisify(require("child_process").exec);
 
@@ -23,6 +24,7 @@ const
         cmd1 = `git add -A :/`,
         cmd2 = `git commit -m ":bookmark: release v${next}"`,
         cmd3 = `git tag v${next}`;
+    mkdirp("release");
     console.log(`commit release v${next}`);
     await exec(cmd1);
     await exec(cmd2);
@@ -36,4 +38,5 @@ const
     await createZip(next, baseFolder, "linux-64");
     await createZip(next, baseFolder, "osx-64");
     await createZip(next, baseFolder, "win-x64", ".exe");
+
 })();
