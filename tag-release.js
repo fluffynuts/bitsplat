@@ -7,8 +7,10 @@ const
         execResult = await exec("git tag | tail -n 1"),
         latestTag = execResult.stdout.trim(),
         latestTagVersion = latestTag.replace(/[^0-9.]*/g, ""),
-        asFloat = parseFloat(latestTagVersion),
-        next = asFloat + 0.1,
+        parts = latestTagVersion.split("."),
+        major = parseInt(parts[0]),
+        minor = parseInt(parts[1]),
+        next = `${major}.${minor + 1}`,
         cmd1 = `git add -A :/`,
         cmd2 = `git commit -m ":bookmark: release v${next}"`,
         cmd3 = `git tag v${next}`;
