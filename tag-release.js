@@ -11,7 +11,7 @@ const
         }
         const zip = `bitsplat-${runtime}-${version}.zip`;
         console.log(`create release zip: ${zip}`);
-        await exec(`zip -9 release/${zip} "${src}"`);
+        await exec(`zip -j -9 release/${zip} "${src}"`);
     }
 
 (async function() {
