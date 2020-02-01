@@ -11,7 +11,7 @@ namespace bitsplat.Pipes
         private readonly IMessageWriter _messageWriter;
         private string _current;
         private int _maxLabelLength;
-        
+
         private const string OK = "[ OK ]";
         private const string FAIL = "[FAIL]";
 
@@ -177,7 +177,7 @@ namespace bitsplat.Pipes
         }
 
         private bool _notifiedStart;
-        
+
         public void NotifyOverall(
             NotificationDetails details
         )
@@ -187,14 +187,20 @@ namespace bitsplat.Pipes
                 return;
             }
 
-            if (details.IsStarting && !_notifiedStart)
+            var s = details.TotalItems == 1
+                        ? ""
+                        : "s";
+            if (details.IsStarting &&
+                !_notifiedStart)
             {
                 _notifiedStart = true;
                 _messageWriter.Write(details.Label);
                 _messageWriter.Write(
                     $@"Overall transfer: {
                             details.TotalItems
-                        } files, {
+                        } file{
+                            s
+                        }, {
                             HumanReadableSizeFor(
                                 details.TotalBytes
                             )
@@ -209,7 +215,9 @@ namespace bitsplat.Pipes
                 _messageWriter.Write(
                     $@"Transferred {
                             details.TotalItems
-                        } files, {
+                        } file{
+                            s
+                        }, {
                             HumanReadableSizeFor(details.TotalBytes)
                         }, {
                             HumanReadableTimeFor((int) timeTaken.TotalSeconds)
