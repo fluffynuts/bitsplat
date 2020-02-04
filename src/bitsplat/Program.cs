@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
 using bitsplat.ResumeStrategies;
 using bitsplat.StaleFileRemovers;
+using bitsplat.Storage;
 using DryIoc;
 using static bitsplat.Filters.FilterRegistrations;
 
@@ -14,10 +16,18 @@ namespace bitsplat
         {
             Console.CancelKeyPress += OnCancel;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            
+
             if (!TryParseOptionsFrom(args, out var opts))
             {
                 return -1;
+            }
+
+            // TODO: when more than just local filesystems are handled,
+            //       this should move elsewhere
+            if (!Directory.Exists(opts.Target) &&
+                opts.CreateTargetIfRequired)
+            {
+                LocalFileSystem.EnsureFolderExists(opts.Target);
             }
 
             using var container = CreateContainerScopeFor(opts);
@@ -164,6 +174,12 @@ namespace bitsplat
                         o => o.WithArg("--keep-stale")
                             .WithArg("-k")
                             .WithHelp("Keep stale files (ie files removed from source and still at the target")
+                    )
+                    .WithFlag(
+                        nameof(Options.CreateTargetIfRequired),
+                        o => o.WithArg("-c")
+                            .WithArg("--create-missing-target")
+                            .WithHelp("Create the target folder if it's missing")
                     )
                     .WithParameter(
                         nameof(Options.Retries),
