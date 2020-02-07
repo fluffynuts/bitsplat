@@ -16,7 +16,7 @@ async function createZip(version, baseFolder, runtime, append) {
 
 (async function () {
     const
-        execResult = await exec("git tag | tail -n 1"),
+        execResult = await exec("git tag | sort -V | tail -n 1"),
         latestTag = execResult.stdout.trim(),
         latestTagVersion = latestTag.replace(/[^0-9.]*/g, ""),
         parts = latestTagVersion.split("."),
