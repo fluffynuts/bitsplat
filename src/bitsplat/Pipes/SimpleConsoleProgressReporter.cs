@@ -14,6 +14,7 @@ namespace bitsplat.Pipes
 
         private const string OK = "[ OK ]";
         private const string FAIL = "[FAIL]";
+        private int? _lastKnownConsoleWidth;
 
         public SimpleConsoleProgressReporter(
             IMessageWriter messageWriter)
@@ -21,11 +22,32 @@ namespace bitsplat.Pipes
             _messageWriter = messageWriter;
             try
             {
+                _lastKnownConsoleWidth = Console.WindowWidth;
                 _maxLabelLength = Console.WindowWidth - 1;
             }
             catch
             {
-                /* ignore */
+                /* ignore: console may not be available */
+            }
+        }
+
+        private void AdjustMaxLabelLength()
+        {
+            if (_lastKnownConsoleWidth is null)
+            {
+                return;
+            }
+
+            try
+            {
+                var currentWidth = Console.WindowWidth;
+                var delta = currentWidth - _lastKnownConsoleWidth.Value;
+                _maxLabelLength += delta;
+                _lastKnownConsoleWidth = currentWidth;
+            }
+            catch
+            {
+                /* ignore: console may not be available */
             }
         }
 
@@ -104,6 +126,7 @@ namespace bitsplat.Pipes
 
         private string RenderMessageLine(string start, string end)
         {
+            AdjustMaxLabelLength();
             start ??= "";
             var required = _maxLabelLength - start.Length - (end ?? "").Length;
             if (required < 1 &&
