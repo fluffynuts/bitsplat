@@ -9,7 +9,6 @@ using NExpect;
 using NSubstitute;
 using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
-using PeanutButter.Utils;
 using static NExpect.Expectations;
 
 namespace bitsplat.Tests.ResumeStrategies
@@ -27,11 +26,12 @@ namespace bitsplat.Tests.ResumeStrategies
                 public class AndTrailingBytesMatch
                 {
                     [Test]
+                    [Repeat(15)]
                     public void ShouldAllow()
                     {
                         // Arrange
                         using var arena = new TestArena();
-                        var sourceData = GetRandomBytes(150, 200);
+                        var sourceData = RandomBytes();
                         var relPath = GetRandomString(10);
                         arena.CreateSourceResource(
                             relPath,
@@ -62,11 +62,11 @@ namespace bitsplat.Tests.ResumeStrategies
                             targetStream);
                         sourceStream.Dispose();
                         targetStream.Dispose();
-                        
-                        synchronizer.Synchronize(source, target);
-                        // Assert
                         Expect(result)
                             .To.Be.True();
+
+                        synchronizer.Synchronize(source, target);
+                        // Assert
                         var onDisk = File.ReadAllBytes(targetPath);
                         Expect(onDisk)
                             .To.Equal(
@@ -76,15 +76,24 @@ namespace bitsplat.Tests.ResumeStrategies
                     }
                 }
 
+                private static byte[] RandomBytes()
+                {
+                    return GetRandomBytes(
+                        (int) (SimpleResumeStrategy.DEFAULT_CHECK_BYTES * 0.5),
+                        SimpleResumeStrategy.DEFAULT_CHECK_BYTES * 2
+                    );
+                }
+
                 [TestFixture]
                 public class AndTrailingBytesDoNotMatch
                 {
                     [Test]
+                    [Repeat(15)]
                     public void ShouldNotAllow()
                     {
                         // Arrange
                         var arena = new TestArena();
-                        var expected = GetRandomBytes(1024, 2048);
+                        var expected = RandomBytes();
                         var partial = expected
                             .Take(GetRandomInt(512, 600))
                             .Union(GetRandomBytes(100, 150))
@@ -118,7 +127,7 @@ namespace bitsplat.Tests.ResumeStrategies
                             targetStream);
                         sourceStream.Dispose();
                         targetStream.Dispose();
-                        
+
                         synchronizer.Synchronize(source, target);
                         // Assert
                         Expect(result)
@@ -144,7 +153,7 @@ namespace bitsplat.Tests.ResumeStrategies
         private static IOptions CreateDefaultOptions()
         {
             var opts = Substitute.For<IOptions>();
-            opts.ResumeCheckBytes.Returns(512);
+            opts.ResumeCheckBytes.Returns(SimpleResumeStrategy.DEFAULT_CHECK_BYTES);
             return opts;
         }
 

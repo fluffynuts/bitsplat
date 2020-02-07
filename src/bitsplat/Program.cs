@@ -142,7 +142,7 @@ namespace bitsplat
                     .WithParameter(
                         nameof(Options.ResumeCheckBytes),
                         o => o.WithArg("--resume-check-bytes")
-                            .WithDefault(new[] { "512" })
+                            .WithDefault(new[] { SimpleResumeStrategy.DEFAULT_CHECK_BYTES.ToString() })
                             .WithHelp(
                                 "How many bytes to check at the end of a partial file when considering resume")
                     )
