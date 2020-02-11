@@ -128,7 +128,8 @@ namespace bitsplat.Tests
             return new Mede8erArchiver(
                 new IPassThrough[0],
                 progressReporter ?? new FakeProgressReporter(),
-                Substitute.For<IOptions>()
+                Substitute.For<IOptions>(),
+                Substitute.For<IMessageWriter>()
             );
         }
     }

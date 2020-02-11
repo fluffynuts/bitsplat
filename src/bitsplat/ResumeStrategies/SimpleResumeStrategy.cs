@@ -10,10 +10,14 @@ namespace bitsplat.ResumeStrategies
     {
         public const int DEFAULT_CHECK_BYTES = 2048;
         private readonly IOptions _options;
+        private readonly IMessageWriter _messageWriter;
 
-        public SimpleResumeStrategy(IOptions options)
+        public SimpleResumeStrategy(
+            IOptions options,
+            IMessageWriter messageWriter)
         {
             _options = options;
+            _messageWriter = messageWriter;
         }
 
         public bool CanResume(
@@ -45,31 +49,32 @@ namespace bitsplat.ResumeStrategies
             bool TailBytesMatch()
             {
                 var toSeek = targetResource.Size - toCheck;
-                return BytesMatch(toSeek, toCheck, source, target);
+                return BytesMatch(toSeek, toCheck, source, target, sourceResource, targetResource);
             }
 
             bool LeadBytesMatch()
             {
-                return BytesMatch(0, toCheck, source, target);
+                return BytesMatch(0, toCheck, source, target, sourceResource, targetResource);
             }
         }
 
-        private static bool BytesMatch(
-            long offset,
+        private bool BytesMatch(long offset,
             int toCheck,
             Stream source,
-            Stream target)
+            Stream target,
+            IFileResource sourceResource,
+            IFileResource targetResource)
         {
             using var sourceResetter = new StreamResetter(source);
             using var sourceData = BufferPool.Borrow(toCheck);
-            if (!TryReadBytes(source, offset, toCheck, sourceData.Data))
+            if (!TryReadBytes(source, offset, toCheck, sourceData.Data, sourceResource))
             {
                 return false;
             }
 
             using var targetResetter = new StreamResetter(target);
             using var targetData = BufferPool.Borrow(toCheck);
-            if (!TryReadBytes(target, offset, toCheck, targetData.Data))
+            if (!TryReadBytes(target, offset, toCheck, targetData.Data, targetResource))
             {
                 return false;
             }
@@ -84,15 +89,25 @@ namespace bitsplat.ResumeStrategies
                 );
         }
 
-        private static bool TryReadBytes(
-            Stream stream,
+        private bool TryReadBytes(Stream stream,
             long offset,
             int count,
-            byte[] target)
+            byte[] target,
+            IFileResource resource)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
-            var read = stream.Read(target, 0, count);
-            return read == count;
+            try
+            {
+                stream.Seek(offset, SeekOrigin.Begin);
+                var read = stream.Read(target, 0, count);
+                return read == count;
+            }
+            catch (Exception ex)
+            {
+                _messageWriter.Write(
+                    $"Resume not supported: unable to read {count} bytes from offset {offset} of {resource.RelativePath}:\n  {ex.Message}"
+                );
+                return false;
+            }
         }
 
         private class StreamResetter : IDisposable

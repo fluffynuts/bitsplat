@@ -144,10 +144,14 @@ namespace bitsplat.Tests.ResumeStrategies
         }
 
         private static IResumeStrategy Create(
-            IOptions options = null)
+            IOptions options = null,
+            IMessageWriter messageWriter = null)
         {
             options ??= CreateDefaultOptions();
-            return new SimpleResumeStrategy(options);
+            return new SimpleResumeStrategy(
+                options,
+                messageWriter ?? Substitute.For<IMessageWriter>()
+            );
         }
 
         private static IOptions CreateDefaultOptions()
@@ -167,7 +171,7 @@ namespace bitsplat.Tests.ResumeStrategies
             options.ResumeCheckBytes.Returns(512);
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new SimpleResumeStrategy(options),
+                resumeStrategy ?? new SimpleResumeStrategy(options, Substitute.For<IMessageWriter>()),
                 intermediatePipes,
                 new IFilter[] { new TargetOptInFilter() },
                 progressReporter ?? new FakeProgressReporter(),

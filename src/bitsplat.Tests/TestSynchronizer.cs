@@ -413,7 +413,7 @@ namespace bitsplat.Tests
                 using var arena = new TestArena();
                 var options = Substitute.For<IOptions>();
                 options.Retries.Returns(3);
-                
+
                 using var resetter = new AutoResetter<int>(() =>
                     {
                         var original = StreamSource.MaxBuffer;
@@ -439,7 +439,7 @@ namespace bitsplat.Tests
                 var sourceFile = arena.CreateSourceFile(data: GetRandomBytes(10, 20));
                 var expected = arena.TargetPathFor(sourceFile);
                 var sut = Create(
-                    intermediatePipes: new IPassThrough[] { errorPassThrough }, 
+                    intermediatePipes: new IPassThrough[] { errorPassThrough },
                     options: options);
                 // Act
                 sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
@@ -487,7 +487,7 @@ namespace bitsplat.Tests
                 var options = Substitute.For<IOptions>();
                 options.ResumeCheckBytes.Returns(512);
                 var sut = Create(
-                    new SimpleResumeStrategy(options),
+                    new SimpleResumeStrategy(options, Substitute.For<IMessageWriter>()),
                     new IPassThrough[] { notifiable, intermediate1 }
                         .Randomize()
                         .ToArray()
@@ -753,7 +753,11 @@ namespace bitsplat.Tests
             options ??= CreateDefaultOptions();
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new SimpleResumeStrategy(options),
+                resumeStrategy ??
+                new SimpleResumeStrategy(
+                    options,
+                    new ConsoleMessageWriter()
+                ),
                 intermediatePipes ?? new IPassThrough[0],
                 filters ?? DefaultFilters,
                 progressReporter ?? new FakeProgressReporter(),

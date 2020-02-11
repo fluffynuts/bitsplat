@@ -22,6 +22,7 @@ namespace bitsplat.Pipes
         private LinkedList<string> _spinner;
 
         private readonly object _lock = new object();
+        private bool _lastOperationWasRewrite;
 
         public bool Quiet { get; set; }
 
@@ -29,7 +30,13 @@ namespace bitsplat.Pipes
         {
             lock (_lock)
             {
+                if (_lastOperationWasRewrite)
+                {
+                    Console.WriteLine("");
+                }
+
                 _lastMessage = null;
+                _lastOperationWasRewrite = false;
                 Console.WriteLine(message);
             }
         }
@@ -40,6 +47,7 @@ namespace bitsplat.Pipes
             {
                 var overwrite = new String(' ', _lastMessage?.Length ?? 0);
                 _lastMessage = message;
+                _lastOperationWasRewrite = true;
                 Console.Write($"\r{overwrite}\r{message}");
             }
         }
