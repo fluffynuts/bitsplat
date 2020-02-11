@@ -31,6 +31,11 @@ namespace bitsplat.ResumeStrategies
                 return false;
             }
 
+            if (SourceOrTargetAreZeroLength())
+            {
+                return false;
+            }
+
             var toCheck = (int) Math.Min(
                 _options.ResumeCheckBytes,
                 Math.Ceiling(targetResource.Size / 2M)
@@ -55,6 +60,12 @@ namespace bitsplat.ResumeStrategies
             bool LeadBytesMatch()
             {
                 return BytesMatch(0, toCheck, source, target, sourceResource, targetResource);
+            }
+
+            bool SourceOrTargetAreZeroLength()
+            {
+                return sourceResource.Size == 0 ||
+                       targetResource.Size == 0;
             }
         }
 
