@@ -86,7 +86,8 @@ namespace bitsplat.Pipes
             }
 
             _current = null;
-            Write(label, OK);
+            Rewrite(label, OK);
+            _messageWriter.EndRewrite();
         }
 
         protected virtual void NotifyStart(string label)
@@ -110,6 +111,11 @@ namespace bitsplat.Pipes
                     end
                 )
             );
+        }
+
+        protected void Newline()
+        {
+            _messageWriter.Write("");
         }
 
         protected void Rewrite(

@@ -12,6 +12,7 @@ namespace bitsplat.Pipes
         void Rewrite(string message);
         void StartProgress(string message);
         void StopProgress(string message);
+        void EndRewrite();
     }
 
     public class ConsoleMessageWriter : IMessageWriter
@@ -39,6 +40,18 @@ namespace bitsplat.Pipes
                 _lastOperationWasRewrite = false;
                 Console.WriteLine(message);
             }
+        }
+
+        public void EndRewrite()
+        {
+            if (!_lastOperationWasRewrite)
+            {
+                return;
+            }
+
+            Console.WriteLine("");
+            _lastOperationWasRewrite = false;
+            _lastMessage = null;
         }
 
         public void Rewrite(string message)
