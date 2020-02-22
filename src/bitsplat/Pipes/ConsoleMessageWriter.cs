@@ -6,8 +6,6 @@ namespace bitsplat.Pipes
 {
     public interface IMessageWriter
     {
-        public bool Quiet { get; set; }
-
         void Write(string message);
         void Rewrite(string message);
         void StartProgress(string message);
@@ -24,8 +22,6 @@ namespace bitsplat.Pipes
 
         private readonly object _lock = new object();
         private bool _lastOperationWasRewrite;
-
-        public bool Quiet { get; set; }
 
         public void Write(string message)
         {

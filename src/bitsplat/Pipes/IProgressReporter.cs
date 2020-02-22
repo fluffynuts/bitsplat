@@ -54,6 +54,8 @@ namespace bitsplat.Pipes
         }
     }
 
+    // TODO: introduce a quiet reporter which never re-writes
+    // so is friendlier to, eg, cron runs (no more ^M)
     public interface IProgressReporter
     {
         public bool Quiet { get; set; }
