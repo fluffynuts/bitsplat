@@ -167,6 +167,8 @@ namespace bitsplat
             var targetResource = targetResources.FirstOrDefault(
                 r => r.RelativePath == sourceResource.RelativePath);
 
+            // FIXME: if the source or target can't be opened
+            // then the entire process bombs
             var sourceStream = sourceResource.OpenForRead();
             var targetStream = target.Open(
                 sourceResource.RelativePath,
