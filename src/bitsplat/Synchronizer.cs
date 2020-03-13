@@ -159,32 +159,46 @@ namespace bitsplat
             }
         }
 
+        private bool TryDo<T>(Func<T> toRun, out T result)
+        {
+            try
+            {
+                result = toRun();
+                return true;
+            }
+            catch
+            {
+                result = default;
+                return false;
+            }
+        }
+
         private bool TrySynchroniseResource(
             IReadWriteFileResource sourceResource,
             IFileSystem target,
             IReadWriteFileResource[] targetResources)
         {
             var targetResource = targetResources.FirstOrDefault(
-                r => r.RelativePath == sourceResource.RelativePath);
+                r => r.RelativePath == sourceResource.RelativePath
+            );
 
-            // FIXME: if the source or target can't be opened
-            // then the entire process bombs
-            var sourceStream = sourceResource.OpenForRead();
-            var targetStream = target.Open(
-                sourceResource.RelativePath,
-                FileMode.OpenOrCreate);
+            if (!TryDo(sourceResource.OpenForRead, out var sourceStream))
+            {
+                return false;
+            }
 
-            var resuming = ResumeIfPossible(
-                sourceResource,
-                targetResource,
-                sourceStream,
-                targetStream);
+            if (!TryDo(
+                    () => target.Open(sourceResource.RelativePath,
+                        FileMode.OpenOrCreate,
+                        FileAccess.ReadWrite
+                    ),
+                    out var targetStream)
+            )
+            {
+                return false;
+            }
 
-            NotifySyncStart(
-                sourceResource,
-                resuming
-                    ? targetResource
-                    : null);
+            NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
 
             var composition = ComposePipeline(sourceStream, targetStream);
             try
@@ -207,6 +221,24 @@ namespace bitsplat
             }
 
             return true;
+        }
+
+        private void NotifySyncStart(IReadWriteFileResource sourceResource,
+            IReadWriteFileResource targetResource,
+            Stream sourceStream,
+            Stream targetStream)
+        {
+            var isResuming = ResumeIfPossible(
+                sourceResource,
+                targetResource,
+                sourceStream,
+                targetStream);
+
+            NotifySyncStart(
+                sourceResource,
+                isResuming
+                    ? targetResource
+                    : null);
         }
 
         private void RecordSkipped(FileSystemComparison comparison)

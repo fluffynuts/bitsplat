@@ -44,9 +44,13 @@ namespace bitsplat.Storage
             );
         }
 
-        public Stream Open(string path, FileMode mode)
+        public Stream Open(
+            string path,
+            FileMode mode,
+            FileAccess access
+        )
         {
-            return _underlying.Open(path, mode);
+            return _underlying.Open(path, mode, access);
         }
 
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()

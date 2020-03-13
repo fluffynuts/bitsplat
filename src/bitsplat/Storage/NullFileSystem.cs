@@ -22,7 +22,10 @@ namespace bitsplat.Storage
             return false;
         }
 
-        public Stream Open(string path, FileMode mode)
+        public Stream Open(
+            string path, 
+            FileMode mode,
+            FileAccess access)
         {
             return new MemoryStream();
         }

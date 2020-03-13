@@ -45,7 +45,7 @@ namespace bitsplat.Tests
                     .ListResourcesRecursive();
                 Expect(archive)
                     .Not.To.Have.Received()
-                    .Open(Arg.Any<string>(), Arg.Any<FileMode>());
+                    .Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>());
             }
         }
 
@@ -71,7 +71,7 @@ namespace bitsplat.Tests
                 // Assert
                 Expect(archive)
                     .Not.To.Have.Received()
-                    .Open(Arg.Any<string>(), Arg.Any<FileMode>());
+                    .Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>());
                 Expect(sourceResource)
                     .Not.To.Have.Received()
                     .OpenForRead();

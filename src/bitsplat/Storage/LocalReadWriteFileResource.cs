@@ -40,7 +40,8 @@ namespace bitsplat.Storage
         {
             return _fileSystem.Open(
                 RelativePath,
-                FileMode.Open
+                FileMode.Open,
+                FileAccess.Read
             );
         }
 
@@ -48,7 +49,8 @@ namespace bitsplat.Storage
         {
             return _fileSystem.Open(
                 RelativePath,
-                FileMode.OpenOrCreate
+                FileMode.OpenOrCreate,
+                FileAccess.ReadWrite
             );
         }
     }

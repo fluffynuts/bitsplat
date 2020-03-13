@@ -786,7 +786,11 @@ namespace bitsplat.Tests
             this IFileSystem fileSystem,
             string name)
         {
-            using var stream = fileSystem.Open(name, FileMode.Open);
+            using var stream = fileSystem.Open(
+                name,
+                FileMode.Open,
+                FileAccess.Read
+            );
             return stream.ReadAllBytes();
         }
     }

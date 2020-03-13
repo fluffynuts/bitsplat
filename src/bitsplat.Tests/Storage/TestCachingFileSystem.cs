@@ -19,21 +19,22 @@ namespace bitsplat.Tests.Storage
             {
                 // Arrange
                 var underlying = Substitute.For<IFileSystem>();
-                underlying.Open(Arg.Any<string>(), Arg.Any<FileMode>())
+                underlying.Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>())
                     .Returns(ci => new MemoryStream());
                 var sut = Create(underlying);
                 var path = GetRandomString();
                 var otherPath = GetAnother(path);
                 var otherMode = GetRandom<FileMode>();
+                var access = GetRandom<FileAccess>();
                 // Act
-                var result1 = sut.Open(path, FileMode.Append);
-                var result2 = sut.Open(path, FileMode.Append);
-                var result3 = sut.Open(path, FileMode.Create);
-                var result4 = sut.Open(path, FileMode.Open);
-                var result5 = sut.Open(path, FileMode.Truncate);
-                var result6 = sut.Open(path, FileMode.CreateNew);
-                var result7 = sut.Open(path, FileMode.OpenOrCreate);
-                var result8 = sut.Open(otherPath, otherMode);
+                var result1 = sut.Open(path, FileMode.Append, access);
+                var result2 = sut.Open(path, FileMode.Append, access);
+                var result3 = sut.Open(path, FileMode.Create, access);
+                var result4 = sut.Open(path, FileMode.Open, access);
+                var result5 = sut.Open(path, FileMode.Truncate, access);
+                var result6 = sut.Open(path, FileMode.CreateNew, access);
+                var result7 = sut.Open(path, FileMode.OpenOrCreate, access);
+                var result8 = sut.Open(otherPath, otherMode, access);
                 // Assert
                 Expect(new[]
                     {
@@ -45,17 +46,18 @@ namespace bitsplat.Tests.Storage
                         result6,
                         result7,
                         result8
-                    }).To.Be.Distinct();
+                    })
+                    .To.Be.Distinct();
                 Received.InOrder(() =>
                 {
-                    underlying.Open(path, FileMode.Append);
-                    underlying.Open(path, FileMode.Append);
-                    underlying.Open(path, FileMode.Create);
-                    underlying.Open(path, FileMode.Open);
-                    underlying.Open(path, FileMode.Truncate);
-                    underlying.Open(path, FileMode.CreateNew);
-                    underlying.Open(path, FileMode.OpenOrCreate);
-                    underlying.Open(otherPath, otherMode);
+                    underlying.Open(path, FileMode.Append, access);
+                    underlying.Open(path, FileMode.Append, access);
+                    underlying.Open(path, FileMode.Create, access);
+                    underlying.Open(path, FileMode.Open, access);
+                    underlying.Open(path, FileMode.Truncate, access);
+                    underlying.Open(path, FileMode.CreateNew, access);
+                    underlying.Open(path, FileMode.OpenOrCreate, access);
+                    underlying.Open(otherPath, otherMode, access);
                 });
             }
 
@@ -98,7 +100,7 @@ namespace bitsplat.Tests.Storage
                 Expect(result1)
                     .To.Equal(result2)
                     .And.To.Equal(expected1);
-                
+
                 Expect(result3)
                     .To.Equal(expected2);
             }
@@ -282,10 +284,10 @@ namespace bitsplat.Tests.Storage
         }
 
         [TestFixture]
-        public class WhenDeleting: TestCachingFileSystem
+        public class WhenDeleting : TestCachingFileSystem
         {
             [TestFixture]
-            public class WhenNoOptions: WhenDeleting
+            public class WhenNoOptions : WhenDeleting
             {
                 [Test]
                 public void ShouldRemoveFromCachedList()
@@ -314,7 +316,7 @@ namespace bitsplat.Tests.Storage
             }
 
             [TestFixture]
-            public class WhenHaveOptions: WhenDeleting
+            public class WhenHaveOptions : WhenDeleting
             {
                 [Test]
                 public void ShouldRemoveFromCachedList()

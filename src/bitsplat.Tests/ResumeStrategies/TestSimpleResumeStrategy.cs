@@ -50,10 +50,13 @@ namespace bitsplat.Tests.ResumeStrategies
                             .Single(r => r.RelativePath == relPath);
                         var sourceStream = arena.SourceFileSystem.Open(
                             relPath,
-                            FileMode.OpenOrCreate);
+                            FileMode.OpenOrCreate,
+                            FileAccess.Read
+                        );
                         var targetStream = arena.TargetFileSystem.Open(
                             relPath,
-                            FileMode.OpenOrCreate);
+                            FileMode.OpenOrCreate,
+                            FileAccess.ReadWrite);
                         // Act
                         var result = sut.CanResume(
                             sourceResource,
@@ -115,10 +118,12 @@ namespace bitsplat.Tests.ResumeStrategies
                             .Single(r => r.RelativePath == relPath);
                         var sourceStream = arena.SourceFileSystem.Open(
                             relPath,
-                            FileMode.OpenOrCreate);
+                            FileMode.OpenOrCreate,
+                            FileAccess.Read);
                         var targetStream = arena.TargetFileSystem.Open(
                             relPath,
-                            FileMode.OpenOrCreate);
+                            FileMode.OpenOrCreate,
+                            FileAccess.ReadWrite);
                         // Act
                         var result = sut.CanResume(
                             sourceResource,

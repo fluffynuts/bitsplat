@@ -69,8 +69,9 @@ namespace bitsplat.Storage
         /// </summary>
         /// <param name="path"></param>
         /// <param name="mode"></param>
+        /// <param name="fileAccess"></param>
         /// <returns></returns>
-        Stream Open(string path, FileMode mode);
+        Stream Open(string path, FileMode mode, FileAccess fileAccess);
 
         /// <summary>
         /// Lists all files under the base path

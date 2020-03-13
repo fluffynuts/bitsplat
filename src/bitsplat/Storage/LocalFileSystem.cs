@@ -51,12 +51,13 @@ namespace bitsplat.Storage
 
         public Stream Open(
             string path,
-            FileMode mode)
+            FileMode mode,
+            FileAccess fileAccess)
         {
             var fullPath = FullPathFor(path);
             var containingFolder = Path.GetDirectoryName(fullPath);
             EnsureFolderExists(containingFolder);
-            return File.Open(fullPath, mode);
+            return File.Open(fullPath, mode, fileAccess);
         }
 
         public static void EnsureFolderExists(string fullPath)

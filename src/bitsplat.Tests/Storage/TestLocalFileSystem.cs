@@ -179,7 +179,10 @@ namespace bitsplat.Tests.Storage
                 var expected = GetRandomBytes(1024);
                 var sut = Create(tempFolder);
                 // Act
-                using (var stream = sut.Open(fileName, FileMode.OpenOrCreate))
+                using (var stream = sut.Open(
+                    fileName, 
+                    FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite))
                 {
                     stream.Write(expected);
                 }
@@ -207,7 +210,10 @@ namespace bitsplat.Tests.Storage
                 var expected = GetRandomBytes(1024);
                 var sut = Create(tempFolder);
                 // Act
-                using (var stream = sut.Open(fileName, FileMode.Append))
+                using (var stream = sut.Open(
+                    fileName, 
+                    FileMode.Append,
+                    FileAccess.Write))
                 {
                     stream.Write(expected);
                 }
@@ -399,19 +405,17 @@ namespace bitsplat.Tests.Storage
             public void ShouldSupplyMinusOneForSizeIfUnableToStat()
             {
                 // Arrange
-                using (var tempFolder = new AutoTempFolder())
-                {
-                    var file = tempFolder.CreateRandomFile();
-                    var stat = new FileInfo(file);
-                    var sut = Create(tempFolder);
-                    // Act
-                    var results = sut.ListResourcesRecursive();
-                    File.Delete(file);
-                    // Assert
-                    Expect(results.Single()
-                            .Size)
-                        .To.Equal(-1);
-                }
+                using var tempFolder = new AutoTempFolder();
+                var file = tempFolder.CreateRandomFile();
+                var stat = new FileInfo(file);
+                var sut = Create(tempFolder);
+                // Act
+                var results = sut.ListResourcesRecursive();
+                File.Delete(file);
+                // Assert
+                Expect(results.Single()
+                        .Size)
+                    .To.Equal(-1);
             }
         }
 
@@ -456,6 +460,22 @@ namespace bitsplat.Tests.Storage
                     Expect(fullPath)
                         .Not.To.Exist();
                 }
+            }
+        }
+
+        [TestFixture]
+        public class OpeningTheSameFileForReading
+        {
+            [Test]
+            public void CanItBeDone()
+            {
+                // Arrange
+                using var file = new AutoTempFile()
+                {
+                    StringData = GetRandomString(8196, 16384)
+                };
+                // Act
+                // Assert
             }
         }
 
