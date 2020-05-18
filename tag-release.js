@@ -14,14 +14,35 @@ async function createZip(version, baseFolder, runtime, append) {
     await exec(`zip -j -9 release/${zip} "${src}"`);
 }
 
+class Version {
+  constructor(tag) {
+    const parts = tag.replace(/^v/, "").split(".");
+    this.tag = tag;
+    this.major = parseInt(parts[0]);
+    this.minor = parseInt(parts[1] || 0);
+    this.patch = parseInt(parts[2] || 0);
+  }
+
+  compare(otherVersion) {
+    return [ "major", "minor", "patch" ].reduce(
+      (acc, cur) => acc || this._comparePart(cur, otherVersion),
+      0
+    );
+  }
+
+  _comparePart(partName, otherVersion) {
+    return this[partName] - otherVersion[partName];
+  }
+}
+
 (async function () {
     const
-        execResult = await exec("git tag | sort -V | tail -n 1"),
-        latestTag = execResult.stdout.trim(),
-        latestTagVersion = latestTag.replace(/[^0-9.]*/g, ""),
-        parts = latestTagVersion.split("."),
-        major = parseInt(parts[0]),
-        minor = parseInt(parts[1]),
+        execResult = await exec("git tag"),
+        lines = execResult.stdout.trim().split("\n").map(l => l.trim()).sort(),
+        versions = lines.map(line => new Version(line)),
+        latestVersion = versions.sort((a, b) => b.compare(a))[0],
+        major = latestVersion.major,
+        minor = latestVersion.minor,
         next = `${major}.${minor + 1}`,
         cmd1 = `git add -A :/`,
         cmd2 = `git commit -m ":bookmark: release v${next}"`,
