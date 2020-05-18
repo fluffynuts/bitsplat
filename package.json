@@ -27,6 +27,6 @@
     },
     "homepage": "https://github.com/fluffynuts/bitsplat#readme",
     "devDependencies": {
-        "zarro": "^1.17.0"
+        "zarro": "^1.37.0"
     }
 }
