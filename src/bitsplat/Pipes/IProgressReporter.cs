@@ -65,6 +65,7 @@ namespace bitsplat.Pipes
         void NotifyCurrent(NotificationDetails details);
         void NotifyOverall(NotificationDetails details);
         void NotifyError(NotificationDetails details);
+        void Log(string info);
 
         void NotifyPrepare(
             string operation,
@@ -86,6 +87,7 @@ namespace bitsplat.Pipes
             string message,
             Action toRun
         );
+        
         
     }
 }

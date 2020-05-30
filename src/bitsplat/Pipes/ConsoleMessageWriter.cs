@@ -11,6 +11,7 @@ namespace bitsplat.Pipes
         void StartProgress(string message);
         void StopProgress(string message);
         void EndRewrite();
+        void Log(string message);
     }
 
     public class ConsoleMessageWriter : IMessageWriter
@@ -49,6 +50,14 @@ namespace bitsplat.Pipes
             _lastOperationWasRewrite = false;
             _lastMessage = null;
         }
+
+        public void Log(string message)
+        {
+            Console.WriteLine($"[${TimeStamp}] ${message}");
+        }
+        
+        private string TimeStamp =>
+            DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
         public void Rewrite(string message)
         {

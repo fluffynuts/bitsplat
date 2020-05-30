@@ -198,6 +198,11 @@ namespace bitsplat.Pipes
             );
         }
 
+        public void Log(string info)
+        {
+            _reporter.Log(info);
+        }
+
         public override void Dispose()
         {
             Clear();

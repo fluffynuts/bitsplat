@@ -31,5 +31,9 @@ namespace bitsplat.Pipes
             IFileSystem source,
             IFileSystem target
         );
+
+        void Log(
+            string info
+        );
     }
 }

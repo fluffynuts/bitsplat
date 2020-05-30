@@ -19,6 +19,10 @@ namespace bitsplat.Tests
         {
         }
 
+        public void Log(string info)
+        {
+        }
+
         public void SetMaxLabelLength(int longestName)
         {
         }

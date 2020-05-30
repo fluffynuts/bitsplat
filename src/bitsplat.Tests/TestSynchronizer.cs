@@ -663,6 +663,10 @@ namespace bitsplat.Tests
                 IFileSystem target)
             {
             }
+
+            public void Log(string info)
+            {
+            }
         }
 
         public class GenericFilter : IFilter

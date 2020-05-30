@@ -88,14 +88,19 @@ namespace bitsplat.Storage
 
         public long FetchSize(string path)
         {
+            var fullPath = FullPathFor(path);
             try
             {
                 return new FileInfo(
-                    FullPathFor(path)
+                    fullPath
                 ).Length;
             }
-            catch
+            catch (Exception ex)
             {
+                _progressReporter.Log(
+                    $"Unable to read size of {fullPath}\n{ex.Message}"
+                );
+
                 return -1;
             }
         }
@@ -113,8 +118,8 @@ namespace bitsplat.Storage
             string possibleRelativePath)
         {
             return possibleRelativePath.StartsWith(_basePath)
-                       ? possibleRelativePath
-                       : Path.Combine(_basePath, possibleRelativePath);
+                ? possibleRelativePath
+                : Path.Combine(_basePath, possibleRelativePath);
         }
 
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(

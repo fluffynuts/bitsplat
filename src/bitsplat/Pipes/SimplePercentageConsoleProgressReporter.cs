@@ -11,8 +11,10 @@ namespace bitsplat.Pipes
         public const int MIN_REPORT_WINDOW_MS = 500;
         private DateTime _lastReport = DateTime.MinValue;
 
-        public SimplePercentageConsoleProgressReporter(IMessageWriter messageWriter)
-            : base(messageWriter)
+        public SimplePercentageConsoleProgressReporter(
+            IOptions options,
+            IMessageWriter messageWriter)
+            : base(messageWriter, options)
         {
             Quiet = false;
             DetailPadding = base.DetailPadding + 28; // guess? we want to put more info in here

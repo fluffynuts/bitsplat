@@ -20,6 +20,14 @@ namespace bitsplat.ResumeStrategies
             _messageWriter = messageWriter;
         }
 
+        private void Log(string message)
+        {
+            if (_options.Verbose)
+            {
+                _messageWriter.Log(message);
+            }
+        }
+
         public bool CanResume(
             IFileResource sourceResource,
             IFileResource targetResource,
@@ -48,22 +56,29 @@ namespace bitsplat.ResumeStrategies
 
             bool TargetIsLargerThanSource()
             {
-                return targetResource.Size > sourceResource.Size;
+                var result = targetResource.Size > sourceResource.Size;
+                Log($"{targetResource.RelativePath}: target is {(result ? "larger" : "smaller")} than source");
+                return result;
             }
 
             bool TailBytesMatch()
             {
                 var toSeek = targetResource.Size - toCheck;
-                return BytesMatch(toSeek, toCheck, source, target, sourceResource, targetResource);
+                var result = BytesMatch(toSeek, toCheck, source, target, sourceResource, targetResource);
+                Log($"{targetResource.RelativePath} tail bytes {toSeek} - {toCheck} {(result ? "" : "do not ")}match");
+                return result;
             }
 
             bool LeadBytesMatch()
             {
-                return BytesMatch(0, toCheck, source, target, sourceResource, targetResource);
+                var result = BytesMatch(0, toCheck, source, target, sourceResource, targetResource);
+                Log($"{targetResource.RelativePath} lead {toCheck} bytes {(result ? "" : "do not ")}match");
+                return result;
             }
 
             bool SourceOrTargetAreZeroLength()
             {
+                Log($"{targetResource.RelativePath} sizes in bytes: source: {sourceResource.Size} vs target: {targetResource.Size}");
                 return sourceResource.Size == 0 ||
                        targetResource.Size == 0;
             }
@@ -80,6 +95,7 @@ namespace bitsplat.ResumeStrategies
             using var sourceData = BufferPool.Borrow(toCheck);
             if (!TryReadBytes(source, offset, toCheck, sourceData.Data, sourceResource))
             {
+                Log($"can't read bytes {offset} - {toCheck} of source {sourceResource.RelativePath}");
                 return false;
             }
 
@@ -87,6 +103,7 @@ namespace bitsplat.ResumeStrategies
             using var targetData = BufferPool.Borrow(toCheck);
             if (!TryReadBytes(target, offset, toCheck, targetData.Data, targetResource))
             {
+                Log($"can't read bytes {offset} - {toCheck} of target {targetResource.RelativePath}");
                 return false;
             }
 

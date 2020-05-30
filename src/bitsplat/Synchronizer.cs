@@ -107,6 +107,13 @@ namespace bitsplat
                 return;
             }
 
+            if (_options.DryRun)
+            {
+                Debug("would attempt to sync:");
+                syncQueue.ForEach(LogWouldAttemptSync);
+                return;
+            }
+
             syncQueue.ForEach(sourceResource =>
                 SynchroniseResource(
                     source,
@@ -117,6 +124,19 @@ namespace bitsplat
             );
 
             NotifySyncBatchComplete(syncQueue);
+        }
+
+        private void LogWouldAttemptSync(IReadWriteFileResource obj)
+        {
+            Debug($"  {obj.RelativePath} ({obj.Size})");
+        }
+
+        private void Debug(string message)
+        {
+            if (_options.Verbose)
+            {
+                _notifiables.ForEach(n => n.Log(message));
+            }
         }
 
         private void SynchroniseResource(
@@ -243,6 +263,14 @@ namespace bitsplat
 
         private void RecordSkipped(FileSystemComparison comparison)
         {
+            if (_options.NoHistory)
+            {
+                // fixme: this is a mix of concerns:
+                // there's already a noop history reporter
+                // -> just trying to reduce logging
+                return;
+            }
+
             var toRecord = comparison.Skipped
                 .Union(comparison.RecordOnly)
                 .ToArray();
@@ -383,6 +411,11 @@ namespace bitsplat
                 sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
                 targetStream.Seek(targetResource.Size, SeekOrigin.Begin);
             }
+            else
+            {
+                // force restart
+                targetStream.SetLength(0);
+            }
 
             return canResume;
         }
@@ -393,7 +426,7 @@ namespace bitsplat
             IFileSystem source,
             IFileSystem target)
         {
-            return _progressReporter.Bookend(
+            var result = _progressReporter.Bookend(
                 "Comparing source and target",
                 () => sourceResources.Aggregate(
                     new FileSystemComparison(),
@@ -423,11 +456,37 @@ namespace bitsplat
                                 list = acc.RecordOnly;
                                 break;
                         }
-
                         list.Add(sourceResource);
                         return acc;
                     })
             );
+            Log(result);
+            return result;
+        }
+
+        private void Log(FileSystemComparison result)
+        {
+            if (!_options.Verbose)
+            {
+                return;
+            }
+            Dump("Excluded", result.Excluded);
+            Dump("Skipped", result.Skipped);
+            Dump("Record only", result.RecordOnly);
+            Dump("Sync", result.SyncQueue);
+        }
+
+        private void Dump(
+            string label,
+            List<IReadWriteFileResource> resources)
+        {
+            if (resources.None())
+            {
+                return;
+            }
+
+            Debug($"{label}:");
+            resources.ForEach(r => Debug($"  {r.RelativePath}"));
         }
 
         private FilterResult ApplyAllFilters(

@@ -9,6 +9,7 @@ namespace bitsplat.Pipes
         public bool Quiet { get; set; } = true;
 
         private readonly IMessageWriter _messageWriter;
+        private readonly IOptions _options;
         private string _current;
         private int _maxLabelLength;
 
@@ -17,9 +18,11 @@ namespace bitsplat.Pipes
         private int? _lastKnownConsoleWidth;
 
         public SimpleConsoleProgressReporter(
-            IMessageWriter messageWriter)
+            IMessageWriter messageWriter,
+            IOptions options)
         {
             _messageWriter = messageWriter;
+            _options = options;
             try
             {
                 _lastKnownConsoleWidth = Console.WindowWidth;
@@ -161,6 +164,11 @@ namespace bitsplat.Pipes
             Write(details.Label, FAIL);
             Write(details.Exception.Message, "");
             Write(details.Exception.StackTrace, "");
+        }
+
+        public void Log(string info)
+        {
+            Write(info, "");
         }
 
         // add 2 spaces and 6 chars for [ -- ]
@@ -334,19 +342,17 @@ namespace bitsplat.Pipes
 
         private void StartProgress(string message)
         {
-            if (Quiet)
+            if (Quiet || _options.Verbose)
             {
-                Rewrite(message, null);
+                return;
             }
-            else
-            {
-                _messageWriter.StartProgress(message);
-            }
+
+            _messageWriter.StartProgress(message);
         }
 
         private void StopProgress(string message)
         {
-            if (Quiet)
+            if (Quiet || _options.Verbose)
             {
                 Write(message, OK);
             }
@@ -358,7 +364,7 @@ namespace bitsplat.Pipes
 
         private void FailProgress(string message)
         {
-            if (Quiet)
+            if (Quiet || _options.Verbose)
             {
                 Write(message, FAIL);
             }

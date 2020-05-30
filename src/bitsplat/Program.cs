@@ -188,6 +188,19 @@ namespace bitsplat
                             .WithDefault(new[] { "3" }) // TODO: this is a bit ugly -- can it be better?
                             .WithHelp("Retry failed synchronisations at most this many times")
                     )
+                    .WithFlag(
+                        nameof(Options.DryRun),
+                        o => o.WithArg("-d")
+                            .WithArg("--dry-run")
+                            .WithHelp("Only report what would be done instead of actually doing it")
+                            .WithDefault(false)
+                    )
+                    .WithFlag(
+                        nameof(Options.Verbose),
+                        o => o.WithArg("-v")
+                            .WithArg("--verbose")
+                            .WithDefault(false)
+                    )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
                 return !opts.ShowedHelp;

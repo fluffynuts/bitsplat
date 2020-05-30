@@ -180,7 +180,7 @@ namespace bitsplat.Tests.Storage
                 var sut = Create(tempFolder);
                 // Act
                 using (var stream = sut.Open(
-                    fileName, 
+                    fileName,
                     FileMode.OpenOrCreate,
                     FileAccess.ReadWrite))
                 {
@@ -211,7 +211,7 @@ namespace bitsplat.Tests.Storage
                 var sut = Create(tempFolder);
                 // Act
                 using (var stream = sut.Open(
-                    fileName, 
+                    fileName,
                     FileMode.Append,
                     FileAccess.Write))
                 {
@@ -376,11 +376,11 @@ namespace bitsplat.Tests.Storage
                 Expect(results)
                     .To.Contain.Exactly(1)
                     .Matched.By(o => o.RelativePath == expected1 &&
-                                     o.Path == file1);
+                        o.Path == file1);
                 Expect(results)
                     .To.Contain.Exactly(1)
                     .Matched.By(o => o.RelativePath == expected2 &&
-                                     o.Path == file2);
+                        o.Path == file2);
             }
 
             [Test]
@@ -477,6 +477,25 @@ namespace bitsplat.Tests.Storage
                 // Act
                 // Assert
             }
+        }
+
+        [Explicit("discovery")]
+        [Test]
+        public void StrangeFile()
+        {
+            // Arrange
+            var path = "/mnt/mede8er-smb/movies/Dragonheart 3 - The Sorcerer's Curse (2015).mkv";
+            var basePath = Path.GetDirectoryName(path);
+            var fileName = Path.GetFileName(path);
+            var fs = new LocalFileSystem(basePath, Substitute.For<IProgressReporter>());
+            // Act
+            var resource = new LocalReadWriteFileResource(
+                fileName,
+                basePath,
+                fs
+            );
+            // Assert
+            Console.WriteLine(resource.Size);
         }
 
         private static IFileSystem Create(string baseFolder)

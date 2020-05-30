@@ -22,6 +22,8 @@ namespace bitsplat
         int Retries { get; set; }
         int ResumeCheckBytes { get; set; }
         bool CreateTargetIfRequired { get; set; }
+        bool DryRun { get; set; }
+        bool Verbose { get; set; }
     }
 
     public class Options : ParsedArguments, IOptions
@@ -39,5 +41,8 @@ namespace bitsplat
         public bool NoHistory { get; set; }
         public bool KeepStaleFiles { get; set; }
         public bool CreateTargetIfRequired { get; set; }
+
+        public bool DryRun { get; set; }
+        public bool Verbose { get; set; }
     }
 }
