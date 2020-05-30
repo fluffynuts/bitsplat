@@ -20,5 +20,6 @@ namespace bitsplat.CommandLine
             = new Dictionary<string, ParsedArgument<string[]>>();
 
         public bool ShowedHelp { get; set; }
+        public bool ShowedVersion { get; set; }
     }
 }

@@ -24,6 +24,7 @@ namespace bitsplat
         bool CreateTargetIfRequired { get; set; }
         bool DryRun { get; set; }
         bool Verbose { get; set; }
+        public bool Version { get; set; }
     }
 
     public class Options : ParsedArguments, IOptions
@@ -44,5 +45,6 @@ namespace bitsplat
 
         public bool DryRun { get; set; }
         public bool Verbose { get; set; }
+        public bool Version { get; set; }
     }
 }

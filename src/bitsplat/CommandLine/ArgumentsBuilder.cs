@@ -56,7 +56,7 @@ namespace bitsplat.CommandLine
 
             var argsList = args.ToList();
             result.ShowedHelp = argsList.TryFindFlag("--help", "-h") ?? false;
-
+            result.ShowedVersion = argsList.TryFindFlag("--version") ?? false;
             _flags.ForEach(
                 kvp => ParseFlag(
                     result,
@@ -77,12 +77,31 @@ namespace bitsplat.CommandLine
             {
                 RenderHelp(result);
             }
+            else if (result.ShowedVersion)
+            {
+                RenderVersion();
+            }
             else
             {
                 MapCustomProperties(result);
             }
 
             return result;
+        }
+
+        private void RenderVersion()
+        {
+            var version = typeof(Program)
+                .Assembly.GetName()
+                .Version?.ToString() ?? "(unknown version)";
+            var parts = version.Split('.');
+            if (parts.Length > 1)
+            {
+                // only first two parts matter for tag
+                version = parts.Take(2).JoinWith(".");
+            }
+
+            Console.WriteLine($"bitsplat v{version}");
         }
 
         private void RenderHelp(ParsedArguments result)
@@ -104,7 +123,7 @@ namespace bitsplat.CommandLine
             var sorted = flagHelp.Union(parameterHelp)
                 .OrderBy(kvp => kvp.Key.FirstOrDefault())
                 .ToArray();
-            
+
             _help.ForEach(line =>
             {
                 var available = Console.WindowWidth;
@@ -155,7 +174,7 @@ namespace bitsplat.CommandLine
             ParsedArgument<bool> arg)
         {
             if (!PropertiesOf(typeof(T))
-                    .TryGetValue(key, out var propertyInfo))
+                .TryGetValue(key, out var propertyInfo))
             {
                 return;
             }
@@ -166,6 +185,7 @@ namespace bitsplat.CommandLine
                     $"Cannot map flag {key} onto property of type {propertyInfo.PropertyType}"
                 );
             }
+
             propertyInfo.SetValue(result, arg.Value);
         }
 
@@ -176,7 +196,7 @@ namespace bitsplat.CommandLine
         ) where T : ParsedArguments
         {
             if (!PropertiesOf(typeof(T))
-                    .TryGetValue(key, out var propInfo))
+                .TryGetValue(key, out var propInfo))
             {
                 return;
             }
@@ -256,8 +276,8 @@ namespace bitsplat.CommandLine
                 result,
                 () => !pi.PropertyType.IsCollection(),
                 (desiredType, value) => TryChangeType(value, desiredType, out var converted)
-                                            ? (true, converted)
-                                            : (false, converted)
+                    ? (true, converted)
+                    : (false, converted)
             );
         }
 
@@ -272,8 +292,8 @@ namespace bitsplat.CommandLine
                 result,
                 () => pi.PropertyType.IsEnum,
                 (type, value) => Enum.TryParse(type, value?.Replace("-", ""), true, out var converted)
-                                     ? (true, value: converted)
-                                     : (false, value: converted)
+                    ? (true, value: converted)
+                    : (false, value: converted)
             );
         }
 
@@ -380,15 +400,23 @@ namespace bitsplat.CommandLine
                 Switches = parser.Switches
             };
             
-            if (!result.ShowedHelp &&
-                result.Parameters[name].Value.Length == 0 &&
-                result.Parameters[name].IsRequired)
+            var skipValidation = result.ShowedHelp || 
+                result.ShowedVersion;
+            if (skipValidation)
+            {
+                return;
+            }
+
+            if (result.Parameters[name]
+                    .Value.Length ==
+                0 &&
+                result.Parameters[name]
+                    .IsRequired)
             {
                 throw new ArgumentException(
                     $"{name} is required"
                 );
             }
-
         }
 
         private void ParseFlag(

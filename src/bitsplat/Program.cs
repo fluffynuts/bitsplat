@@ -22,6 +22,12 @@ namespace bitsplat
                 return -1;
             }
 
+            if (opts.ShowedHelp ||
+                opts.ShowedVersion)
+            {
+                return 0;
+            }
+
             // TODO: when more than just local filesystems are handled,
             //       this should move elsewhere
             if (!Directory.Exists(opts.Target) &&
@@ -200,10 +206,16 @@ namespace bitsplat
                         o => o.WithArg("-v")
                             .WithArg("--verbose")
                             .WithDefault(false)
+                            .WithHelp("Print a lot more logging")
+                    )
+                    .WithFlag(
+                        nameof(Options.Version),
+                        o => o.WithArg("--version")
+                            .WithDefault(false)
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
-                return !opts.ShowedHelp;
+                return true;
             }
             catch (ArgumentException ex)
             {
