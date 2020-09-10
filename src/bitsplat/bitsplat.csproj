@@ -8,8 +8,8 @@
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
+      <PublishSingleFile>true</PublishSingleFile>
+      <PublishTrimmed>true</PublishTrimmed>
     </PropertyGroup>
 
     <ItemGroup>
