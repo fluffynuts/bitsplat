@@ -9,8 +9,8 @@ namespace bitsplat.Storage
         private readonly string _basePath;
         private readonly IFileSystem _fileSystem;
         public override string Path { get; }
-        public override long Size => (_size ?? (_size = FetchSize())).Value;
-        public override string RelativePath => _relativePath ?? (_relativePath = GetRelativePath());
+        public override long Size => (_size ??= FetchSize());
+        public override string RelativePath => _relativePath ??= GetRelativePath();
 
         private long? _size;
 

@@ -3,8 +3,10 @@
     <PropertyGroup>
         <Version>1.16.0</Version>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>netcoreapp6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
+        <WarningLevel>4</WarningLevel>
+        <AnalysisLevel>none</AnalysisLevel>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -19,6 +21,7 @@
       <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
       <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.4.0" />
       <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
+      <PackageReference Include="SharpCifs.Std" Version="0.2.13" />
       <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
     </ItemGroup>
 

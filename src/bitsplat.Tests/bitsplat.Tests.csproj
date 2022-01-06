@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>netcoreapp6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <IsPackable>false</IsPackable>
+        <WarningLevel>4</WarningLevel>
+        <AnalysisLevel>none</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +19,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
         <PackageReference Include="PeanutButter.RandomGenerators" Version="1.2.331" />
         <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
+        <PackageReference Include="SharpCifs.Std" Version="0.2.13" />
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
     </ItemGroup>
 
