@@ -43,6 +43,13 @@ namespace bitsplat.Storage
                 );
             }
 
+            if (u.Scheme == "smb")
+            {
+                return new SmbFileSystem(
+                    uri
+                );
+            }
+
             throw new NotSupportedException(
                 $"Protocol not supported: {u.Scheme}"
             );

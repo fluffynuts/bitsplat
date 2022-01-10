@@ -56,7 +56,7 @@ namespace bitsplat.Tests.ResumeStrategies
                         var targetStream = arena.TargetFileSystem.Open(
                             relPath,
                             FileMode.OpenOrCreate,
-                            FileAccess.ReadWrite);
+                            FileAccess.Read);
                         // Act
                         var result = sut.CanResume(
                             sourceResource,
@@ -82,8 +82,8 @@ namespace bitsplat.Tests.ResumeStrategies
                 private static byte[] RandomBytes()
                 {
                     return GetRandomBytes(
-                        (int) (SimpleResumeStrategy.DEFAULT_CHECK_BYTES * 0.5),
-                        SimpleResumeStrategy.DEFAULT_CHECK_BYTES * 2
+                        (int) (AppendResumeStrategy.DEFAULT_CHECK_BYTES * 0.5),
+                        AppendResumeStrategy.DEFAULT_CHECK_BYTES * 2
                     );
                 }
 
@@ -153,7 +153,7 @@ namespace bitsplat.Tests.ResumeStrategies
             IMessageWriter messageWriter = null)
         {
             options ??= CreateDefaultOptions();
-            return new SimpleResumeStrategy(
+            return new AppendResumeStrategy(
                 options,
                 messageWriter ?? Substitute.For<IMessageWriter>()
             );
@@ -162,7 +162,7 @@ namespace bitsplat.Tests.ResumeStrategies
         private static IOptions CreateDefaultOptions()
         {
             var opts = Substitute.For<IOptions>();
-            opts.ResumeCheckBytes.Returns(SimpleResumeStrategy.DEFAULT_CHECK_BYTES);
+            opts.ResumeCheckBytes.Returns(AppendResumeStrategy.DEFAULT_CHECK_BYTES);
             return opts;
         }
 
@@ -176,7 +176,7 @@ namespace bitsplat.Tests.ResumeStrategies
             options.ResumeCheckBytes.Returns(512);
             return new Synchronizer(
                 Substitute.For<ITargetHistoryRepository>(),
-                resumeStrategy ?? new SimpleResumeStrategy(options, Substitute.For<IMessageWriter>()),
+                resumeStrategy ?? new AppendResumeStrategy(options, Substitute.For<IMessageWriter>()),
                 intermediatePipes,
                 new IFilter[] { new TargetOptInFilter() },
                 progressReporter ?? new FakeProgressReporter(),

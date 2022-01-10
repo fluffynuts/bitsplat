@@ -96,7 +96,7 @@ namespace bitsplat
                 .WithResumeStrategy(
                     opts.NoResume
                         ? typeof(NeverResumeStrategy)
-                        : typeof(SimpleResumeStrategy)
+                        : typeof(AppendResumeStrategy)
                 )
                 .WithFilter(
                     FilterMap[opts.SyncMode]
@@ -154,7 +154,7 @@ namespace bitsplat
                     .WithParameter(
                         nameof(Options.ResumeCheckBytes),
                         o => o.WithArg("--resume-check-bytes")
-                            .WithDefault(new[] { SimpleResumeStrategy.DEFAULT_CHECK_BYTES.ToString() })
+                            .WithDefault(new[] { AppendResumeStrategy.DEFAULT_CHECK_BYTES.ToString() })
                             .WithHelp(
                                 "How many bytes to check at the end of a partial file when considering resume")
                     )

@@ -182,7 +182,7 @@ namespace bitsplat.Tests.Storage
                 using (var stream = sut.Open(
                     fileName,
                     FileMode.OpenOrCreate,
-                    FileAccess.ReadWrite))
+                    FileAccess.Write))
                 {
                     stream.Write(expected);
                 }

@@ -38,6 +38,20 @@ namespace bitsplat.Tests
         }
 
         [Test]
+        public void SambaTest()
+        {
+            // Arrange
+            Program.Main(
+                "-q",
+                "-n",
+                "-s", "C:\\tmp\\smb-src",
+                "-t", "smb://192.168.50.105/mede8er/smb-test"
+            );
+            // Act
+            // Assert
+        }
+
+        [Test]
         public void ShouldNotCreateTargetHistoryIfNoHistorySpecified()
         {
             // Arrange

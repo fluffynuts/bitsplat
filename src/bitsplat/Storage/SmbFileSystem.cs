@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using SharpCifs.Smb;
 
 namespace bitsplat.Storage
@@ -29,9 +30,19 @@ namespace bitsplat.Storage
 
         private SmbFile EntryFor(string path)
         {
+            return new SmbFile(UrlFor(path));
+        }
+
+        private string UrlFor(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("path may not be null or whitespace", nameof(path));
+            }
+
             return path.StartsWith(BasePath)
-                ? new SmbFile(path)
-                : new SmbFile($"{BasePath}{path}");
+                ? path
+                : $"{BasePath}{path}";
         }
 
         public bool IsFile(string path)
@@ -46,11 +57,6 @@ namespace bitsplat.Storage
             return file.IsDirectory();
         }
 
-        public Stream Open(string path, FileMode mode, FileAccess fileAccess)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
         {
             var baseEntry = new SmbFile(BasePath);
@@ -61,20 +67,119 @@ namespace bitsplat.Storage
                 .ToArray();
         }
 
-        private IReadWriteFileResource WrapAsReadWriteFileResource(SmbFile arg)
+        public Stream Open(
+            string path,
+            FileMode mode,
+            FileAccess fileAccess
+        )
         {
-            return new SmbReadWriteFileResource(arg, BasePath, this);
+            var entry = EntryFor(path);
+            return new SmbFileStream(entry, this, fileAccess == FileAccess.Read);
         }
 
         public long FetchSize(string path)
         {
-            throw new System.NotImplementedException();
+            return EntryFor(path).Length();
         }
 
         public void Delete(string path)
         {
-            throw new System.NotImplementedException();
+            var entry = EntryFor(path);
+            if (!entry.Exists())
+            {
+                return;
+            }
+            entry.Delete();
         }
+
+        private IReadWriteFileResource WrapAsReadWriteFileResource(SmbFile arg)
+        {
+            return new SmbReadWriteFileResource(arg, BasePath, this);
+        }
+    }
+
+    public class SmbFileStream : Stream
+    {
+        public SmbFile File { get; }
+        public SmbFileSystem FileSystem { get; }
+        public bool IsReadOnly { get; }
+
+        public SmbFileStream(
+            SmbFile file,
+            SmbFileSystem fileSystem,
+            bool isReadOnly
+        )
+        {
+            File = file;
+            FileSystem = fileSystem;
+            IsReadOnly = isReadOnly;
+            Position = 0;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            using var readStream = new SmbFileInputStream(File);
+            readStream.SetPosition(Position);
+            var result = readStream.Read(buffer, offset, count);
+            Position += result;
+            return result;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            using var writeStream = new SmbFileOutputStream(File, File.Exists());
+            writeStream.SetPosition(Position);
+            writeStream.Write(buffer, offset, count);
+            Position += count;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return Position = SeekInternal(offset, origin);
+        }
+
+        private long SeekInternal(long offset, SeekOrigin origin)
+        {
+            if (origin == SeekOrigin.End)
+            {
+                throw new NotSupportedException(
+                    "Only seeking from the beginning or current position of the file is supported");
+            }
+
+            var position = origin == SeekOrigin.Begin
+                ? offset
+                : Position + offset;
+            return Position = position;
+        }
+
+        public override void SetLength(long value)
+        {
+            if (value != 0)
+            {
+                throw new ArgumentException($"{nameof(SetLength)} only supports truncation (ie, length of zero)");
+            }
+
+            if (File.Exists())
+            {
+                File.Delete();
+            }
+        }
+
+        private long ReadLength()
+        {
+            return File.Exists() ? File.Length() : 0;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => !IsReadOnly;
+        public override long Length => ReadLength();
+
+        public override long Position { get; set; }
     }
 
     public class SmbReadWriteFileResource
@@ -115,8 +220,34 @@ namespace bitsplat.Storage
         }
     }
 
-    public static class SmbFileExtensions
+    public static class CifsExtensions
     {
+        public static void SetPosition(this SmbFileOutputStream smbFile, long newPosition)
+        {
+            OutputStreamPositionField.SetValue(smbFile, newPosition);
+        }
+
+        public static long GetPosition(this SmbFileOutputStream smbFile)
+        {
+            return (long)OutputStreamPositionField.GetValue(smbFile);
+        }
+
+        public static long GetPosition(this SmbFileInputStream smbFile)
+        {
+            return (long)InputStreamPositionField.GetValue(smbFile);
+        }
+
+        public static void SetPosition(this SmbFileInputStream smbFile, long newPosition)
+        {
+            InputStreamPositionField.SetValue(smbFile, newPosition);
+        }
+
+        private static readonly FieldInfo OutputStreamPositionField = typeof(SmbFileOutputStream)
+            .GetField("_fp", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static readonly FieldInfo InputStreamPositionField = typeof(SmbFileInputStream)
+            .GetField("_fp", BindingFlags.Instance | BindingFlags.NonPublic);
+
         public static string[] ListRecursive(this SmbFile smbFile)
         {
             var basePath = smbFile.GetPath();

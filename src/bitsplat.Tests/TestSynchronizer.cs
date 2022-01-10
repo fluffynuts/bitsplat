@@ -487,7 +487,7 @@ namespace bitsplat.Tests
                 var options = Substitute.For<IOptions>();
                 options.ResumeCheckBytes.Returns(512);
                 var sut = Create(
-                    new SimpleResumeStrategy(options, Substitute.For<IMessageWriter>()),
+                    new AppendResumeStrategy(options, Substitute.For<IMessageWriter>()),
                     new IPassThrough[] { notifiable, intermediate1 }
                         .Randomize()
                         .ToArray()
@@ -758,7 +758,7 @@ namespace bitsplat.Tests
             return new Synchronizer(
                 targetHistoryRepository ?? Substitute.For<ITargetHistoryRepository>(),
                 resumeStrategy ??
-                new SimpleResumeStrategy(
+                new AppendResumeStrategy(
                     options,
                     new ConsoleMessageWriter()
                 ),

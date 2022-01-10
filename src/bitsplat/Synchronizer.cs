@@ -87,7 +87,7 @@ namespace bitsplat
             var sourceResources = source.ListResourcesRecursive();
             var targetResourcesCollection = target.ListResourcesRecursive();
             var targetResources = targetResourcesCollection as IReadWriteFileResource[] ??
-                                  targetResourcesCollection.ToArray();
+                targetResourcesCollection.ToArray();
 
             var comparison = CompareResources(
                 sourceResources,
@@ -159,15 +159,15 @@ namespace bitsplat
 
             var attempts = 0;
             var test = _options.Retries < 1
-                           ? new Func<bool>(() => true)
-                           : CanTryAgain;
+                ? new Func<bool>(() => true)
+                : CanTryAgain;
             do
             {
                 if (TrySynchroniseResource(
-                    sourceResource,
-                    target,
-                    targetResources
-                ))
+                        sourceResource,
+                        target,
+                        targetResources
+                    ))
                 {
                     return;
                 }
@@ -213,7 +213,7 @@ namespace bitsplat
                         FileAccess.ReadWrite
                     ),
                     out var targetStream)
-            )
+               )
             {
                 return false;
             }
@@ -401,11 +401,11 @@ namespace bitsplat
             Stream targetStream)
         {
             var canResume = targetResource != null &&
-                            _resumeStrategy.CanResume(
-                                sourceResource,
-                                targetResource,
-                                sourceStream,
-                                targetStream);
+                _resumeStrategy.CanResume(
+                    sourceResource,
+                    targetResource,
+                    sourceStream,
+                    targetStream);
             if (canResume)
             {
                 sourceStream.Seek(targetResource.Size, SeekOrigin.Begin);
@@ -456,6 +456,7 @@ namespace bitsplat
                                 list = acc.RecordOnly;
                                 break;
                         }
+
                         list.Add(sourceResource);
                         return acc;
                     })
@@ -470,6 +471,7 @@ namespace bitsplat
             {
                 return;
             }
+
             Dump("Excluded", result.Excluded);
             Dump("Skipped", result.Skipped);
             Dump("Record only", result.RecordOnly);
@@ -515,8 +517,8 @@ namespace bitsplat
                         target);
 
                     return CurrentFilterIsAmbivalent()
-                               ? acc1
-                               : thisResult;
+                        ? acc1
+                        : thisResult;
 
                     bool AlreadyExcluded()
                     {

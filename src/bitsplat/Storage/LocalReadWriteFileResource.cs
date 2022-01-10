@@ -50,7 +50,7 @@ namespace bitsplat.Storage
             return _fileSystem.Open(
                 RelativePath,
                 FileMode.OpenOrCreate,
-                FileAccess.ReadWrite
+                FileAccess.Write
             );
         }
     }

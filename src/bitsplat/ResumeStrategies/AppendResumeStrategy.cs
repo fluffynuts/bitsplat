@@ -6,13 +6,13 @@ using bitsplat.Storage;
 
 namespace bitsplat.ResumeStrategies
 {
-    public class SimpleResumeStrategy : IResumeStrategy
+    public class AppendResumeStrategy : IResumeStrategy
     {
         public const int DEFAULT_CHECK_BYTES = 2048;
         private readonly IOptions _options;
         private readonly IMessageWriter _messageWriter;
 
-        public SimpleResumeStrategy(
+        public AppendResumeStrategy(
             IOptions options,
             IMessageWriter messageWriter)
         {
