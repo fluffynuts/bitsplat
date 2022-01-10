@@ -66,11 +66,6 @@ namespace bitsplat.Storage
             return new SmbReadWriteFileResource(arg, BasePath, this);
         }
 
-        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(ListOptions options)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public long FetchSize(string path)
         {
             throw new System.NotImplementedException();

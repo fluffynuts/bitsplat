@@ -26,5 +26,7 @@ namespace bitsplat.History
         {
             return new HistoryItem[0];
         }
+
+        public string DatabaseFile => null;
     }
 }

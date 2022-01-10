@@ -32,7 +32,9 @@ namespace bitsplat.Tests.StaleFileRemovers
             // Act
             sut.RemoveStaleFiles(
                 source,
-                target);
+                target,
+                new string[0]
+            );
             // Assert
             Expect(source)
                 .Not.To.Have.Received()

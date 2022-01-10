@@ -9,5 +9,6 @@ namespace bitsplat.History
         HistoryItem Find(string path);
         bool Exists(string path);
         IEnumerable<HistoryItem> FindAll(string match);
+        string DatabaseFile { get; }
     }
 }

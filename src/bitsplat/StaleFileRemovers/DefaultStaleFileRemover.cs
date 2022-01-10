@@ -9,12 +9,18 @@ namespace bitsplat.StaleFileRemovers
     {
         void RemoveStaleFiles(
             IFileSystem source,
-            IFileSystem target);
+            IFileSystem target,
+            string[] ignore
+        );
     }
 
     public class NullStaleFileRemover : IStaleFileRemover
     {
-        public void RemoveStaleFiles(IFileSystem source, IFileSystem target)
+        public void RemoveStaleFiles(
+            IFileSystem source,
+            IFileSystem target,
+            string[] ignore
+        )
         {
         }
     }
@@ -28,12 +34,17 @@ namespace bitsplat.StaleFileRemovers
             _progressReporter = progressReporter;
         }
 
-        public void RemoveStaleFiles(IFileSystem source, IFileSystem target)
+        public void RemoveStaleFiles(
+            IFileSystem source,
+            IFileSystem target,
+            string[] ignore
+        )
         {
             var sourcePaths = source.ListResourcesRecursive()
                 .Select(o => o.RelativePath)
                 .AsHashSet();
             target.ListResourcesRecursive()
+                .Where(o => !ignore.Contains(o.Path) && !ignore.Contains(o.RelativePath))
                 .Where(o => !sourcePaths.Contains(o.RelativePath))
                 .ForEach(o =>
                 {

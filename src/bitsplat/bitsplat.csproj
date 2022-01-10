@@ -15,14 +15,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="1.60.6" />
-      <PackageReference Include="DryIoc" Version="4.0.7" />
-      <PackageReference Include="FluentMigrator" Version="3.2.1" />
-      <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
+      <PackageReference Include="Dapper" Version="2.0.123" />
+      <PackageReference Include="DryIoc" Version="4.8.6" />
+      <PackageReference Include="FluentMigrator" Version="3.3.1" />
+      <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
       <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.4.0" />
-      <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
+      <PackageReference Include="PeanutButter.Utils" Version="2.0.50" />
       <PackageReference Include="SharpCifs.Std" Version="0.2.13" />
-      <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
+      <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
     </ItemGroup>
 
 </Project>

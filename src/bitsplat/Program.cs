@@ -2,6 +2,7 @@
 using System.IO;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
+using bitsplat.History;
 using bitsplat.ResumeStrategies;
 using bitsplat.StaleFileRemovers;
 using bitsplat.Storage;
@@ -42,6 +43,7 @@ namespace bitsplat
             var target = container.ResolveTargetFileSystem();
             var archive = container.ResolveArchiveFileSystem();
             var archiver = container.Resolve<IArchiver>();
+            var historyRepository = container.Resolve<ITargetHistoryRepository>();
             var staleFileRemover = container.Resolve<IStaleFileRemover>();
 
             archiver.RunArchiveOperations(
@@ -49,7 +51,11 @@ namespace bitsplat
                 archive,
                 source);
 
-            staleFileRemover.RemoveStaleFiles(source, target);
+            staleFileRemover.RemoveStaleFiles(
+                source,
+                target,
+                new[] { historyRepository.DatabaseFile }
+            );
 
             var synchronizer = container.Resolve<ISynchronizer>();
 

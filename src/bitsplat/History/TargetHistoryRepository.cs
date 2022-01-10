@@ -9,12 +9,15 @@ using Dapper;
 using PeanutButter.Utils;
 using Table = bitsplat.Migrations.Constants.Tables.History;
 using Columns = bitsplat.Migrations.Constants.Tables.History.Columns;
+
 // ReSharper disable AccessToDisposedClosure
 
 namespace bitsplat.History
 {
     public class TargetHistoryRepository : ITargetHistoryRepository
     {
+        public string DatabaseFile { get; }
+
         public const string DB_NAME = ".bitsplat.db";
         private readonly string _folder;
         private readonly string _databaseName;
@@ -32,6 +35,7 @@ namespace bitsplat.History
             _folder = folder;
             _databaseName = databaseName;
             _messageWriter = messageWriter;
+            DatabaseFile = Path.Combine(_folder, _databaseName);
             CreateDatabase();
             MigrateUp();
         }
@@ -69,8 +73,8 @@ namespace bitsplat.History
         {
             conn.Execute(
                 $@"update {
-                        Table.NAME
-                    } set
+                    Table.NAME
+                } set
                     Size = @Size,
                     Modified = datetime('now')
                    where id = @Id;",
@@ -86,14 +90,14 @@ namespace bitsplat.History
         {
             conn.Execute(
                 $@"replace into {
-                        Table.NAME
-                    } ({
-                        Columns.PATH
-                    }, {
-                        Columns.SIZE
-                    }, {
-                        Columns.MODIFIED
-                    })
+                    Table.NAME
+                } ({
+                    Columns.PATH
+                }, {
+                    Columns.SIZE
+                }, {
+                    Columns.MODIFIED
+                })
                     values (@Path, @Size, datetime('now'));",
                 item);
         }
@@ -114,13 +118,13 @@ namespace bitsplat.History
         {
             using var conn = OpenConnection();
             return conn.QueryFirstOrDefault<int>(
-                       $"select id from {Table.NAME} where path = @path;",
-                       new
-                       {
-                           path
-                       }
-                   ) >
-                   0;
+                    $"select id from {Table.NAME} where path = @path;",
+                    new
+                    {
+                        path
+                    }
+                ) >
+                0;
         }
 
         public IEnumerable<HistoryItem> FindAll(string match)
@@ -169,9 +173,10 @@ namespace bitsplat.History
                 .OpenAndReturn();
         }
 
+
         private string CreateConnectionString()
         {
-            var uri = new Uri(Path.Combine(_folder, _databaseName)).ToString();
+            var uri = new Uri(DatabaseFile).ToString();
             ;
             if (Platform.IsWindows)
             {

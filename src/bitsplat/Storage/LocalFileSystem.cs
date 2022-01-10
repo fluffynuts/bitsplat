@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using bitsplat.CommandLine;
 using bitsplat.Pipes;
 using PeanutButter.Utils;
 
@@ -122,41 +123,29 @@ namespace bitsplat.Storage
                 : Path.Combine(_basePath, possibleRelativePath);
         }
 
-        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
-            ListOptions options
-        )
-        {
-            return ListResourcesUnder(BasePath, options);
-        }
-
         public IEnumerable<IReadWriteFileResource> ListResourcesRecursive()
         {
             return _progressReporter.Bookend(
                 $"Listing resources under {BasePath}",
                 () => ListResourcesUnder(
-                        BasePath,
-                        new ListOptions()
+                        BasePath
                     )
+                    .Where(p => !p.RelativePath.IsDotFile())
                     .ToArray()
             );
         }
 
         private IEnumerable<IReadWriteFileResource> ListResourcesUnder(
-            string path,
-            ListOptions options)
+            string path
+        )
         {
             return Directory.GetFiles(path)
                 .Select(p => new LocalReadWriteFileResource(p, BasePath, this))
-                .Where(p =>
-                    options.IncludeDotFiles ||
-                    !p.Name.StartsWith(".")
-                )
                 .Union(
                     Directory.GetDirectories(path)
                         .SelectMany(
                             dir => ListResourcesUnder(
-                                Path.Combine(path, dir),
-                                options
+                                Path.Combine(path, dir)
                             )
                         )
                 );

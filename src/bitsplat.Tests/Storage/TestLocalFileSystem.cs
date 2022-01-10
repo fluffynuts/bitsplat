@@ -339,11 +339,11 @@ namespace bitsplat.Tests.Storage
             }
 
             [Test]
-            public void ShouldIgnoreDotFilesByDefault()
+            public void ShouldIgnoreDotFiles()
             {
                 // Arrange
                 using var folder = new AutoTempFolder();
-                var fileName = ".{GetRandomString(1)}";
+                var fileName = $".{GetRandomString(1)}";
                 File.WriteAllBytes(
                     Path.Combine(folder.Path, fileName),
                     GetRandomBytes()

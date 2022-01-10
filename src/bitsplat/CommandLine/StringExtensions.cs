@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace bitsplat.CommandLine
@@ -29,6 +30,11 @@ namespace bitsplat.CommandLine
                 str ?? "",
                 "[/||\\\\]"
             );
+        }
+
+        public static bool IsDotFile(this string path)
+        {
+            return path?.SplitPath()?.Last()?.IndexOf('.') == 0;
         }
     }
 }

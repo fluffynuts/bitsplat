@@ -61,15 +61,6 @@ namespace bitsplat.Storage
             );
         }
 
-        public IEnumerable<IReadWriteFileResource> ListResourcesRecursive(
-            ListOptions options)
-        {
-            return Resolve(
-                $"{nameof(ListResourcesRecursive)}-{options.GetHashCode()}",
-                () => _underlying.ListResourcesRecursive(options)
-            );
-        }
-
         public long FetchSize(string path)
         {
             return Resolve(

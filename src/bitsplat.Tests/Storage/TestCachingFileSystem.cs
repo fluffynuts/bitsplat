@@ -298,8 +298,8 @@ namespace bitsplat.Tests.Storage
                     var toDelete = GetRandomFrom(resources);
                     underlying.ListResourcesRecursive()
                         .Returns(resources);
-                    underlying.ListResourcesRecursive(Arg.Any<ListOptions>())
-                        .Returns(resources);
+                    // underlying.ListResourcesRecursive(Arg.Any<ListOptions>())
+                    //     .Returns(resources);
                     var sut = Create(underlying);
                     // Act
                     var first = sut.ListResourcesRecursive();
@@ -315,35 +315,35 @@ namespace bitsplat.Tests.Storage
                 }
             }
 
-            [TestFixture]
-            public class WhenHaveOptions : WhenDeleting
-            {
-                [Test]
-                public void ShouldRemoveFromCachedList()
-                {
-                    // Arrange
-                    var underlying = Substitute.For<IFileSystem>();
-                    var resources = GetRandomArray<IReadWriteFileResource>(2);
-                    var toDelete = GetRandomFrom(resources);
-                    underlying.ListResourcesRecursive()
-                        .Returns(resources);
-                    underlying.ListResourcesRecursive(Arg.Any<ListOptions>())
-                        .Returns(resources);
-                    var listOptions = GetRandom<ListOptions>();
-                    var sut = Create(underlying);
-                    // Act
-                    var first = sut.ListResourcesRecursive(listOptions);
-                    sut.Delete(toDelete.RelativePath);
-                    var second = sut.ListResourcesRecursive(listOptions);
-                    // Assert
-                    Expect(first)
-                        .To.Contain.Exactly(1)
-                        .Equal.To(toDelete);
-                    Expect(second)
-                        .Not.To.Contain.Any()
-                        .Equal.To(toDelete);
-                }
-            }
+            // [TestFixture]
+            // public class WhenHaveOptions : WhenDeleting
+            // {
+            //     [Test]
+            //     public void ShouldRemoveFromCachedList()
+            //     {
+            //         // Arrange
+            //         var underlying = Substitute.For<IFileSystem>();
+            //         var resources = GetRandomArray<IReadWriteFileResource>(2);
+            //         var toDelete = GetRandomFrom(resources);
+            //         underlying.ListResourcesRecursive()
+            //             .Returns(resources);
+            //         underlying.ListResourcesRecursive(Arg.Any<ListOptions>())
+            //             .Returns(resources);
+            //         var listOptions = GetRandom<ListOptions>();
+            //         var sut = Create(underlying);
+            //         // Act
+            //         var first = sut.ListResourcesRecursive(listOptions);
+            //         sut.Delete(toDelete.RelativePath);
+            //         var second = sut.ListResourcesRecursive(listOptions);
+            //         // Assert
+            //         Expect(first)
+            //             .To.Contain.Exactly(1)
+            //             .Equal.To(toDelete);
+            //         Expect(second)
+            //             .Not.To.Contain.Any()
+            //             .Equal.To(toDelete);
+            //     }
+            // }
         }
 
         private IFileSystem Create(IFileSystem underlying)
