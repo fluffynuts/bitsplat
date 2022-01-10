@@ -38,6 +38,7 @@ namespace bitsplat.Tests
         }
 
         [Test]
+        [Explicit("FIXME: requires known local folder & smb server")]
         public void SambaTest()
         {
             // Arrange
