@@ -74,6 +74,7 @@ namespace bitsplat.Storage
         )
         {
             var entry = EntryFor(path);
+            entry.Mkdirs();
             return new SmbFileStream(entry, this, fileAccess == FileAccess.Read);
         }
 
@@ -131,6 +132,7 @@ namespace bitsplat.Storage
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+            var exists = File.Exists();
             using var writeStream = new SmbFileOutputStream(File, File.Exists());
             writeStream.SetPosition(Position);
             writeStream.Write(buffer, offset, count);
