@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="1.60.6" />
-    <PackageReference Include="NExpect" Version="1.0.165" />
-    <PackageReference Include="NExpect.Matchers.NSubstitute" Version="1.0.165" />
-    <PackageReference Include="nunit" Version="3.11.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="PeanutButter.RandomGenerators" Version="1.2.331" />
-    <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="NExpect" Version="1.0.254" />
+    <PackageReference Include="NExpect.Matchers.NSubstitute" Version="1.0.254" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="PeanutButter.RandomGenerators" Version="2.0.72" />
+    <PackageReference Include="PeanutButter.Utils" Version="2.0.72" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
   </ItemGroup>
 
   <ItemGroup>

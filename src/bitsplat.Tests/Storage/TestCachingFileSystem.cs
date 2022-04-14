@@ -310,7 +310,7 @@ namespace bitsplat.Tests.Storage
                         .To.Contain.Exactly(1)
                         .Equal.To(toDelete);
                     Expect(second)
-                        .Not.To.Contain.Any()
+                        .Not.To.Contain.Any
                         .Equal.To(toDelete);
                 }
             }
@@ -340,7 +340,7 @@ namespace bitsplat.Tests.Storage
                         .To.Contain.Exactly(1)
                         .Equal.To(toDelete);
                     Expect(second)
-                        .Not.To.Contain.Any()
+                        .Not.To.Contain.Any
                         .Equal.To(toDelete);
                 }
             }

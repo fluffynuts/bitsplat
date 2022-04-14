@@ -42,7 +42,7 @@ namespace bitsplat.Tests.History
                         target)
                     ).ToArray();
                 // Assert
-                Expect(results).To.Contain.All()
+                Expect(results).To.Contain.All
                     .Matched.By(o => o == FilterResult.Exclude);
             }
         }
