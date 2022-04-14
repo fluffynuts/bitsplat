@@ -1,25 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <Version>1.16.0</Version>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
-        <LangVersion>latest</LangVersion>
-    </PropertyGroup>
-    
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-      <PublishSingleFile>true</PublishSingleFile>
-      <PublishTrimmed>true</PublishTrimmed>
-    </PropertyGroup>
+  <PropertyGroup>
+    <Version>1.16.0</Version>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Dapper" Version="1.60.6" />
-      <PackageReference Include="DryIoc" Version="4.0.7" />
-      <PackageReference Include="FluentMigrator" Version="3.2.1" />
-      <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
-      <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.4.0" />
-      <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
-      <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
-    </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.60.6" />
+    <PackageReference Include="DryIoc" Version="4.0.7" />
+    <PackageReference Include="FluentMigrator" Version="3.2.1" />
+    <PackageReference Include="FluentMigrator.Runner" Version="3.2.1" />
+    <PackageReference Include="PeanutButter.Utils" Version="1.2.331" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
+  </ItemGroup>
 
 </Project>
