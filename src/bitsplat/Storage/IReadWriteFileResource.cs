@@ -1,7 +1,6 @@
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using bitsplat.CommandLine;
+using PeanutButter.Utils;
 
 namespace bitsplat.Storage
 {

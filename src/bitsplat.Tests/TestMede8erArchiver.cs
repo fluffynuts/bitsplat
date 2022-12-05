@@ -60,10 +60,10 @@ namespace bitsplat.Tests
                 sourceResource.Path.Returns("some.file");
                 var target = Substitute.For<IFileSystem>();
                 target.ListResourcesRecursive()
-                    .Returns(sourceResource.AsArray());
+                    .Returns(sourceResource.InArray());
                 var source = Substitute.For<IFileSystem>();
                 source.ListResourcesRecursive()
-                    .Returns(sourceResource.AsArray());
+                    .Returns(sourceResource.InArray());
                 var archive = Substitute.For<IFileSystem>();
                 var sut = Create();
                 // Act

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using static PeanutButter.RandomGenerators.RandomValueGen;
 using NExpect;
 using NSubstitute;
+using NSubstitute.Extensions;
 using PeanutButter.RandomGenerators;
 using PeanutButter.Utils;
 using static NExpect.Expectations;
@@ -56,6 +57,11 @@ namespace bitsplat.Tests.StaleFileRemovers
     public class ReadWriteFileResourceBuilder
         : GenericBuilder<ReadWriteFileResourceBuilder, IReadWriteFileResource>
     {
+        public override IReadWriteFileResource ConstructEntity()
+        {
+            return Substitute.For<IReadWriteFileResource>();
+        }
+
         public override ReadWriteFileResourceBuilder WithRandomProps()
         {
             return WithRelativePath(GetRandomPath(2))
@@ -77,7 +83,8 @@ namespace bitsplat.Tests.StaleFileRemovers
         }
 
         public ReadWriteFileResourceBuilder WithRelativePath(
-            string path)
+            string path
+        )
         {
             return WithProp(o =>
             {

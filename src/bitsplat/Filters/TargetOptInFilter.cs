@@ -3,6 +3,7 @@ using System.Linq;
 using bitsplat.CommandLine;
 using bitsplat.History;
 using bitsplat.Storage;
+using PeanutButter.Utils;
 
 namespace bitsplat.Filters
 {

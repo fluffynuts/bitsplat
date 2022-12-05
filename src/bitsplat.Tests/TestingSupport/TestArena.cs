@@ -117,7 +117,7 @@ namespace bitsplat.Tests.TestingSupport
         {
             return Path.Combine(
                 SourcePath
-                    .AsArray()
+                    .InArray()
                     .Concat(relative)
                     .ToArray()
             );
@@ -127,7 +127,7 @@ namespace bitsplat.Tests.TestingSupport
         {
             return Path.Combine(
                 TargetPath
-                    .AsArray()
+                    .InArray()
                     .Concat(relative)
                     .ToArray()
             );
@@ -137,7 +137,7 @@ namespace bitsplat.Tests.TestingSupport
         {
             return Path.Combine(
                 ArchivePath
-                    .AsArray()
+                    .InArray()
                     .Concat(relative)
                     .ToArray()
             );

@@ -23,12 +23,12 @@ namespace bitsplat.CommandLine
             return result.ToArray();
         }
 
-        public static string[] SplitPath(this string str)
-        {
-            return Regex.Split(
-                str ?? "",
-                "[/||\\\\]"
-            );
-        }
+        // public static string[] SplitPath(this string str)
+        // {
+        //     return Regex.Split(
+        //         str ?? "",
+        //         "[/||\\\\]"
+        //     );
+        // }
     }
 }
