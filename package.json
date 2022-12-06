@@ -8,6 +8,8 @@
         "preuser-install": "run-s test",
         "user-install": "run-s publish-linux-aot copy-local",
         "publish-all": "run-s publish-win32 publish-linux publish-osx",
+        "user-install": "run-s publish-linux copy-local",
+        "publish-all": "run-s publish-windows-aot publish-linux-aot publish-osx-aot",
         "release": "run-s test publish-all tag-release",
         "tag-release": "node tag-release.js",
         "publish-linux": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --self-contained",
@@ -16,6 +18,8 @@
         "copy-local": "cp Publish/linux/bitsplat ~/.local/bin",
         "publish-windows-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --framework net7.0 --self-contained True --output Publish/windows --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
         "publish-linux-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --framework net7.0 --self-contained True --output Publish/linux --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+        "publish-osx-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --framework net7.0 --self-contained True --output Publish/osx --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+        "copy-local": "cp src/bitsplat/bin/Release/netcoreapp3.1/linux-x64/publish/bitsplat ~/.local/bin",
         "zarro": "cross-env DOTNET_CORE=1 BUILD_TOOLS_FOLDER=tools zarro"
     },
     "repository": {
