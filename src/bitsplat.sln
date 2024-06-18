@@ -4,6 +4,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitsplat", "bitsplat\bitspl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitsplat.Tests", "bitsplat.Tests\bitsplat.Tests.csproj", "{91F1F712-91F1-4751-9D33-D16C10D363D7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".config", ".config", "{1EB39C4B-1781-4704-8AB9-93C4B95364C6}"
+	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
+		..\.gitignore = ..\.gitignore
+		..\.gitmodules = ..\.gitmodules
+		..\.zarro-defaults = ..\.zarro-defaults
+		..\package.json = ..\package.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -1,40 +1,41 @@
 {
-    "name": "bitsplat",
-    "version": "1.0.0",
-    "description": "A really crude alternative to bittorrent where file transfer is done by physical devices.",
-    "scripts": {
-        "build": "run-s \"zarro build\"",
-        "test": "run-s \"zarro test-dotnet\"",
-        "preuser-install": "run-s test",
-        "user-install-aot": "run-s publish-linux-aot copy-local",
-        "publish-all": "run-s publish-win32 publish-linux publish-osx",
-        "user-install": "run-s publish-linux copy-local",
-        "user-install-win32": "run-s publish-win32 copy-local",
-        "publish-all": "run-s publish-windows-aot publish-linux-aot publish-osx-aot",
-        "release": "run-s test publish-all tag-release",
-        "tag-release": "node tag-release.js",
-        "publish-linux": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --self-contained",
-        "publish-win32": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --self-contained",
-        "publish-osx": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --self-contained",
-        "copy-local": "cp Publish/linux/bitsplat ~/.local/bin",
-        "publish-windows-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --framework net7.0 --self-contained True --output Publish/windows --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
-        "publish-linux-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --framework net7.0 --self-contained True --output Publish/linux --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
-        "publish-osx-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --framework net7.0 --self-contained True --output Publish/osx --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
-        "copy-local": "cp src/bitsplat/bin/Release/netcoreapp3.1/linux-x64/publish/bitsplat ~/.local/bin",
-        "zarro": "cross-env DOTNET_CORE=1 BUILD_TOOLS_FOLDER=tools zarro"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://git@github.com/fluffynuts/bitsplat.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "BSD-2-Clause",
-    "bugs": {
-        "url": "https://github.com/fluffynuts/bitsplat/issues"
-    },
-    "homepage": "https://github.com/fluffynuts/bitsplat#readme",
-    "devDependencies": {
-        "zarro": "^1.178.0"
-    }
+  "name": "bitsplat",
+  "version": "1.0.0",
+  "description": "A really crude alternative to bittorrent where file transfer is done by physical devices.",
+  "scripts": {
+    "build": "run-s \"zarro build\"",
+    "test": "run-s \"zarro test-dotnet\"",
+    "preuser-install": "run-s test",
+    "user-install-aot": "run-s publish-linux-aot copy-local",
+    "publish-all": "run-s publish-windows-aot publish-linux-aot publish-osx-aot",
+    "user-install": "run-s publish-linux copy-local",
+    "user-install-win32": "run-s publish-win32 copy-local",
+    "release": "run-s test publish-all tag-release",
+    "tag-release": "node tag-release.js",
+    "publish-linux": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --self-contained",
+    "publish-win32": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --self-contained",
+    "publish-osx": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --self-contained",
+    "copy-local": "cp src/bitsplat/bin/Release/netcoreapp3.1/linux-x64/publish/bitsplat ~/.local/bin",
+    "publish-windows-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --framework net7.0 --self-contained True --output Publish/windows --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "publish-linux-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --framework net7.0 --self-contained True --output Publish/linux --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "publish-osx-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --framework net7.0 --self-contained True --output Publish/osx --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "upgrade-pb": "cross-env UPGRADE_PACKAGES=/^peanutbutter\\..*/ zarro upgrade-packages",
+    "upgrade-nexpect": "cross-env UPGRADE_PACKAGES=/^nexpect$/,/^nexpect\\..*/ zarro upgrade-packages",
+    "upgrade-quackers": "cross-env UPGRADE_PACKAGES=quackers.testlogger zarro upgrade-packages",
+    "zarro": "cross-env DOTNET_CORE=1 BUILD_TOOLS_FOLDER=tools zarro"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/fluffynuts/bitsplat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/fluffynuts/bitsplat/issues"
+  },
+  "homepage": "https://github.com/fluffynuts/bitsplat#readme",
+  "devDependencies": {
+    "zarro": "^1.178.0"
+  }
 }
