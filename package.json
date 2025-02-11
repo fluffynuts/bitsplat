@@ -15,10 +15,10 @@
     "publish-linux": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --self-contained",
     "publish-win32": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --self-contained",
     "publish-osx": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --self-contained",
-    "copy-local": "cp src/bitsplat/bin/Release/netcoreapp3.1/linux-x64/publish/bitsplat ~/.local/bin",
-    "publish-windows-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --framework net7.0 --self-contained True --output Publish/windows --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
-    "publish-linux-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --framework net7.0 --self-contained True --output Publish/linux --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
-    "publish-osx-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --framework net7.0 --self-contained True --output Publish/osx --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "copy-local": "cp src/bitsplat/bin/Release/net8.0/linux-x64/publish/bitsplat ~/.local/bin",
+    "publish-windows-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r win-x64 --framework net8.0 --self-contained True --output Publish/windows --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "publish-linux-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r linux-x64 --framework net8.0 --self-contained True --output Publish/linux --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
+    "publish-osx-aot": "dotnet publish src/bitsplat/bitsplat.csproj -c Release -r osx-x64 --framework net8.0 --self-contained True --output Publish/osx --verbosity Normal /property:PublishTrimmed=true /property:IncludeNativeLibrariesForSelfExtract=true /property:DebugType=None /property:DebugSymbols=False /property:EnableCompressionInSingleFile=true /property:TrimMode=partial",
     "upgrade-pb": "cross-env UPGRADE_PACKAGES=/^peanutbutter\\..*/ zarro upgrade-packages",
     "upgrade-nexpect": "cross-env UPGRADE_PACKAGES=/^nexpect$/,/^nexpect\\..*/ zarro upgrade-packages",
     "upgrade-quackers": "cross-env UPGRADE_PACKAGES=quackers.testlogger zarro upgrade-packages",
@@ -36,6 +36,6 @@
   },
   "homepage": "https://github.com/fluffynuts/bitsplat#readme",
   "devDependencies": {
-    "zarro": "^1.178.0"
+    "zarro": "^1.191.0"
   }
 }
