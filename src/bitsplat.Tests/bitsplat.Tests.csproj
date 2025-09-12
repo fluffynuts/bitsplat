@@ -13,8 +13,8 @@
     <PackageReference Include="nunit" Version="4.3.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageReference Include="PeanutButter.RandomGenerators" Version="3.0.341" />
-    <PackageReference Include="PeanutButter.Utils" Version="3.0.341" />
+    <PackageReference Include="PeanutButter.RandomGenerators" Version="3.0.396" />
+    <PackageReference Include="PeanutButter.Utils" Version="3.0.396" />
     <PackageReference Include="Quackers.TestLogger" Version="1.0.25" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
   </ItemGroup>
