@@ -31,8 +31,8 @@ namespace bitsplat.Tests.TestingSupport
                         passed,
                         () =>
                         {
-                            var actualHash = data.ToMD5String();
-                            var expectedHash = expected.ToMD5String();
+                            var actualHash = data.ToMd5String();
+                            var expectedHash = expected.ToMd5String();
                             return $@"Expected {
                                     passed.AsNot()
                                 } to find data with hash/length {
