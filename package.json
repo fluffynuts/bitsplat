@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/fluffynuts/bitsplat#readme",
   "devDependencies": {
+    "mkdirp": "^3.0.1",
     "zarro": "^1.205.0"
   }
 }
