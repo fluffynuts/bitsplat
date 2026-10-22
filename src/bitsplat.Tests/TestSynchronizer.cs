@@ -404,6 +404,37 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
+        public class DryRun
+        {
+            [Test]
+            public void ShouldListWhatWouldBeSyncedWithoutVerbose()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var sourceFile = arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                var options = CreateDefaultOptions();
+                options.DryRun.Returns(true);
+                options.Verbose.Returns(false);
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { notifiable },
+                    filters: CreatePermissiveFilter(),
+                    options: options);
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(notifiable.LogMessages)
+                    .To.Equal(new[]
+                    {
+                        "would attempt to sync:",
+                        $"  {sourceFile.RelativePath} ({sourceFile.Data.Length})"
+                    });
+                Expect(arena.TargetPathFor(sourceFile))
+                    .Not.To.Exist();
+            }
+        }
+
+        [TestFixture]
         public class ErrorHandling
         {
             [Test]

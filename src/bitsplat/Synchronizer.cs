@@ -112,7 +112,7 @@ namespace bitsplat
 
             if (_options.DryRun)
             {
-                Debug("would attempt to sync:");
+                Log("would attempt to sync:");
                 syncQueue.ForEach(LogWouldAttemptSync);
                 return SyncResult.NothingAttempted;
             }
@@ -136,15 +136,20 @@ namespace bitsplat
 
         private void LogWouldAttemptSync(IReadWriteFileResource obj)
         {
-            Debug($"  {obj.RelativePath} ({obj.Size})");
+            Log($"  {obj.RelativePath} ({obj.Size})");
         }
 
         private void Debug(string message)
         {
             if (_options.Verbose)
             {
-                _notifiables.ForEach(n => n.Log(message));
+                Log(message);
             }
+        }
+
+        private void Log(string message)
+        {
+            _notifiables.ForEach(n => n.Log(message));
         }
 
         private bool SynchroniseResource(
@@ -203,9 +208,7 @@ namespace bitsplat
         {
             var retryNumber = attempt.Number - 1;
             var delay = RetryBackOff[Math.Min(retryNumber, RetryBackOff.Length) - 1];
-            _notifiables.ForEach(
-                n => n.Log($"waiting {delay.TotalSeconds}s before {attempt}")
-            );
+            Log($"waiting {delay.TotalSeconds}s before {attempt}");
             _delayer.Delay(delay);
         }
 
