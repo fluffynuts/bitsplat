@@ -616,6 +616,78 @@ namespace bitsplat.Tests
                 }
             }
 
+            [TestFixture]
+            public class WhenPreparingTheTargetFails
+            {
+                [Test]
+                public void ShouldReportTheErrorAndCarryOnWithTheNextFile()
+                {
+                    // Arrange
+                    var failingData = GetRandomBytes(10, 20);
+                    var nextData = GetRandomBytes(10, 20);
+                    var sourceResources = new[]
+                    {
+                        CreateSourceResource("a.bin", failingData),
+                        CreateSourceResource("b.bin", nextData)
+                    };
+                    var source = Substitute.For<IFileSystem>();
+                    source.ListResourcesRecursive().Returns(sourceResources);
+                    source.IsFile(Arg.Any<string>()).Returns(true);
+                    var expected = new IOException("network share went away");
+                    var failingTargetStream = new SetLengthFailsStream(expected);
+                    var nextTargetStream = new DisposeTrackingStream();
+                    var target = Substitute.For<IFileSystem>();
+                    target.ListResourcesRecursive().Returns(new IReadWriteFileResource[0]);
+                    target.Open("a.bin", Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns(failingTargetStream);
+                    target.Open("b.bin", Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns(nextTargetStream);
+                    var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                    var sut = Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(0));
+                    // Act
+                    var result = sut.Synchronize(source, target);
+                    // Assert
+                    Expect(notifiable.ErrorNotifications.Select(n => n.ex))
+                        .To.Equal(new Exception[] { expected });
+                    Expect(failingTargetStream.IsDisposed)
+                        .To.Be.True();
+                    Expect(result.Failed.Select(r => r.RelativePath))
+                        .To.Equal(new[] { "a.bin" });
+                    Expect(nextTargetStream.ToArray())
+                        .To.Equal(nextData);
+                }
+
+                private static IReadWriteFileResource CreateSourceResource(
+                    string relativePath,
+                    byte[] data)
+                {
+                    var resource = Substitute.For<IReadWriteFileResource>();
+                    resource.RelativePath.Returns(relativePath);
+                    resource.Name.Returns(relativePath);
+                    resource.Size.Returns(data.Length);
+                    resource.OpenForRead().Returns(_ => new MemoryStream(data));
+                    return resource;
+                }
+
+                private class SetLengthFailsStream : DisposeTrackingStream
+                {
+                    private readonly Exception _toThrow;
+
+                    public SetLengthFailsStream(Exception toThrow)
+                    {
+                        _toThrow = toThrow;
+                    }
+
+                    public override void SetLength(long value)
+                    {
+                        throw _toThrow;
+                    }
+                }
+            }
+
             private static IOptions CreateOptionsWithRetries(int retries)
             {
                 var options = CreateDefaultOptions();
@@ -626,6 +698,10 @@ namespace bitsplat.Tests
             public class DisposeTrackingStream : MemoryStream
             {
                 public bool IsDisposed { get; private set; }
+
+                public DisposeTrackingStream()
+                {
+                }
 
                 public DisposeTrackingStream(byte[] data)
                     : base(data)

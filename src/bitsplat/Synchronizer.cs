@@ -264,7 +264,18 @@ namespace bitsplat
             Stream targetStream,
             SyncAttempt attempt)
         {
-            NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
+            try
+            {
+                // checking for resume and preparing the target both do I/O
+                NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
+            }
+            catch (Exception ex)
+            {
+                NotifyError(sourceResource, targetResource, ex, attempt);
+                sourceStream.Dispose();
+                targetStream.Dispose();
+                return false;
+            }
 
             var composition = ComposePipeline(sourceStream, targetStream);
             try
