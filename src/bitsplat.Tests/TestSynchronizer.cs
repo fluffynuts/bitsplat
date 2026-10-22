@@ -485,6 +485,40 @@ namespace bitsplat.Tests
                     .To.Equal(expectedAttempts);
             }
 
+            [Test]
+            public void ShouldKeepRetryingUntilSuccessWhenRetryingForever()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var sourceFile = arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                const int failures = 10;
+                var attempts = 0;
+                var failingPipe = new GenericPassThrough(
+                    (_, _) =>
+                    {
+                        if (++attempts <= failures)
+                        {
+                            throw new IOException("simulated failure");
+                        }
+                    },
+                    () =>
+                    {
+                    });
+                var options = CreateOptionsWithRetries(0);
+                options.RetryForever.Returns(true);
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { failingPipe },
+                    filters: CreatePermissiveFilter(),
+                    options: options);
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(attempts)
+                    .To.Equal(failures + 1);
+                Expect(File.ReadAllBytes(arena.TargetPathFor(sourceFile)))
+                    .To.Equal(sourceFile.Data);
+            }
+
             [TestFixture]
             public class WhenTargetCannotBeOpened
             {

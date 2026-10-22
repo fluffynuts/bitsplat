@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
 using bitsplat.ResumeStrategies;
@@ -198,6 +199,13 @@ namespace bitsplat
                             )
                     )
                     .WithFlag(
+                        nameof(Options.RetryForever),
+                        o => o.WithArg("--retry-forever")
+                            .WithHelp("Keep retrying failed synchronisations until they succeed",
+                                "Cannot be combined with --retries"
+                            )
+                    )
+                    .WithFlag(
                         nameof(Options.DryRun),
                         o => o.WithArg("-d")
                             .WithArg("--dry-run")
@@ -218,6 +226,14 @@ namespace bitsplat
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
+                if (opts.RetryForever &&
+                    opts.RawArguments.Any(a => a is "-r" or "--retries"))
+                {
+                    throw new ArgumentException(
+                        "use either --retries or --retry-forever, not both"
+                    );
+                }
+
                 if (opts.Retries < 0)
                 {
                     throw new ArgumentException(

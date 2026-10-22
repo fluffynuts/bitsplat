@@ -163,7 +163,7 @@ namespace bitsplat
             }
 
             var maxAttempts = 1 + _options.Retries;
-            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            for (var attempt = 1; _options.RetryForever || attempt <= maxAttempts; attempt++)
             {
                 if (TrySynchroniseResource(
                     sourceResource,

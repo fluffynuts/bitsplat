@@ -53,6 +53,9 @@ A simple file synchroniser aimed at media sync
   -r, --retries
     Retry failed synchronisations at most this many times
     0 disables retrying
+  --retry-forever
+    Keep retrying failed synchronisations until they succeed
+    Cannot be combined with --retries
   -s, --source
     Path / URI to use for source
   -t, --target

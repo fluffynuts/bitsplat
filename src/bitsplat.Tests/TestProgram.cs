@@ -72,30 +72,45 @@ namespace bitsplat.Tests
             using var arena = CreateArena();
             var newFile = arena.CreateSourceFile();
             var notExpected = arena.TargetPathFor(newFile.RelativePath);
-            using var output = new StringWriter();
-            var originalOut = Console.Out;
-            Console.SetOut(output);
-            int exitCode;
             // Act
-            try
-            {
-                exitCode = Program.Main(
-                    "-q",
-                    "-s", arena.SourcePath,
-                    "-t", arena.TargetPath,
-                    "-r", "-1"
-                );
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                "-r", "-1"
+            );
             // Assert
             Expect(exitCode)
                 .Not.To.Equal(0);
-            Expect(output.ToString())
+            Expect(output)
                 .To.Contain("--retries");
+            Expect(notExpected)
+                .Not.To.Exist();
+        }
+
+        [TestCase("-r")]
+        [TestCase("--retries")]
+        public void ShouldRejectRetryForeverWithRetries(string retriesSwitch)
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var notExpected = arena.TargetPathFor(newFile.RelativePath);
+            // Act
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                retriesSwitch, "2",
+                "--retry-forever"
+            );
+            // Assert
+            Expect(exitCode)
+                .Not.To.Equal(0);
+            Expect(output)
+                .To.Contain("--retries")
+                .And
+                .To.Contain("--retry-forever");
             Expect(notExpected)
                 .Not.To.Exist();
         }
@@ -330,6 +345,23 @@ namespace bitsplat.Tests
         private static TestArena CreateArena()
         {
             return new TestArena();
+        }
+
+        private static (int exitCode, string output) RunCapturingOutput(
+            params string[] args)
+        {
+            using var output = new StringWriter();
+            var originalOut = Console.Out;
+            Console.SetOut(output);
+            try
+            {
+                var exitCode = Program.Main(args);
+                return (exitCode, output.ToString());
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
         }
     }
 }
