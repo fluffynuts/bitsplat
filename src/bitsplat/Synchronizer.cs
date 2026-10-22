@@ -35,6 +35,7 @@ namespace bitsplat
         private readonly IProgressReporter _progressReporter;
         private readonly IOptions _options;
         private readonly ISyncQueueNotifiable[] _notifiables;
+        private readonly IDelayer _delayer;
         private string _label;
 
         public Synchronizer(
@@ -43,9 +44,11 @@ namespace bitsplat
             IPassThrough[] intermediatePipes,
             IFilter[] filters,
             IProgressReporter progressReporter,
-            IOptions options)
+            IOptions options,
+            IDelayer delayer)
         {
             ValidateIntermediatePipes(intermediatePipes);
+            _delayer = delayer;
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
             _intermediatePipes = intermediatePipes;
@@ -168,11 +171,17 @@ namespace bitsplat
                                    : 1 + _options.Retries;
             for (var attempt = 1; maxAttempts is null || attempt <= maxAttempts; attempt++)
             {
+                var syncAttempt = new SyncAttempt(attempt, maxAttempts);
+                if (attempt > 1)
+                {
+                    WaitBefore(syncAttempt);
+                }
+
                 if (TrySynchroniseResource(
                     sourceResource,
                     target,
                     targetResources,
-                    new SyncAttempt(attempt, maxAttempts)
+                    syncAttempt
                 ))
                 {
                     return true;
@@ -180,6 +189,24 @@ namespace bitsplat
             }
 
             return false;
+        }
+
+        // gives transient failures (eg a dropped wifi connection) time to recover
+        private static readonly TimeSpan[] RetryBackOff =
+        {
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(3),
+            TimeSpan.FromSeconds(5)
+        };
+
+        private void WaitBefore(SyncAttempt attempt)
+        {
+            var retryNumber = attempt.Number - 1;
+            var delay = RetryBackOff[Math.Min(retryNumber, RetryBackOff.Length) - 1];
+            _notifiables.ForEach(
+                n => n.Log($"waiting {delay.TotalSeconds}s before {attempt}")
+            );
+            _delayer.Delay(delay);
         }
 
         private bool TryOpen(

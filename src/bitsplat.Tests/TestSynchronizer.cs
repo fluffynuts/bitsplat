@@ -485,6 +485,96 @@ namespace bitsplat.Tests
                     .To.Equal(expectedAttempts);
             }
 
+            [TestFixture]
+            public class BackOff
+            {
+                [Test]
+                public void ShouldWaitLongerBetweenEachAttemptUpToFiveSeconds()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var delayer = new FakeDelayer();
+                    var sut = CreateWithAlwaysFailingFile(arena, retries: 4, delayer, out _);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays.Select(d => d.TotalSeconds))
+                        .To.Equal(new double[] { 1, 3, 5, 5 });
+                }
+
+                [Test]
+                public void ShouldNotWaitWithoutRetries()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var delayer = new FakeDelayer();
+                    var sut = CreateWithAlwaysFailingFile(arena, retries: 0, delayer, out _);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays)
+                        .To.Be.Empty();
+                }
+
+                [Test]
+                public void ShouldNotWaitWhenTheFirstAttemptSucceeds()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                    var delayer = new FakeDelayer();
+                    var sut = Create(
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(3),
+                        delayer: delayer);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays)
+                        .To.Be.Empty();
+                }
+
+                [Test]
+                public void ShouldSayWhatItIsWaitingFor()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var sut = CreateWithAlwaysFailingFile(
+                        arena,
+                        retries: 2,
+                        new FakeDelayer(),
+                        out var notifiable);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(notifiable.LogMessages)
+                        .To.Equal(new[]
+                        {
+                            "waiting 1s before attempt 2 of 3",
+                            "waiting 3s before attempt 3 of 3"
+                        });
+                }
+
+                private static ISynchronizer CreateWithAlwaysFailingFile(
+                    TestArena arena,
+                    int retries,
+                    IDelayer delayer,
+                    out NotifiableGenericPassThrough notifiable)
+                {
+                    arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                    notifiable = new NotifiableGenericPassThrough(
+                        (_, _) => throw new IOException("simulated failure"),
+                        () =>
+                        {
+                        });
+                    return Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(retries),
+                        delayer: delayer);
+                }
+            }
+
             [Test]
             public void ShouldReportWhichAttemptFailed()
             {
@@ -924,6 +1014,8 @@ namespace bitsplat.Tests
                 ErrorNotifications.Add((sourceResource, targetResource, ex, attempt));
             }
 
+            public List<string> LogMessages { get; } = new List<string>();
+
             public void NotifyNoWork(
                 IFileSystem source,
                 IFileSystem target)
@@ -932,6 +1024,7 @@ namespace bitsplat.Tests
 
             public void Log(string info)
             {
+                LogMessages.Add(info);
             }
         }
 
@@ -1018,7 +1111,8 @@ namespace bitsplat.Tests
             ITargetHistoryRepository targetHistoryRepository = null,
             IFilter[] filters = null,
             IProgressReporter progressReporter = null,
-            IOptions options = null)
+            IOptions options = null,
+            IDelayer delayer = null)
         {
             options ??= CreateDefaultOptions();
             return new Synchronizer(
@@ -1031,7 +1125,8 @@ namespace bitsplat.Tests
                 intermediatePipes ?? new IPassThrough[0],
                 filters ?? DefaultFilters,
                 progressReporter ?? new FakeProgressReporter(),
-                options ?? Substitute.For<IOptions>()
+                options ?? Substitute.For<IOptions>(),
+                delayer ?? new FakeDelayer()
             );
         }
 

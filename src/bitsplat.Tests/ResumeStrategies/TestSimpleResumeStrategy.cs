@@ -180,7 +180,8 @@ namespace bitsplat.Tests.ResumeStrategies
                 intermediatePipes,
                 new IFilter[] { new TargetOptInFilter() },
                 progressReporter ?? new FakeProgressReporter(),
-                Substitute.For<IOptions>()
+                Substitute.For<IOptions>(),
+                new FakeDelayer()
             );
         }
     }

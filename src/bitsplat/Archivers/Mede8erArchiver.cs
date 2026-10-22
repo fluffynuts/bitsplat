@@ -42,6 +42,7 @@ namespace bitsplat.Archivers
         private readonly IProgressReporter _progressReporter;
         private readonly IOptions _options;
         private readonly IMessageWriter _messageWriter;
+        private readonly IDelayer _delayer;
 
         // TODO: test if it makes sense to have any pass-through
         // pipes from the caller -- perhaps progress makes sense
@@ -50,9 +51,11 @@ namespace bitsplat.Archivers
             IPassThrough[] intermediatePipes,
             IProgressReporter progressReporter,
             IOptions options,
-            IMessageWriter messageWriter
+            IMessageWriter messageWriter,
+            IDelayer delayer
         )
         {
+            _delayer = delayer;
             _intermediatePipes = intermediatePipes;
             _progressReporter = progressReporter;
             _options = options;
@@ -126,7 +129,8 @@ namespace bitsplat.Archivers
                 _intermediatePipes,
                 new IFilter[] { archiverFilter },
                 _progressReporter,
-                options
+                options,
+                _delayer
             );
 
             return synchronizer.Synchronize(

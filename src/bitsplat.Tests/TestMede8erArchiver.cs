@@ -278,7 +278,8 @@ namespace bitsplat.Tests
                 new IPassThrough[0],
                 progressReporter ?? new FakeProgressReporter(),
                 options ?? Substitute.For<IOptions>(),
-                messageWriter ?? Substitute.For<IMessageWriter>()
+                messageWriter ?? Substitute.For<IMessageWriter>(),
+                new FakeDelayer()
             );
         }
     }
