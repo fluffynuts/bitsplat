@@ -2,7 +2,7 @@ name: Build and Test
 
 on:
   push:
-    branches: [ master ]
+  # still needed for PRs from forks, which don't push to this repo
   pull_request:
     branches: [ master ]
 
@@ -10,13 +10,13 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           8.x
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/setup-node@v7
       with:
         node-version: '22'
     - name: Build and test
