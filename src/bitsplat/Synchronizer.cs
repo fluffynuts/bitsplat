@@ -296,8 +296,11 @@ namespace bitsplat
         {
             try
             {
-                // checking for resume and preparing the target both do I/O
-                NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
+                ResumeOrTruncateTargetThenNotifySyncStart(
+                    sourceResource,
+                    targetResource,
+                    sourceStream,
+                    targetStream);
             }
             catch (Exception ex)
             {
@@ -330,7 +333,8 @@ namespace bitsplat
             return true;
         }
 
-        private void NotifySyncStart(IReadWriteFileResource sourceResource,
+        private void ResumeOrTruncateTargetThenNotifySyncStart(
+            IReadWriteFileResource sourceResource,
             IReadWriteFileResource targetResource,
             Stream sourceStream,
             Stream targetStream)
