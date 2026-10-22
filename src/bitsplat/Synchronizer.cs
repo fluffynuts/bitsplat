@@ -162,11 +162,8 @@ namespace bitsplat
                 return false;
             }
 
-            var attempts = 0;
-            var test = _options.Retries < 1
-                           ? new Func<bool>(() => true)
-                           : CanTryAgain;
-            do
+            var maxAttempts = 1 + _options.Retries;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 if (TrySynchroniseResource(
                     sourceResource,
@@ -176,14 +173,9 @@ namespace bitsplat
                 {
                     return true;
                 }
-            } while (test());
+            }
 
             return false;
-
-            bool CanTryAgain()
-            {
-                return ++attempts < _options.Retries;
-            }
         }
 
         private bool TryOpen(

@@ -450,6 +450,41 @@ namespace bitsplat.Tests
                     .To.Equal(sourceFile.Data);
             }
 
+            [TestCase(0, 1)]
+            [TestCase(2, 3)]
+            public void ShouldAttemptOnceMoreThanTheNumberOfRetries(
+                int retries,
+                int expectedAttempts)
+            {
+                // Arrange
+                using var arena = new TestArena();
+                arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                // stops failing eventually so that unbounded retrying ends the test
+                // with a wrong count instead of hanging it
+                const int giveUpFailingAfter = 10;
+                var attempts = 0;
+                var failingPipe = new GenericPassThrough(
+                    (_, _) =>
+                    {
+                        if (++attempts <= giveUpFailingAfter)
+                        {
+                            throw new IOException("simulated failure");
+                        }
+                    },
+                    () =>
+                    {
+                    });
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { failingPipe },
+                    filters: CreatePermissiveFilter(),
+                    options: CreateOptionsWithRetries(retries));
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(attempts)
+                    .To.Equal(expectedAttempts);
+            }
+
             [TestFixture]
             public class WhenTargetCannotBeOpened
             {

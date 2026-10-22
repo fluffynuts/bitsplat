@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using bitsplat.History;
 using bitsplat.Tests.TestingSupport;
@@ -61,6 +62,41 @@ namespace bitsplat.Tests
                 .To.Equal(newFile.Data);
             var dbFile = Path.Combine(arena.TargetPath, TargetHistoryRepository.DB_NAME);
             Expect(dbFile)
+                .Not.To.Exist();
+        }
+
+        [Test]
+        public void ShouldRejectNegativeRetries()
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var notExpected = arena.TargetPathFor(newFile.RelativePath);
+            using var output = new StringWriter();
+            var originalOut = Console.Out;
+            Console.SetOut(output);
+            int exitCode;
+            // Act
+            try
+            {
+                exitCode = Program.Main(
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-r", "-1"
+                );
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+
+            // Assert
+            Expect(exitCode)
+                .Not.To.Equal(0);
+            Expect(output.ToString())
+                .To.Contain("--retries");
+            Expect(notExpected)
                 .Not.To.Exist();
         }
 

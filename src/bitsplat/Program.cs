@@ -192,7 +192,10 @@ namespace bitsplat
                         o => o.WithArg("-r")
                             .WithArg("--retries")
                             .WithDefault(new[] { "3" }) // TODO: this is a bit ugly -- can it be better?
-                            .WithHelp("Retry failed synchronisations at most this many times")
+                            .WithHelp(
+                                "Retry failed synchronisations at most this many times",
+                                "0 disables retrying"
+                            )
                     )
                     .WithFlag(
                         nameof(Options.DryRun),
@@ -215,6 +218,13 @@ namespace bitsplat
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
+                if (opts.Retries < 0)
+                {
+                    throw new ArgumentException(
+                        $"--retries must be 0 or more (got {opts.Retries})"
+                    );
+                }
+
                 return true;
             }
             catch (ArgumentException ex)

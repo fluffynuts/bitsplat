@@ -52,6 +52,7 @@ A simple file synchroniser aimed at media sync
     Produces less output, good for non-interactive scripts
   -r, --retries
     Retry failed synchronisations at most this many times
+    0 disables retrying
   -s, --source
     Path / URI to use for source
   -t, --target
