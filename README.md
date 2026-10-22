@@ -35,7 +35,7 @@ A simple file synchroniser aimed at media sync
     me
   -a, --archive
     Path / URI to use for archiving
-  -h, --history-db
+  -H, --history-db
     Override path to history database
     The default location for the database is at the root of the target
   -m, --mode

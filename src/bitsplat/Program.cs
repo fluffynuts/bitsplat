@@ -162,7 +162,7 @@ namespace bitsplat
                     )
                     .WithParameter(
                         nameof(Options.HistoryDatabase),
-                        o => o.WithArg("-h")
+                        o => o.WithArg("-H")
                             .WithArg("--history-db")
                             .WithHelp(
                                 "Override path to history database",

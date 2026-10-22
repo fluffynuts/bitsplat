@@ -115,6 +115,32 @@ namespace bitsplat.Tests
                 .Not.To.Exist();
         }
 
+        [TestCase("-H")]
+        [TestCase("--history-db")]
+        public void ShouldUseTheGivenHistoryDatabase(string historyDbSwitch)
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var historyDb = Path.Combine(arena.ContainerPath, "elsewhere.db");
+            // Act
+            var (exitCode, _) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                historyDbSwitch, historyDb
+            );
+            // Assert
+            Expect(exitCode)
+                .To.Equal(Program.ExitCodes.SUCCESS);
+            Expect(arena.TargetPathFor(newFile.RelativePath))
+                .To.Exist();
+            Expect(historyDb)
+                .To.Exist();
+            Expect(Path.Combine(arena.TargetPath, TargetHistoryRepository.DB_NAME))
+                .Not.To.Exist();
+        }
+
         [TestFixture]
         public class ExitCode
         {
