@@ -15,6 +15,9 @@ namespace bitsplat
 {
     public class Program
     {
+        private const string RETRIES_SHORT_SWITCH = "-r";
+        private const string RETRIES_LONG_SWITCH = "--retries";
+
         public static class ExitCodes
         {
             public const int SUCCESS = 0;
@@ -220,8 +223,8 @@ namespace bitsplat
                     )
                     .WithParameter(
                         nameof(Options.Retries),
-                        o => o.WithArg("-r")
-                            .WithArg("--retries")
+                        o => o.WithArg(RETRIES_SHORT_SWITCH)
+                            .WithArg(RETRIES_LONG_SWITCH)
                             .WithDefault(new[] { "3" }) // TODO: this is a bit ugly -- can it be better?
                             .WithHelp(
                                 "Retry failed synchronisations at most this many times",
@@ -257,17 +260,17 @@ namespace bitsplat
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
                 if (opts.RetryForever &&
-                    opts.RawArguments.Any(a => a is "-r" or "--retries"))
+                    opts.RawArguments.Any(a => a is RETRIES_SHORT_SWITCH or RETRIES_LONG_SWITCH))
                 {
                     throw new ArgumentException(
-                        "use either --retries or --retry-forever, not both"
+                        $"use either {RETRIES_LONG_SWITCH} or --retry-forever, not both"
                     );
                 }
 
                 if (opts.Retries < 0)
                 {
                     throw new ArgumentException(
-                        $"--retries must be 0 or more (got {opts.Retries})"
+                        $"{RETRIES_LONG_SWITCH} must be 0 or more (got {opts.Retries})"
                     );
                 }
 
