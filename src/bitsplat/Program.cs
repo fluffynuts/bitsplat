@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
+using bitsplat.Pipes;
 using bitsplat.ResumeStrategies;
 using bitsplat.StaleFileRemovers;
 using bitsplat.Storage;
@@ -12,6 +15,16 @@ namespace bitsplat
 {
     public class Program
     {
+        private const string RETRIES_SHORT_SWITCH = "-r";
+        private const string RETRIES_LONG_SWITCH = "--retries";
+
+        public static class ExitCodes
+        {
+            public const int SUCCESS = 0;
+            public const int INVALID_ARGUMENTS = -1;
+            public const int FINISHED_WITH_FAILURES = 2;
+        }
+
         public static int Main(params string[] args)
         {
             Console.CancelKeyPress += OnCancel;
@@ -19,13 +32,13 @@ namespace bitsplat
 
             if (!TryParseOptionsFrom(args, out var opts))
             {
-                return -1;
+                return ExitCodes.INVALID_ARGUMENTS;
             }
 
             if (opts.ShowedHelp ||
                 opts.ShowedVersion)
             {
-                return 0;
+                return ExitCodes.SUCCESS;
             }
 
             // TODO: when more than just local filesystems are handled,
@@ -44,7 +57,7 @@ namespace bitsplat
             var archiver = container.Resolve<IArchiver>();
             var staleFileRemover = container.Resolve<IStaleFileRemover>();
 
-            archiver.RunArchiveOperations(
+            var notArchived = archiver.RunArchiveOperations(
                 target,
                 archive,
                 source);
@@ -53,12 +66,33 @@ namespace bitsplat
 
             var synchronizer = container.Resolve<ISynchronizer>();
 
-            synchronizer.Synchronize(
+            var syncResult = synchronizer.Synchronize(
                 $"Start sync: {source.BasePath} => {target.BasePath}",
                 source,
                 target);
 
-            return 0;
+            return ReportFailures(
+                container.Resolve<IMessageWriter>(),
+                notArchived,
+                syncResult.Failed.Select(r => r.RelativePath).ToArray()
+            );
+        }
+
+        private static int ReportFailures(
+            IMessageWriter messageWriter,
+            IReadOnlyList<string> notArchived,
+            IReadOnlyList<string> notSynced)
+        {
+            if (notArchived.Count == 0 &&
+                notSynced.Count == 0)
+            {
+                return ExitCodes.SUCCESS;
+            }
+
+            messageWriter.Write("");
+            notArchived.ForEach(p => messageWriter.Write($"Failed to archive: {p}"));
+            notSynced.ForEach(p => messageWriter.Write($"Failed to sync: {p}"));
+            return ExitCodes.FINISHED_WITH_FAILURES;
         }
 
         private static bool _cancelled;
@@ -131,7 +165,7 @@ namespace bitsplat
                     )
                     .WithParameter(
                         nameof(Options.HistoryDatabase),
-                        o => o.WithArg("-h")
+                        o => o.WithArg("-H")
                             .WithArg("--history-db")
                             .WithHelp(
                                 "Override path to history database",
@@ -189,10 +223,20 @@ namespace bitsplat
                     )
                     .WithParameter(
                         nameof(Options.Retries),
-                        o => o.WithArg("-r")
-                            .WithArg("--retries")
+                        o => o.WithArg(RETRIES_SHORT_SWITCH)
+                            .WithArg(RETRIES_LONG_SWITCH)
                             .WithDefault(new[] { "3" }) // TODO: this is a bit ugly -- can it be better?
-                            .WithHelp("Retry failed synchronisations at most this many times")
+                            .WithHelp(
+                                "Retry failed synchronisations at most this many times",
+                                "0 disables retrying"
+                            )
+                    )
+                    .WithFlag(
+                        nameof(Options.RetryForever),
+                        o => o.WithArg("--retry-forever")
+                            .WithHelp("Keep retrying failed synchronisations until they succeed",
+                                "Cannot be combined with --retries"
+                            )
                     )
                     .WithFlag(
                         nameof(Options.DryRun),
@@ -215,6 +259,21 @@ namespace bitsplat
                     )
                     .WithHelp("BitSplat", "A simple file synchroniser aimed at media sync")
                     .Parse<Options>(args);
+                if (opts.RetryForever &&
+                    opts.RawArguments.Any(a => a is RETRIES_SHORT_SWITCH or RETRIES_LONG_SWITCH))
+                {
+                    throw new ArgumentException(
+                        $"use either {RETRIES_LONG_SWITCH} or --retry-forever, not both"
+                    );
+                }
+
+                if (opts.Retries < 0)
+                {
+                    throw new ArgumentException(
+                        $"{RETRIES_LONG_SWITCH} must be 0 or more (got {opts.Retries})"
+                    );
+                }
+
                 return true;
             }
             catch (ArgumentException ex)

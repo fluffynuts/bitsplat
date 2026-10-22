@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using bitsplat.CommandLine;
+using bitsplat.Pipes;
 using bitsplat.StaleFileRemovers;
 using bitsplat.Storage;
 using NUnit.Framework;
@@ -46,10 +47,78 @@ namespace bitsplat.Tests.StaleFileRemovers
                 .Delete(onlyAtTarget.RelativePath);
         }
 
-        private static IStaleFileRemover Create()
+        [Test]
+        public void ShouldKeepWatchedMarkersWhoseMediaFileIsStillAtSource()
+        {
+            // Arrange
+            var media = ResourceAt("Series/ep1.mkv");
+            var source = Substitute.For<IFileSystem>();
+            var target = Substitute.For<IFileSystem>();
+            source.ListResourcesRecursive()
+                .Returns(new[] { media });
+            var markerForMediaAtSource = ResourceAt("Series/ep1.mkv.t");
+            var markerForMediaGoneFromSource = ResourceAt("Series/ep2.mkv.t");
+            target.ListResourcesRecursive()
+                .Returns(new[] { media, markerForMediaAtSource, markerForMediaGoneFromSource });
+            var sut = Create();
+            // Act
+            sut.RemoveStaleFiles(
+                source,
+                target);
+            // Assert
+            Expect(target)
+                .To.Have.Received(1)
+                .Delete(Arg.Any<string>());
+            Expect(target)
+                .To.Have.Received(1)
+                .Delete("Series/ep2.mkv.t");
+        }
+
+        private static IReadWriteFileResource ResourceAt(string relativePath)
+        {
+            return ReadWriteFileResourceBuilder.Create()
+                .WithRandomProps()
+                .WithRelativePath(relativePath)
+                .Build();
+        }
+
+        [Test]
+        public void ShouldOnlyReportWhatWouldBeRemovedOnDryRun()
+        {
+            // Arrange
+            var commonResources = GetRandomArray<IReadWriteFileResource>(2);
+            var onlyAtTarget = GetRandom<IReadWriteFileResource>();
+            var source = Substitute.For<IFileSystem>();
+            var target = Substitute.For<IFileSystem>();
+            source.ListResourcesRecursive()
+                .Returns(commonResources);
+            target.ListResourcesRecursive()
+                .Returns(commonResources.And(onlyAtTarget));
+            var options = Substitute.For<IOptions>();
+            options.DryRun.Returns(true);
+            var messageWriter = Substitute.For<IMessageWriter>();
+            var sut = Create(options, messageWriter);
+            // Act
+            sut.RemoveStaleFiles(
+                source,
+                target);
+            // Assert
+            Expect(target)
+                .Not.To.Have.Received()
+                .Delete(Arg.Any<string>());
+            Expect(messageWriter)
+                .To.Have.Received(1)
+                .Write($"Would remove target: {onlyAtTarget.RelativePath}");
+        }
+
+        private static IStaleFileRemover Create(
+            IOptions options = null,
+            IMessageWriter messageWriter = null)
         {
             return new DefaultStaleFileRemover(
-                new FakeProgressReporter()
+                new FakeProgressReporter(),
+                options ?? Substitute.For<IOptions>(),
+                messageWriter ?? Substitute.For<IMessageWriter>()
             );
         }
     }

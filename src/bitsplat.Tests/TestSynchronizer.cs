@@ -404,6 +404,37 @@ namespace bitsplat.Tests
         }
 
         [TestFixture]
+        public class DryRun
+        {
+            [Test]
+            public void ShouldListWhatWouldBeSyncedWithoutVerbose()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var sourceFile = arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                var options = CreateDefaultOptions();
+                options.DryRun.Returns(true);
+                options.Verbose.Returns(false);
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { notifiable },
+                    filters: CreatePermissiveFilter(),
+                    options: options);
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(notifiable.LogMessages)
+                    .To.Equal(new[]
+                    {
+                        "would attempt to sync:",
+                        $"  {sourceFile.RelativePath} ({sourceFile.Data.Length})"
+                    });
+                Expect(arena.TargetPathFor(sourceFile))
+                    .Not.To.Exist();
+            }
+        }
+
+        [TestFixture]
         public class ErrorHandling
         {
             [Test]
@@ -448,6 +479,361 @@ namespace bitsplat.Tests
                     .To.Exist();
                 Expect(File.ReadAllBytes(expected))
                     .To.Equal(sourceFile.Data);
+            }
+
+            [TestCase(0, 1)]
+            [TestCase(2, 3)]
+            public void ShouldAttemptOnceMoreThanTheNumberOfRetries(
+                int retries,
+                int expectedAttempts)
+            {
+                // Arrange
+                using var arena = new TestArena();
+                arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                // stops failing eventually so that unbounded retrying ends the test
+                // with a wrong count instead of hanging it
+                const int giveUpFailingAfter = 10;
+                var attempts = 0;
+                var failingPipe = new GenericPassThrough(
+                    (_, _) =>
+                    {
+                        if (++attempts <= giveUpFailingAfter)
+                        {
+                            throw new IOException("simulated failure");
+                        }
+                    },
+                    () =>
+                    {
+                    });
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { failingPipe },
+                    filters: CreatePermissiveFilter(),
+                    options: CreateOptionsWithRetries(retries));
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(attempts)
+                    .To.Equal(expectedAttempts);
+            }
+
+            [TestFixture]
+            public class BackOff
+            {
+                [Test]
+                public void ShouldWaitLongerBetweenEachAttemptUpToFiveSeconds()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var delayer = new FakeDelayer();
+                    var sut = CreateWithAlwaysFailingFile(arena, retries: 4, delayer, out _);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays.Select(d => d.TotalSeconds))
+                        .To.Equal(new double[] { 1, 3, 5, 5 });
+                }
+
+                [Test]
+                public void ShouldNotWaitWithoutRetries()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var delayer = new FakeDelayer();
+                    var sut = CreateWithAlwaysFailingFile(arena, retries: 0, delayer, out _);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays)
+                        .To.Be.Empty();
+                }
+
+                [Test]
+                public void ShouldNotWaitWhenTheFirstAttemptSucceeds()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                    var delayer = new FakeDelayer();
+                    var sut = Create(
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(3),
+                        delayer: delayer);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(delayer.Delays)
+                        .To.Be.Empty();
+                }
+
+                [Test]
+                public void ShouldSayWhatItIsWaitingFor()
+                {
+                    // Arrange
+                    using var arena = new TestArena();
+                    var sut = CreateWithAlwaysFailingFile(
+                        arena,
+                        retries: 2,
+                        new FakeDelayer(),
+                        out var notifiable);
+                    // Act
+                    sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                    // Assert
+                    Expect(notifiable.LogMessages)
+                        .To.Equal(new[]
+                        {
+                            "waiting 1s before attempt 2 of 3",
+                            "waiting 3s before attempt 3 of 3"
+                        });
+                }
+
+                private static ISynchronizer CreateWithAlwaysFailingFile(
+                    TestArena arena,
+                    int retries,
+                    IDelayer delayer,
+                    out NotifiableGenericPassThrough notifiable)
+                {
+                    arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                    notifiable = new NotifiableGenericPassThrough(
+                        (_, _) => throw new IOException("simulated failure"),
+                        () =>
+                        {
+                        });
+                    return Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(retries),
+                        delayer: delayer);
+                }
+            }
+
+            [Test]
+            public void ShouldReportWhichAttemptFailed()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                var notifiable = new NotifiableGenericPassThrough(
+                    (_, _) => throw new IOException("simulated failure"),
+                    () =>
+                    {
+                    });
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { notifiable },
+                    filters: CreatePermissiveFilter(),
+                    options: CreateOptionsWithRetries(2));
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(notifiable.ErrorNotifications.Select(n => n.attempt?.ToString()))
+                    .To.Equal(new[] { "attempt 1 of 3", "attempt 2 of 3", "attempt 3 of 3" });
+            }
+
+            [Test]
+            public void ShouldKeepRetryingUntilSuccessWhenRetryingForever()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var sourceFile = arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                const int failures = 10;
+                var attempts = 0;
+                var failingPipe = new GenericPassThrough(
+                    (_, _) =>
+                    {
+                        if (++attempts <= failures)
+                        {
+                            throw new IOException("simulated failure");
+                        }
+                    },
+                    () =>
+                    {
+                    });
+                var options = CreateOptionsWithRetries(0);
+                options.RetryForever.Returns(true);
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { failingPipe },
+                    filters: CreatePermissiveFilter(),
+                    options: options);
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(attempts)
+                    .To.Equal(failures + 1);
+                Expect(File.ReadAllBytes(arena.TargetPathFor(sourceFile)))
+                    .To.Equal(sourceFile.Data);
+            }
+
+            [TestFixture]
+            public class WhenTargetCannotBeOpened
+            {
+                [Test]
+                public void ShouldDisposeTheSourceStream()
+                {
+                    // Arrange
+                    var (source, openedSourceStreams) = CreateSourceWithOneFile();
+                    var target = CreateTargetWhichCannotBeOpened(new IOException("target is read-only"));
+                    var sut = Create(
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(1));
+                    // Act
+                    sut.Synchronize(source, target);
+                    // Assert
+                    Expect(openedSourceStreams)
+                        .Not.To.Be.Empty();
+                    Expect(openedSourceStreams)
+                        .To.Contain.All
+                        .Matched.By(s => s.IsDisposed);
+                }
+
+                [Test]
+                public void ShouldNotifyTheOpenError()
+                {
+                    // Arrange
+                    var (source, _) = CreateSourceWithOneFile();
+                    var expected = new IOException("target is read-only");
+                    var target = CreateTargetWhichCannotBeOpened(expected);
+                    var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                    var sut = Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(1));
+                    // Act
+                    sut.Synchronize(source, target);
+                    // Assert
+                    Expect(notifiable.ErrorNotifications)
+                        .Not.To.Be.Empty();
+                    Expect(notifiable.ErrorNotifications)
+                        .To.Contain.All
+                        .Matched.By(n => n.ex == expected && n.source.RelativePath == "file.bin");
+                }
+
+                private static (IFileSystem source, List<DisposeTrackingStream> openedStreams)
+                    CreateSourceWithOneFile()
+                {
+                    var openedStreams = new List<DisposeTrackingStream>();
+                    var data = GetRandomBytes(10, 20);
+                    var resource = Substitute.For<IReadWriteFileResource>();
+                    resource.RelativePath.Returns("file.bin");
+                    resource.Name.Returns("file.bin");
+                    resource.Size.Returns(data.Length);
+                    resource.OpenForRead().Returns(_ =>
+                    {
+                        var stream = new DisposeTrackingStream(data);
+                        openedStreams.Add(stream);
+                        return stream;
+                    });
+                    var source = Substitute.For<IFileSystem>();
+                    source.ListResourcesRecursive().Returns(new[] { resource });
+                    source.IsFile("file.bin").Returns(true);
+                    return (source, openedStreams);
+                }
+
+                private static IFileSystem CreateTargetWhichCannotBeOpened(Exception toThrow)
+                {
+                    var target = Substitute.For<IFileSystem>();
+                    target.ListResourcesRecursive().Returns(new IReadWriteFileResource[0]);
+                    target.Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns<Stream>(_ => throw toThrow);
+                    return target;
+                }
+            }
+
+            [TestFixture]
+            public class WhenPreparingTheTargetFails
+            {
+                [Test]
+                public void ShouldReportTheErrorAndCarryOnWithTheNextFile()
+                {
+                    // Arrange
+                    var failingData = GetRandomBytes(10, 20);
+                    var nextData = GetRandomBytes(10, 20);
+                    var sourceResources = new[]
+                    {
+                        CreateSourceResource("a.bin", failingData),
+                        CreateSourceResource("b.bin", nextData)
+                    };
+                    var source = Substitute.For<IFileSystem>();
+                    source.ListResourcesRecursive().Returns(sourceResources);
+                    source.IsFile(Arg.Any<string>()).Returns(true);
+                    var expected = new IOException("network share went away");
+                    var failingTargetStream = new SetLengthFailsStream(expected);
+                    var nextTargetStream = new DisposeTrackingStream();
+                    var target = Substitute.For<IFileSystem>();
+                    target.ListResourcesRecursive().Returns(new IReadWriteFileResource[0]);
+                    target.Open("a.bin", Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns(failingTargetStream);
+                    target.Open("b.bin", Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns(nextTargetStream);
+                    var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                    var sut = Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(0));
+                    // Act
+                    var result = sut.Synchronize(source, target);
+                    // Assert
+                    Expect(notifiable.ErrorNotifications.Select(n => n.ex))
+                        .To.Equal(new Exception[] { expected });
+                    Expect(failingTargetStream.IsDisposed)
+                        .To.Be.True();
+                    Expect(result.Failed.Select(r => r.RelativePath))
+                        .To.Equal(new[] { "a.bin" });
+                    Expect(nextTargetStream.ToArray())
+                        .To.Equal(nextData);
+                }
+
+                private static IReadWriteFileResource CreateSourceResource(
+                    string relativePath,
+                    byte[] data)
+                {
+                    var resource = Substitute.For<IReadWriteFileResource>();
+                    resource.RelativePath.Returns(relativePath);
+                    resource.Name.Returns(relativePath);
+                    resource.Size.Returns(data.Length);
+                    resource.OpenForRead().Returns(_ => new MemoryStream(data));
+                    return resource;
+                }
+
+                private class SetLengthFailsStream : DisposeTrackingStream
+                {
+                    private readonly Exception _toThrow;
+
+                    public SetLengthFailsStream(Exception toThrow)
+                    {
+                        _toThrow = toThrow;
+                    }
+
+                    public override void SetLength(long value)
+                    {
+                        throw _toThrow;
+                    }
+                }
+            }
+
+            private static IOptions CreateOptionsWithRetries(int retries)
+            {
+                var options = CreateDefaultOptions();
+                options.Retries.Returns(retries);
+                return options;
+            }
+
+            public class DisposeTrackingStream : MemoryStream
+            {
+                public bool IsDisposed { get; private set; }
+
+                public DisposeTrackingStream()
+                {
+                }
+
+                public DisposeTrackingStream(byte[] data)
+                    : base(data)
+                {
+                }
+
+                protected override void Dispose(bool disposing)
+                {
+                    IsDisposed = true;
+                    base.Dispose(disposing);
+                }
             }
         }
 
@@ -611,8 +997,9 @@ namespace bitsplat.Tests
             public List<(IFileResource source, IFileResource target)> CompletedNotifications { get; }
                 = new List<(IFileResource source, IFileResource target)>();
 
-            public List<(IFileResource source, IFileResource target, Exception ex)> ErrorNotifications { get; }
-                = new List<(IFileResource source, IFileResource target, Exception ex)>();
+            public List<(IFileResource source, IFileResource target, Exception ex, SyncAttempt attempt)>
+                ErrorNotifications { get; }
+                = new List<(IFileResource source, IFileResource target, Exception ex, SyncAttempt attempt)>();
 
             public NotifiableGenericPassThrough(
                 Action<byte[], int> onWrite,
@@ -652,11 +1039,13 @@ namespace bitsplat.Tests
             public void NotifyError(
                 IFileResource sourceResource,
                 IFileResource targetResource,
-                Exception ex)
+                Exception ex,
+                SyncAttempt attempt)
             {
-                // TODO: test me
-                ErrorNotifications.Add((sourceResource, targetResource, ex));
+                ErrorNotifications.Add((sourceResource, targetResource, ex, attempt));
             }
+
+            public List<string> LogMessages { get; } = new List<string>();
 
             public void NotifyNoWork(
                 IFileSystem source,
@@ -666,6 +1055,7 @@ namespace bitsplat.Tests
 
             public void Log(string info)
             {
+                LogMessages.Add(info);
             }
         }
 
@@ -752,7 +1142,8 @@ namespace bitsplat.Tests
             ITargetHistoryRepository targetHistoryRepository = null,
             IFilter[] filters = null,
             IProgressReporter progressReporter = null,
-            IOptions options = null)
+            IOptions options = null,
+            IDelayer delayer = null)
         {
             options ??= CreateDefaultOptions();
             return new Synchronizer(
@@ -765,7 +1156,8 @@ namespace bitsplat.Tests
                 intermediatePipes ?? new IPassThrough[0],
                 filters ?? DefaultFilters,
                 progressReporter ?? new FakeProgressReporter(),
-                options ?? Substitute.For<IOptions>()
+                options ?? Substitute.For<IOptions>(),
+                delayer ?? new FakeDelayer()
             );
         }
 

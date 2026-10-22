@@ -20,6 +20,7 @@ namespace bitsplat
         bool NoHistory { get; set; }
         bool KeepStaleFiles { get; set; }
         int Retries { get; set; }
+        bool RetryForever { get; set; }
         int ResumeCheckBytes { get; set; }
         bool CreateTargetIfRequired { get; set; }
         bool DryRun { get; set; }
@@ -30,6 +31,7 @@ namespace bitsplat
     public class Options : ParsedArguments, IOptions
     {
         public int Retries { get; set; }
+        public bool RetryForever { get; set; }
         public int ResumeCheckBytes { get; set; }
         public SyncMode SyncMode { get; set; }
         public string Source { get; set; }

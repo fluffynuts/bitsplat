@@ -22,10 +22,12 @@ namespace bitsplat.Pipes
             IFileResource sourceResource,
             IFileResource targetResource);
 
+        /// <param name="attempt">null when the error happened outside of a sync attempt</param>
         void NotifyError(
             IFileResource sourceResource,
             IFileResource targetResource,
-            Exception ex);
+            Exception ex,
+            SyncAttempt attempt);
 
         void NotifyNoWork(
             IFileSystem source,

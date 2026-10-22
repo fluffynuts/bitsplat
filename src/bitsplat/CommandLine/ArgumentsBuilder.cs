@@ -8,6 +8,32 @@ namespace bitsplat.CommandLine
 {
     public class ArgumentsBuilder
     {
+        private readonly Func<int> _consoleWidth;
+
+        public ArgumentsBuilder()
+            : this(ReadConsoleWidth)
+        {
+        }
+
+        /// <param name="consoleWidth">0 when the width is unknown, eg when output is redirected</param>
+        public ArgumentsBuilder(Func<int> consoleWidth)
+        {
+            _consoleWidth = consoleWidth;
+        }
+
+        private static int ReadConsoleWidth()
+        {
+            try
+            {
+                return Console.WindowWidth;
+            }
+            catch (System.IO.IOException)
+            {
+                // there's no console to measure, eg output is redirected on Windows
+                return 0;
+            }
+        }
+
         private readonly Dictionary<string, Action<FlagParser>> _flags
             = new Dictionary<string, Action<FlagParser>>();
 
@@ -83,10 +109,24 @@ namespace bitsplat.CommandLine
             }
             else
             {
+                // recognised arguments have been removed from argsList by now
+                RejectUnknown(argsList);
                 MapCustomProperties(result);
             }
 
             return result;
+        }
+
+        private static void RejectUnknown(IList<string> remainingArgs)
+        {
+            if (remainingArgs.Count == 0)
+            {
+                return;
+            }
+
+            throw new ArgumentException(
+                $"unknown argument(s): {remainingArgs.JoinWith(" ")} (see --help)"
+            );
         }
 
         private void RenderVersion()
@@ -126,9 +166,8 @@ namespace bitsplat.CommandLine
 
             _help.ForEach(line =>
             {
-                var available = Console.WindowWidth;
-                var subs = line.SplitLines(available);
-                subs.ForEach(s => Console.WriteLine(s));
+                WrapTo(_consoleWidth(), line)
+                    .ForEach(s => Console.WriteLine(s));
             });
             sorted.ForEach(o => RenderHelpFor(o.Key, o.Value));
         }
@@ -138,12 +177,19 @@ namespace bitsplat.CommandLine
             string[] help)
         {
             Console.WriteLine($"  {switches.JoinWith(", ")}");
-            var available = Console.WindowWidth - 4 - 2; // allow 4 lead and 2 padding at the end
+            var available = _consoleWidth() - 4 - 2; // allow 4 lead and 2 padding at the end
             help.ForEach(line =>
             {
-                var subLines = line.SplitLines(available);
-                subLines.ForEach(s => Console.WriteLine($"    {s}"));
+                WrapTo(available, line)
+                    .ForEach(s => Console.WriteLine($"    {s}"));
             });
+        }
+
+        private static string[] WrapTo(int width, string line)
+        {
+            return width < 1
+                       ? new[] { line }
+                       : line.SplitLines(width);
         }
 
         private void MapCustomProperties<T>(T result)

@@ -1,15 +1,16 @@
+using System.Collections.Generic;
 using bitsplat.Storage;
 
 namespace bitsplat.Archivers
 {
     public class NullArchiver : IArchiver
     {
-        public void RunArchiveOperations(
+        public IReadOnlyList<string> RunArchiveOperations(
             IFileSystem target,
             IFileSystem archive,
             IFileSystem source)
         {
-            /* intentionally does nothing */
+            return new string[0];
         }
     }
 }

@@ -16,6 +16,7 @@ namespace bitsplat.Pipes
         public int CurrentItem { get; set; }
         public int TotalItems { get; set; }
         public Exception Exception { get; set; }
+        public SyncAttempt Attempt { get; set; }
         public DateTime Timestamp { get; } = DateTime.Now;
 
         public int CurrentPercentageCompleteBySize =>

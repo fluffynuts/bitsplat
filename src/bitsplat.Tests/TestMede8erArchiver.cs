@@ -121,15 +121,185 @@ namespace bitsplat.Tests
             }
         }
 
+        [TestFixture]
+        public class WhenArchiveCopyFails : TestMede8erArchiver
+        {
+            [Test]
+            public void ShouldKeepTheSourceFileTargetFileAndMarker()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                var data = GetRandomBytes();
+                var sourceFile = arena.CreateSourceFile(toArchive, data);
+                var targetFile = arena.CreateTargetFile(toArchive, data);
+                var marker = arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var archive = Substitute.For<IFileSystem>();
+                archive.ListResourcesRecursive()
+                    .Returns(new IReadWriteFileResource[0]);
+                archive.Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                    .Returns<Stream>(_ => throw new IOException("archive is full"));
+                var sut = Create(options: CreateOptionsWithRetries(1));
+                // Act
+                sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    archive,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(sourceFile.Path)
+                    .To.Exist();
+                Expect(targetFile.Path)
+                    .To.Exist();
+                Expect(marker.Path)
+                    .To.Exist();
+            }
+        }
+
+        [TestFixture]
+        public class WhenArchiveDoesNotHaveTheFileAfterCopy : TestMede8erArchiver
+        {
+            [Test]
+            public void ShouldKeepTheSourceFileTargetFileAndMarker()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                var data = GetRandomBytes();
+                var sourceFile = arena.CreateSourceFile(toArchive, data);
+                var targetFile = arena.CreateTargetFile(toArchive, data);
+                var marker = arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                // accepts the write, but the file isn't there afterwards
+                var archive = Substitute.For<IFileSystem>();
+                archive.ListResourcesRecursive()
+                    .Returns(new IReadWriteFileResource[0]);
+                archive.Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                    .Returns(_ => new MemoryStream());
+                archive.FetchSize(Arg.Any<string>())
+                    .Returns(-1);
+                var messageWriter = Substitute.For<IMessageWriter>();
+                var sut = Create(
+                    options: CreateOptionsWithRetries(1),
+                    messageWriter: messageWriter);
+                // Act
+                sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    archive,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(sourceFile.Path)
+                    .To.Exist();
+                Expect(targetFile.Path)
+                    .To.Exist();
+                Expect(marker.Path)
+                    .To.Exist();
+                Expect(messageWriter)
+                    .To.Have.Received(1)
+                    .Write(Arg.Is<string>(s => s.Contains(toArchive)));
+            }
+        }
+
+        [TestFixture]
+        public class WhenMarkedFileIsNotAtSource : TestMede8erArchiver
+        {
+            [Test]
+            public void ShouldNotArchiveItOrCountItAsNotArchived()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                arena.CreateTargetFile(toArchive, GetRandomBytes());
+                arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var sut = Create(options: CreateOptionsWithRetries(1));
+                // Act
+                var result = sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    arena.ArchiveFileSystem,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(result.Count)
+                    .To.Equal(0);
+                Expect(arena.ArchiveFileSystem.Exists(toArchive))
+                    .To.Be.False();
+            }
+
+            [TestCase(false, "it will be removed from the target as stale")]
+            [TestCase(true, "it will be kept at the target (--keep-stale)")]
+            public void ShouldSayWhatWillHappenToIt(
+                bool keepStaleFiles,
+                string expected)
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                arena.CreateTargetFile(toArchive, GetRandomBytes());
+                arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var options = CreateOptionsWithRetries(1);
+                options.KeepStaleFiles.Returns(keepStaleFiles);
+                var messageWriter = Substitute.For<IMessageWriter>();
+                var sut = Create(
+                    options: options,
+                    messageWriter: messageWriter);
+                // Act
+                sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    arena.ArchiveFileSystem,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(messageWriter)
+                    .To.Have.Received(1)
+                    .Write($"Not archiving {toArchive}: not found at source; {expected}");
+            }
+        }
+
+        [TestFixture]
+        public class WhenDryRun : TestMede8erArchiver
+        {
+            [Test]
+            public void ShouldNotDeleteAnything()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                var data = GetRandomBytes();
+                var sourceFile = arena.CreateSourceFile(toArchive, data);
+                var targetFile = arena.CreateTargetFile(toArchive, data);
+                var marker = arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var options = CreateOptionsWithRetries(1);
+                options.DryRun.Returns(true);
+                var sut = Create(options: options);
+                // Act
+                sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    arena.ArchiveFileSystem,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(sourceFile.Path)
+                    .To.Exist();
+                Expect(targetFile.Path)
+                    .To.Exist();
+                Expect(marker.Path)
+                    .To.Exist();
+            }
+        }
+
+        private static IOptions CreateOptionsWithRetries(int retries)
+        {
+            var options = Substitute.For<IOptions>();
+            options.Retries.Returns(retries);
+            return options;
+        }
+
         private IArchiver Create(
             IProgressReporter progressReporter = null,
-            IOptions options = null)
+            IOptions options = null,
+            IMessageWriter messageWriter = null)
         {
             return new Mede8erArchiver(
                 new IPassThrough[0],
                 progressReporter ?? new FakeProgressReporter(),
-                Substitute.For<IOptions>(),
-                Substitute.For<IMessageWriter>()
+                options ?? Substitute.For<IOptions>(),
+                messageWriter ?? Substitute.For<IMessageWriter>(),
+                new FakeDelayer()
             );
         }
     }

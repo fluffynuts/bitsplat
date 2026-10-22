@@ -18,6 +18,7 @@ namespace bitsplat
             var result = new Container();
             return result
                 .WithRegistration<ISynchronizer, Synchronizer>()
+                .WithRegistration<IDelayer, ThreadSleepDelayer>()
                 .WithRegistration<IFileSystemFactory, FileSystemFactory>(
                     Reuse.Singleton
                 );

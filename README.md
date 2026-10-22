@@ -35,7 +35,7 @@ A simple file synchroniser aimed at media sync
     me
   -a, --archive
     Path / URI to use for archiving
-  -h, --history-db
+  -H, --history-db
     Override path to history database
     The default location for the database is at the root of the target
   -m, --mode
@@ -52,11 +52,20 @@ A simple file synchroniser aimed at media sync
     Produces less output, good for non-interactive scripts
   -r, --retries
     Retry failed synchronisations at most this many times
+    0 disables retrying
+  --retry-forever
+    Keep retrying failed synchronisations until they succeed
+    Cannot be combined with --retries
   -s, --source
     Path / URI to use for source
   -t, --target
     Path / URI to use for target
 ```
+
+Exit codes:
+- `0`: everything was synchronised (and archived, if requested)
+- `2`: finished, but some files failed to sync or archive; they're listed at the end of the output
+- `255` (`-1`): invalid arguments
 
 Whilst the examples above display how bitsplat is used under Linux, there are binaries available for
 Linux, Windows and OSX (the latter is untested -- feedback welcome). The windows binary can be obtained

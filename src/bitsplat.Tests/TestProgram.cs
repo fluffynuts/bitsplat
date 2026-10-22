@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using bitsplat.History;
 using bitsplat.Tests.TestingSupport;
@@ -62,6 +63,208 @@ namespace bitsplat.Tests
             var dbFile = Path.Combine(arena.TargetPath, TargetHistoryRepository.DB_NAME);
             Expect(dbFile)
                 .Not.To.Exist();
+        }
+
+        [Test]
+        public void ShouldRejectNegativeRetries()
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var notExpected = arena.TargetPathFor(newFile.RelativePath);
+            // Act
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                "-r", "-1"
+            );
+            // Assert
+            Expect(exitCode)
+                .Not.To.Equal(0);
+            Expect(output)
+                .To.Contain("--retries");
+            Expect(notExpected)
+                .Not.To.Exist();
+        }
+
+        [TestCase("-r")]
+        [TestCase("--retries")]
+        public void ShouldRejectRetryForeverWithRetries(string retriesSwitch)
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var notExpected = arena.TargetPathFor(newFile.RelativePath);
+            // Act
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                retriesSwitch, "2",
+                "--retry-forever"
+            );
+            // Assert
+            Expect(exitCode)
+                .Not.To.Equal(0);
+            Expect(output)
+                .To.Contain("--retries")
+                .And
+                .To.Contain("--retry-forever");
+            Expect(notExpected)
+                .Not.To.Exist();
+        }
+
+        [Test]
+        public void ShouldNotSyncWhenGivenAnUnknownSwitch()
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            // Act
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                "--dry-rn"
+            );
+            // Assert
+            Expect(exitCode)
+                .To.Equal(Program.ExitCodes.INVALID_ARGUMENTS);
+            Expect(output)
+                .To.Contain("--dry-rn");
+            Expect(arena.TargetPathFor(newFile.RelativePath))
+                .Not.To.Exist();
+        }
+
+        [TestCase("-H")]
+        [TestCase("--history-db")]
+        public void ShouldUseTheGivenHistoryDatabase(string historyDbSwitch)
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            var historyDb = Path.Combine(arena.ContainerPath, "elsewhere.db");
+            // Act
+            var (exitCode, _) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                historyDbSwitch, historyDb
+            );
+            // Assert
+            Expect(exitCode)
+                .To.Equal(Program.ExitCodes.SUCCESS);
+            Expect(arena.TargetPathFor(newFile.RelativePath))
+                .To.Exist();
+            Expect(historyDb)
+                .To.Exist();
+            Expect(Path.Combine(arena.TargetPath, TargetHistoryRepository.DB_NAME))
+                .Not.To.Exist();
+        }
+
+        [TestFixture]
+        public class ExitCode
+        {
+            [Test]
+            public void ShouldBeZeroWhenEverythingSyncs()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                arena.CreateSourceFile();
+                // Act
+                var (exitCode, _) = RunCapturingOutput(
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(0);
+            }
+
+            [Test]
+            public void ShouldBeNonZeroAndNameTheFileWhenAFileFailsToSync()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var sourceFile = arena.CreateSourceFile();
+                // a folder where the file should go means the file can't be written
+                Directory.CreateDirectory(arena.TargetPathFor(sourceFile.RelativePath));
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-n",
+                    "-r", "0",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.FINISHED_WITH_FAILURES);
+                Expect(output)
+                    .To.Contain($"Failed to sync: {sourceFile.RelativePath}");
+            }
+
+            [Test]
+            public void ShouldBeNonZeroAndNameTheFileWhenAFileFailsToArchive()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var watched = "watched.mkv";
+                var data = GetRandomBytes();
+                arena.CreateSourceFile(watched, data);
+                arena.CreateTargetFile(watched, data);
+                arena.CreateTargetFile($"{watched}.t");
+                // a folder where the file should go means it can't be archived
+                Directory.CreateDirectory(arena.ArchivePathFor(watched));
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-r", "0",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-a", arena.ArchivePath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.FINISHED_WITH_FAILURES);
+                Expect(output)
+                    .To.Contain($"Failed to archive: {watched}");
+                Expect(arena.SourcePathFor(watched))
+                    .To.Exist();
+                Expect(arena.TargetPathFor(watched))
+                    .To.Exist();
+                // so that the next run tries to archive it again
+                Expect(arena.TargetPathFor($"{watched}.t"))
+                    .To.Exist();
+            }
+
+            [Test]
+            public void ShouldBeZeroWhenAWatchedFileIsNoLongerAtTheSource()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var watched = "watched.mkv";
+                arena.CreateTargetFile(watched);
+                arena.CreateTargetFile($"{watched}.t");
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-a", arena.ArchivePath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.SUCCESS);
+                Expect(output)
+                    .To.Contain($"Not archiving {watched}: not found at source; it will be removed from the target as stale");
+                Expect(arena.TargetPathFor(watched))
+                    .Not.To.Exist();
+                Expect(arena.TargetPathFor($"{watched}.t"))
+                    .Not.To.Exist();
+            }
         }
 
         [Test]
@@ -294,6 +497,23 @@ namespace bitsplat.Tests
         private static TestArena CreateArena()
         {
             return new TestArena();
+        }
+
+        private static (int exitCode, string output) RunCapturingOutput(
+            params string[] args)
+        {
+            using var output = new StringWriter();
+            var originalOut = Console.Out;
+            Console.SetOut(output);
+            try
+            {
+                var exitCode = Program.Main(args);
+                return (exitCode, output.ToString());
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
         }
     }
 }

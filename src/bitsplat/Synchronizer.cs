@@ -13,12 +13,12 @@ namespace bitsplat
 {
     public interface ISynchronizer
     {
-        void Synchronize(
+        SyncResult Synchronize(
             IFileSystem from,
             IFileSystem to
         );
 
-        void Synchronize(
+        SyncResult Synchronize(
             string label,
             IFileSystem from,
             IFileSystem to
@@ -35,6 +35,7 @@ namespace bitsplat
         private readonly IProgressReporter _progressReporter;
         private readonly IOptions _options;
         private readonly ISyncQueueNotifiable[] _notifiables;
+        private readonly IDelayer _delayer;
         private string _label;
 
         public Synchronizer(
@@ -43,9 +44,11 @@ namespace bitsplat
             IPassThrough[] intermediatePipes,
             IFilter[] filters,
             IProgressReporter progressReporter,
-            IOptions options)
+            IOptions options,
+            IDelayer delayer)
         {
             ValidateIntermediatePipes(intermediatePipes);
+            _delayer = delayer;
             _targetHistoryRepository = targetHistoryRepository;
             _resumeStrategy = resumeStrategy;
             _intermediatePipes = intermediatePipes;
@@ -70,16 +73,16 @@ namespace bitsplat
             });
         }
 
-        public void Synchronize(
+        public SyncResult Synchronize(
             string label,
             IFileSystem from,
             IFileSystem to)
         {
             _label = label;
-            Synchronize(from, to);
+            return Synchronize(from, to);
         }
 
-        public void Synchronize(
+        public SyncResult Synchronize(
             IFileSystem source,
             IFileSystem target
         )
@@ -104,42 +107,52 @@ namespace bitsplat
             if (syncQueue.IsEmpty())
             {
                 NotifyNoWork(source, target);
-                return;
+                return SyncResult.NothingAttempted;
             }
 
             if (_options.DryRun)
             {
-                Debug("would attempt to sync:");
+                Log("would attempt to sync:");
                 syncQueue.ForEach(LogWouldAttemptSync);
-                return;
+                return SyncResult.NothingAttempted;
             }
 
+            var synced = new List<IReadWriteFileResource>();
+            var failed = new List<IReadWriteFileResource>();
             syncQueue.ForEach(sourceResource =>
-                SynchroniseResource(
+            {
+                var succeeded = SynchroniseResource(
                     source,
                     sourceResource,
                     target,
                     targetResources
-                )
-            );
+                );
+                (succeeded ? synced : failed).Add(sourceResource);
+            });
 
             NotifySyncBatchComplete(syncQueue);
+            return new SyncResult(synced, failed);
         }
 
         private void LogWouldAttemptSync(IReadWriteFileResource obj)
         {
-            Debug($"  {obj.RelativePath} ({obj.Size})");
+            Log($"  {obj.RelativePath} ({obj.Size})");
         }
 
         private void Debug(string message)
         {
             if (_options.Verbose)
             {
-                _notifiables.ForEach(n => n.Log(message));
+                Log(message);
             }
         }
 
-        private void SynchroniseResource(
+        private void Log(string message)
+        {
+            _notifiables.ForEach(n => n.Log(message));
+        }
+
+        private bool SynchroniseResource(
             IFileSystem source,
             IReadWriteFileResource sourceResource,
             IFileSystem target,
@@ -152,43 +165,69 @@ namespace bitsplat
                     null,
                     new FileNotFoundException(
                         $"source: {sourceResource.RelativePath}"
-                    )
+                    ),
+                    attempt: null
                 );
-                return;
+                return false;
             }
 
-            var attempts = 0;
-            var test = _options.Retries < 1
-                           ? new Func<bool>(() => true)
-                           : CanTryAgain;
-            do
+            int? maxAttempts = _options.RetryForever
+                                   ? null
+                                   : 1 + _options.Retries;
+            for (var attempt = 1; maxAttempts is null || attempt <= maxAttempts; attempt++)
             {
+                var syncAttempt = new SyncAttempt(attempt, maxAttempts);
+                if (attempt > 1)
+                {
+                    WaitBefore(syncAttempt);
+                }
+
                 if (TrySynchroniseResource(
                     sourceResource,
                     target,
-                    targetResources
+                    targetResources,
+                    syncAttempt
                 ))
                 {
-                    return;
+                    return true;
                 }
-            } while (test());
-
-            bool CanTryAgain()
-            {
-                return ++attempts < _options.Retries;
             }
+
+            return false;
         }
 
-        private bool TryDo<T>(Func<T> toRun, out T result)
+        // gives transient failures (eg a dropped wifi connection) time to recover
+        private static readonly TimeSpan[] RetryBackOff =
+        {
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(3),
+            TimeSpan.FromSeconds(5)
+        };
+
+        private void WaitBefore(SyncAttempt attempt)
+        {
+            var retryNumber = attempt.Number - 1;
+            var delay = RetryBackOff[Math.Min(retryNumber, RetryBackOff.Length) - 1];
+            Log($"waiting {delay.TotalSeconds}s before {attempt}");
+            _delayer.Delay(delay);
+        }
+
+        private bool TryOpen(
+            Func<Stream> open,
+            IFileResource sourceResource,
+            IFileResource targetResource,
+            SyncAttempt attempt,
+            out Stream stream)
         {
             try
             {
-                result = toRun();
+                stream = open();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                result = default;
+                NotifyError(sourceResource, targetResource, ex, attempt);
+                stream = null;
                 return false;
             }
         }
@@ -196,29 +235,80 @@ namespace bitsplat
         private bool TrySynchroniseResource(
             IReadWriteFileResource sourceResource,
             IFileSystem target,
-            IReadWriteFileResource[] targetResources)
+            IReadWriteFileResource[] targetResources,
+            SyncAttempt attempt)
         {
             var targetResource = targetResources.FirstOrDefault(
                 r => r.RelativePath == sourceResource.RelativePath
             );
 
-            if (!TryDo(sourceResource.OpenForRead, out var sourceStream))
+            if (!TryOpen(
+                    sourceResource.OpenForRead,
+                    sourceResource,
+                    targetResource,
+                    attempt,
+                    out var sourceStream))
             {
                 return false;
             }
 
-            if (!TryDo(
-                    () => target.Open(sourceResource.RelativePath,
-                        FileMode.OpenOrCreate,
-                        FileAccess.ReadWrite
-                    ),
-                    out var targetStream)
-            )
+            Stream targetStream = null;
+            try
             {
-                return false;
+                if (!TryOpen(
+                        () => target.Open(
+                            sourceResource.RelativePath,
+                            FileMode.OpenOrCreate,
+                            FileAccess.ReadWrite
+                        ),
+                        sourceResource,
+                        targetResource,
+                        attempt,
+                        out targetStream))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (targetStream is null)
+                {
+                    sourceStream.Dispose();
+                }
             }
 
-            NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
+            return TrySynchroniseStreams(
+                sourceResource,
+                target,
+                targetResource,
+                sourceStream,
+                targetStream,
+                attempt);
+        }
+
+        private bool TrySynchroniseStreams(
+            IReadWriteFileResource sourceResource,
+            IFileSystem target,
+            IReadWriteFileResource targetResource,
+            Stream sourceStream,
+            Stream targetStream,
+            SyncAttempt attempt)
+        {
+            try
+            {
+                ResumeOrTruncateTargetThenNotifySyncStart(
+                    sourceResource,
+                    targetResource,
+                    sourceStream,
+                    targetStream);
+            }
+            catch (Exception ex)
+            {
+                NotifyError(sourceResource, targetResource, ex, attempt);
+                sourceStream.Dispose();
+                targetStream.Dispose();
+                return false;
+            }
 
             var composition = ComposePipeline(sourceStream, targetStream);
             try
@@ -235,7 +325,7 @@ namespace bitsplat
             }
             catch (Exception ex)
             {
-                NotifyError(sourceResource, targetResource, ex);
+                NotifyError(sourceResource, targetResource, ex, attempt);
                 composition.Dispose();
                 return false;
             }
@@ -243,7 +333,8 @@ namespace bitsplat
             return true;
         }
 
-        private void NotifySyncStart(IReadWriteFileResource sourceResource,
+        private void ResumeOrTruncateTargetThenNotifySyncStart(
+            IReadWriteFileResource sourceResource,
             IReadWriteFileResource targetResource,
             Stream sourceStream,
             Stream targetStream)
@@ -340,13 +431,15 @@ namespace bitsplat
         private void NotifyError(
             IFileResource source,
             IFileResource target,
-            Exception ex)
+            Exception ex,
+            SyncAttempt attempt)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifyError(
                     source,
                     target,
-                    ex
+                    ex,
+                    attempt
                 )
             );
         }
