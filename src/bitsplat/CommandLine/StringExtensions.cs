@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -7,6 +8,15 @@ namespace bitsplat.CommandLine
     {
         public static string[] SplitLines(this string str, int maxLength)
         {
+            if (maxLength < 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxLength),
+                    maxLength,
+                    "lines must be allowed at least one character"
+                );
+            }
+
             var start = 0;
             var result = new List<string>();
             while (start < str.Length)
