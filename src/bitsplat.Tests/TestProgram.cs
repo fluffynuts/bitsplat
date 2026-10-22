@@ -235,6 +235,9 @@ namespace bitsplat.Tests
                     .To.Exist();
                 Expect(arena.TargetPathFor(watched))
                     .To.Exist();
+                // so that the next run tries to archive it again
+                Expect(arena.TargetPathFor($"{watched}.t"))
+                    .To.Exist();
             }
 
             [Test]

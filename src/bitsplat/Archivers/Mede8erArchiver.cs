@@ -38,6 +38,11 @@ namespace bitsplat.Archivers
 
     public class Mede8erArchiver : IArchiver
     {
+        /// <summary>
+        /// the player marks "movie.mkv" as watched by creating "movie.mkv.t" next to it
+        /// </summary>
+        public const string WATCHED_MARKER_EXTENSION = ".t";
+
         private readonly IPassThrough[] _intermediatePipes;
         private readonly IProgressReporter _progressReporter;
         private readonly IOptions _options;
@@ -70,11 +75,11 @@ namespace bitsplat.Archivers
             var notArchived = new List<string>();
             var targetResources = target.ListResourcesRecursive();
             var archiveMarkers = targetResources
-                .Where(r => r.Name?.EndsWith(".t") ?? false)
+                .Where(r => r.Name?.EndsWith(WATCHED_MARKER_EXTENSION) ?? false)
                 .Select(r => r.RelativePath)
                 .ToArray();
             var toArchive = archiveMarkers
-                .Select(p => p.RegexReplace(".t$", ""))
+                .Select(p => p[..^WATCHED_MARKER_EXTENSION.Length])
                 .ToArray();
 
             // the source is the source of truth: a watched file which has gone from
@@ -106,7 +111,7 @@ namespace bitsplat.Archivers
 
                 source.Delete(r.RelativePath);
                 target.Delete(r.RelativePath);
-                target.Delete($"{r.RelativePath}.t");
+                target.Delete($"{r.RelativePath}{WATCHED_MARKER_EXTENSION}");
             });
 
             return notArchived;

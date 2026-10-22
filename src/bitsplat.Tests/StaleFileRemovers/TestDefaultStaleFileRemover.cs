@@ -48,6 +48,41 @@ namespace bitsplat.Tests.StaleFileRemovers
         }
 
         [Test]
+        public void ShouldKeepWatchedMarkersWhoseMediaFileIsStillAtSource()
+        {
+            // Arrange
+            var media = ResourceAt("Series/ep1.mkv");
+            var source = Substitute.For<IFileSystem>();
+            var target = Substitute.For<IFileSystem>();
+            source.ListResourcesRecursive()
+                .Returns(new[] { media });
+            var markerForMediaAtSource = ResourceAt("Series/ep1.mkv.t");
+            var markerForMediaGoneFromSource = ResourceAt("Series/ep2.mkv.t");
+            target.ListResourcesRecursive()
+                .Returns(new[] { media, markerForMediaAtSource, markerForMediaGoneFromSource });
+            var sut = Create();
+            // Act
+            sut.RemoveStaleFiles(
+                source,
+                target);
+            // Assert
+            Expect(target)
+                .To.Have.Received(1)
+                .Delete(Arg.Any<string>());
+            Expect(target)
+                .To.Have.Received(1)
+                .Delete("Series/ep2.mkv.t");
+        }
+
+        private static IReadWriteFileResource ResourceAt(string relativePath)
+        {
+            return ReadWriteFileResourceBuilder.Create()
+                .WithRandomProps()
+                .WithRelativePath(relativePath)
+                .Build();
+        }
+
+        [Test]
         public void ShouldOnlyReportWhatWouldBeRemovedOnDryRun()
         {
             // Arrange
