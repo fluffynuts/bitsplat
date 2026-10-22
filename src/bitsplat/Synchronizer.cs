@@ -179,16 +179,21 @@ namespace bitsplat
             }
         }
 
-        private bool TryDo<T>(Func<T> toRun, out T result)
+        private bool TryOpen(
+            Func<Stream> open,
+            IFileResource sourceResource,
+            IFileResource targetResource,
+            out Stream stream)
         {
             try
             {
-                result = toRun();
+                stream = open();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                result = default;
+                NotifyError(sourceResource, targetResource, ex);
+                stream = null;
                 return false;
             }
         }
@@ -202,22 +207,54 @@ namespace bitsplat
                 r => r.RelativePath == sourceResource.RelativePath
             );
 
-            if (!TryDo(sourceResource.OpenForRead, out var sourceStream))
+            if (!TryOpen(
+                    sourceResource.OpenForRead,
+                    sourceResource,
+                    targetResource,
+                    out var sourceStream))
             {
                 return false;
             }
 
-            if (!TryDo(
-                    () => target.Open(sourceResource.RelativePath,
-                        FileMode.OpenOrCreate,
-                        FileAccess.ReadWrite
-                    ),
-                    out var targetStream)
-            )
+            Stream targetStream = null;
+            try
             {
-                return false;
+                if (!TryOpen(
+                        () => target.Open(
+                            sourceResource.RelativePath,
+                            FileMode.OpenOrCreate,
+                            FileAccess.ReadWrite
+                        ),
+                        sourceResource,
+                        targetResource,
+                        out targetStream))
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                if (targetStream is null)
+                {
+                    sourceStream.Dispose();
+                }
             }
 
+            return TrySynchroniseStreams(
+                sourceResource,
+                target,
+                targetResource,
+                sourceStream,
+                targetStream);
+        }
+
+        private bool TrySynchroniseStreams(
+            IReadWriteFileResource sourceResource,
+            IFileSystem target,
+            IReadWriteFileResource targetResource,
+            Stream sourceStream,
+            Stream targetStream)
+        {
             NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
 
             var composition = ComposePipeline(sourceStream, targetStream);

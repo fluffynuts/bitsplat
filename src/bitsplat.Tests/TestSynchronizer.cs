@@ -449,6 +449,104 @@ namespace bitsplat.Tests
                 Expect(File.ReadAllBytes(expected))
                     .To.Equal(sourceFile.Data);
             }
+
+            [TestFixture]
+            public class WhenTargetCannotBeOpened
+            {
+                [Test]
+                public void ShouldDisposeTheSourceStream()
+                {
+                    // Arrange
+                    var (source, openedSourceStreams) = CreateSourceWithOneFile();
+                    var target = CreateTargetWhichCannotBeOpened(new IOException("target is read-only"));
+                    var sut = Create(
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(1));
+                    // Act
+                    sut.Synchronize(source, target);
+                    // Assert
+                    Expect(openedSourceStreams)
+                        .Not.To.Be.Empty();
+                    Expect(openedSourceStreams)
+                        .To.Contain.All
+                        .Matched.By(s => s.IsDisposed);
+                }
+
+                [Test]
+                public void ShouldNotifyTheOpenError()
+                {
+                    // Arrange
+                    var (source, _) = CreateSourceWithOneFile();
+                    var expected = new IOException("target is read-only");
+                    var target = CreateTargetWhichCannotBeOpened(expected);
+                    var notifiable = new NotifiableGenericPassThrough((_, _) => { }, () => { });
+                    var sut = Create(
+                        intermediatePipes: new IPassThrough[] { notifiable },
+                        filters: CreatePermissiveFilter(),
+                        options: CreateOptionsWithRetries(1));
+                    // Act
+                    sut.Synchronize(source, target);
+                    // Assert
+                    Expect(notifiable.ErrorNotifications)
+                        .Not.To.Be.Empty();
+                    Expect(notifiable.ErrorNotifications)
+                        .To.Contain.All
+                        .Matched.By(n => n.ex == expected && n.source.RelativePath == "file.bin");
+                }
+
+                private static (IFileSystem source, List<DisposeTrackingStream> openedStreams)
+                    CreateSourceWithOneFile()
+                {
+                    var openedStreams = new List<DisposeTrackingStream>();
+                    var data = GetRandomBytes(10, 20);
+                    var resource = Substitute.For<IReadWriteFileResource>();
+                    resource.RelativePath.Returns("file.bin");
+                    resource.Name.Returns("file.bin");
+                    resource.Size.Returns(data.Length);
+                    resource.OpenForRead().Returns(_ =>
+                    {
+                        var stream = new DisposeTrackingStream(data);
+                        openedStreams.Add(stream);
+                        return stream;
+                    });
+                    var source = Substitute.For<IFileSystem>();
+                    source.ListResourcesRecursive().Returns(new[] { resource });
+                    source.IsFile("file.bin").Returns(true);
+                    return (source, openedStreams);
+                }
+
+                private static IFileSystem CreateTargetWhichCannotBeOpened(Exception toThrow)
+                {
+                    var target = Substitute.For<IFileSystem>();
+                    target.ListResourcesRecursive().Returns(new IReadWriteFileResource[0]);
+                    target.Open(Arg.Any<string>(), Arg.Any<FileMode>(), Arg.Any<FileAccess>())
+                        .Returns<Stream>(_ => throw toThrow);
+                    return target;
+                }
+            }
+
+            private static IOptions CreateOptionsWithRetries(int retries)
+            {
+                var options = CreateDefaultOptions();
+                options.Retries.Returns(retries);
+                return options;
+            }
+
+            public class DisposeTrackingStream : MemoryStream
+            {
+                public bool IsDisposed { get; private set; }
+
+                public DisposeTrackingStream(byte[] data)
+                    : base(data)
+                {
+                }
+
+                protected override void Dispose(bool disposing)
+                {
+                    IsDisposed = true;
+                    base.Dispose(disposing);
+                }
+            }
         }
 
         [TestFixture]
