@@ -202,16 +202,42 @@ namespace bitsplat.Tests
         public class WhenMarkedFileIsNotAtSource : TestMede8erArchiver
         {
             [Test]
-            public void ShouldKeepTheTargetFileAndMarkerAndReportIt()
+            public void ShouldNotArchiveItOrCountItAsNotArchived()
             {
                 // Arrange
                 using var arena = new TestArena();
                 var toArchive = GetRandomFileName();
-                var targetFile = arena.CreateTargetFile(toArchive, GetRandomBytes());
-                var marker = arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                arena.CreateTargetFile(toArchive, GetRandomBytes());
+                arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var sut = Create(options: CreateOptionsWithRetries(1));
+                // Act
+                var result = sut.RunArchiveOperations(
+                    arena.TargetFileSystem,
+                    arena.ArchiveFileSystem,
+                    arena.SourceFileSystem);
+                // Assert
+                Expect(result.Count)
+                    .To.Equal(0);
+                Expect(arena.ArchiveFileSystem.Exists(toArchive))
+                    .To.Be.False();
+            }
+
+            [TestCase(false, "it will be removed from the target as stale")]
+            [TestCase(true, "it will be kept at the target (--keep-stale)")]
+            public void ShouldSayWhatWillHappenToIt(
+                bool keepStaleFiles,
+                string expected)
+            {
+                // Arrange
+                using var arena = new TestArena();
+                var toArchive = GetRandomFileName();
+                arena.CreateTargetFile(toArchive, GetRandomBytes());
+                arena.CreateTargetFile($"{toArchive}.t", new byte[0]);
+                var options = CreateOptionsWithRetries(1);
+                options.KeepStaleFiles.Returns(keepStaleFiles);
                 var messageWriter = Substitute.For<IMessageWriter>();
                 var sut = Create(
-                    options: CreateOptionsWithRetries(1),
+                    options: options,
                     messageWriter: messageWriter);
                 // Act
                 sut.RunArchiveOperations(
@@ -219,15 +245,9 @@ namespace bitsplat.Tests
                     arena.ArchiveFileSystem,
                     arena.SourceFileSystem);
                 // Assert
-                Expect(targetFile.Path)
-                    .To.Exist();
-                Expect(marker.Path)
-                    .To.Exist();
-                Expect(arena.ArchiveFileSystem.Exists(toArchive))
-                    .To.Be.False();
                 Expect(messageWriter)
                     .To.Have.Received(1)
-                    .Write(Arg.Is<string>(s => s.Contains(toArchive)));
+                    .Write($"Not archiving {toArchive}: not found at source; {expected}");
             }
         }
 

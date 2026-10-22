@@ -207,17 +207,21 @@ namespace bitsplat.Tests
             }
 
             [Test]
-            public void ShouldBeNonZeroAndNameTheFileWhenAFileIsNotArchived()
+            public void ShouldBeNonZeroAndNameTheFileWhenAFileFailsToArchive()
             {
                 // Arrange
                 using var arena = CreateArena();
                 var watched = "watched.mkv";
-                arena.CreateTargetFile(watched);
+                var data = GetRandomBytes();
+                arena.CreateSourceFile(watched, data);
+                arena.CreateTargetFile(watched, data);
                 arena.CreateTargetFile($"{watched}.t");
+                // a folder where the file should go means it can't be archived
+                Directory.CreateDirectory(arena.ArchivePathFor(watched));
                 // Act
                 var (exitCode, output) = RunCapturingOutput(
                     "-q",
-                    "-k",
+                    "-r", "0",
                     "-s", arena.SourcePath,
                     "-t", arena.TargetPath,
                     "-a", arena.ArchivePath
@@ -227,6 +231,36 @@ namespace bitsplat.Tests
                     .To.Equal(Program.ExitCodes.FINISHED_WITH_FAILURES);
                 Expect(output)
                     .To.Contain($"Failed to archive: {watched}");
+                Expect(arena.SourcePathFor(watched))
+                    .To.Exist();
+                Expect(arena.TargetPathFor(watched))
+                    .To.Exist();
+            }
+
+            [Test]
+            public void ShouldBeZeroWhenAWatchedFileIsNoLongerAtTheSource()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var watched = "watched.mkv";
+                arena.CreateTargetFile(watched);
+                arena.CreateTargetFile($"{watched}.t");
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-a", arena.ArchivePath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.SUCCESS);
+                Expect(output)
+                    .To.Contain($"Not archiving {watched}: not found at source; it will be removed from the target as stale");
+                Expect(arena.TargetPathFor(watched))
+                    .Not.To.Exist();
+                Expect(arena.TargetPathFor($"{watched}.t"))
+                    .Not.To.Exist();
             }
         }
 

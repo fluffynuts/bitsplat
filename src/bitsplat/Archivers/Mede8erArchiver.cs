@@ -77,9 +77,16 @@ namespace bitsplat.Archivers
                 .Select(p => p.RegexReplace(".t$", ""))
                 .ToArray();
 
+            // the source is the source of truth: a watched file which has gone from
+            // there doesn't need archiving, and stale removal deals with the target copy
             toArchive
                 .Where(p => !source.IsFile(p))
-                .ForEach(p => ReportNotArchived(p, "not found at source"));
+                .ForEach(p => _messageWriter.Write(
+                    $"Not archiving {p}: not found at source; " +
+                    (_options.KeepStaleFiles
+                         ? "it will be kept at the target (--keep-stale)"
+                         : "it will be removed from the target as stale")
+                ));
 
             var result = SynchronizeArchiveFiles(source, archive, toArchive, _options);
             if (_options.DryRun)
