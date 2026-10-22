@@ -157,18 +157,22 @@ namespace bitsplat
                     null,
                     new FileNotFoundException(
                         $"source: {sourceResource.RelativePath}"
-                    )
+                    ),
+                    attempt: null
                 );
                 return false;
             }
 
-            var maxAttempts = 1 + _options.Retries;
-            for (var attempt = 1; _options.RetryForever || attempt <= maxAttempts; attempt++)
+            int? maxAttempts = _options.RetryForever
+                                   ? null
+                                   : 1 + _options.Retries;
+            for (var attempt = 1; maxAttempts is null || attempt <= maxAttempts; attempt++)
             {
                 if (TrySynchroniseResource(
                     sourceResource,
                     target,
-                    targetResources
+                    targetResources,
+                    new SyncAttempt(attempt, maxAttempts)
                 ))
                 {
                     return true;
@@ -182,6 +186,7 @@ namespace bitsplat
             Func<Stream> open,
             IFileResource sourceResource,
             IFileResource targetResource,
+            SyncAttempt attempt,
             out Stream stream)
         {
             try
@@ -191,7 +196,7 @@ namespace bitsplat
             }
             catch (Exception ex)
             {
-                NotifyError(sourceResource, targetResource, ex);
+                NotifyError(sourceResource, targetResource, ex, attempt);
                 stream = null;
                 return false;
             }
@@ -200,7 +205,8 @@ namespace bitsplat
         private bool TrySynchroniseResource(
             IReadWriteFileResource sourceResource,
             IFileSystem target,
-            IReadWriteFileResource[] targetResources)
+            IReadWriteFileResource[] targetResources,
+            SyncAttempt attempt)
         {
             var targetResource = targetResources.FirstOrDefault(
                 r => r.RelativePath == sourceResource.RelativePath
@@ -210,6 +216,7 @@ namespace bitsplat
                     sourceResource.OpenForRead,
                     sourceResource,
                     targetResource,
+                    attempt,
                     out var sourceStream))
             {
                 return false;
@@ -226,6 +233,7 @@ namespace bitsplat
                         ),
                         sourceResource,
                         targetResource,
+                        attempt,
                         out targetStream))
                 {
                     return false;
@@ -244,7 +252,8 @@ namespace bitsplat
                 target,
                 targetResource,
                 sourceStream,
-                targetStream);
+                targetStream,
+                attempt);
         }
 
         private bool TrySynchroniseStreams(
@@ -252,7 +261,8 @@ namespace bitsplat
             IFileSystem target,
             IReadWriteFileResource targetResource,
             Stream sourceStream,
-            Stream targetStream)
+            Stream targetStream,
+            SyncAttempt attempt)
         {
             NotifySyncStart(sourceResource, targetResource, sourceStream, targetStream);
 
@@ -271,7 +281,7 @@ namespace bitsplat
             }
             catch (Exception ex)
             {
-                NotifyError(sourceResource, targetResource, ex);
+                NotifyError(sourceResource, targetResource, ex, attempt);
                 composition.Dispose();
                 return false;
             }
@@ -376,13 +386,15 @@ namespace bitsplat
         private void NotifyError(
             IFileResource source,
             IFileResource target,
-            Exception ex)
+            Exception ex,
+            SyncAttempt attempt)
         {
             _notifiables.ForEach(
                 notifiable => notifiable.NotifyError(
                     source,
                     target,
-                    ex
+                    ex,
+                    attempt
                 )
             );
         }

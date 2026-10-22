@@ -162,7 +162,11 @@ namespace bitsplat.Pipes
         public void NotifyError(NotificationDetails details)
         {
             Write(details.Label, FAIL);
-            Write(details.Exception.Message, "");
+            Write(
+                details.Attempt is null
+                    ? details.Exception.Message
+                    : $"{details.Attempt} failed: {details.Exception.Message}",
+                "");
             Write(details.Exception.StackTrace, "");
         }
 

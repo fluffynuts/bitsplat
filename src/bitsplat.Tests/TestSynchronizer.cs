@@ -486,6 +486,28 @@ namespace bitsplat.Tests
             }
 
             [Test]
+            public void ShouldReportWhichAttemptFailed()
+            {
+                // Arrange
+                using var arena = new TestArena();
+                arena.CreateSourceFile(data: GetRandomBytes(10, 20));
+                var notifiable = new NotifiableGenericPassThrough(
+                    (_, _) => throw new IOException("simulated failure"),
+                    () =>
+                    {
+                    });
+                var sut = Create(
+                    intermediatePipes: new IPassThrough[] { notifiable },
+                    filters: CreatePermissiveFilter(),
+                    options: CreateOptionsWithRetries(2));
+                // Act
+                sut.Synchronize(arena.SourceFileSystem, arena.TargetFileSystem);
+                // Assert
+                Expect(notifiable.ErrorNotifications.Select(n => n.attempt?.ToString()))
+                    .To.Equal(new[] { "attempt 1 of 3", "attempt 2 of 3", "attempt 3 of 3" });
+            }
+
+            [Test]
             public void ShouldKeepRetryingUntilSuccessWhenRetryingForever()
             {
                 // Arrange
@@ -778,8 +800,9 @@ namespace bitsplat.Tests
             public List<(IFileResource source, IFileResource target)> CompletedNotifications { get; }
                 = new List<(IFileResource source, IFileResource target)>();
 
-            public List<(IFileResource source, IFileResource target, Exception ex)> ErrorNotifications { get; }
-                = new List<(IFileResource source, IFileResource target, Exception ex)>();
+            public List<(IFileResource source, IFileResource target, Exception ex, SyncAttempt attempt)>
+                ErrorNotifications { get; }
+                = new List<(IFileResource source, IFileResource target, Exception ex, SyncAttempt attempt)>();
 
             public NotifiableGenericPassThrough(
                 Action<byte[], int> onWrite,
@@ -819,10 +842,10 @@ namespace bitsplat.Tests
             public void NotifyError(
                 IFileResource sourceResource,
                 IFileResource targetResource,
-                Exception ex)
+                Exception ex,
+                SyncAttempt attempt)
             {
-                // TODO: test me
-                ErrorNotifications.Add((sourceResource, targetResource, ex));
+                ErrorNotifications.Add((sourceResource, targetResource, ex, attempt));
             }
 
             public void NotifyNoWork(

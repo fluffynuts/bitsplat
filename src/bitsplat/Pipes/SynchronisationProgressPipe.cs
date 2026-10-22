@@ -171,7 +171,8 @@ namespace bitsplat.Pipes
         public void NotifyError(
             IFileResource sourceResource,
             IFileResource targetResource,
-            Exception ex)
+            Exception ex,
+            SyncAttempt attempt)
         {
             _reporter.NotifyError(
                 new NotificationDetails()
@@ -183,7 +184,8 @@ namespace bitsplat.Pipes
                     TotalItems = _totalBatchItems,
                     TotalBytesTransferred = _batchBytesTransferred,
                     TotalBytes = _totalBatchBytes,
-                    Exception = ex
+                    Exception = ex,
+                    Attempt = attempt
                 }
             );
         }
