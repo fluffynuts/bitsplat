@@ -134,6 +134,43 @@ namespace bitsplat.Tests
             public class BuildingParser
             {
                 [TestFixture]
+                public class UnknownArguments
+                {
+                    [Test]
+                    public void ShouldRejectThemByName()
+                    {
+                        // Arrange
+                        var args = new[] { "-f", "--dry-rn", "stray" };
+                        // Act
+                        Expect(() => Args.Configure()
+                                .WithFlag("force",
+                                    o => o.WithArg("-f")
+                                )
+                                .Parse(args))
+                            .To.Throw<ArgumentException>()
+                            .With.Message.Containing("--dry-rn")
+                            .And.Containing("stray");
+                        // Assert
+                    }
+
+                    [Test]
+                    public void ShouldNotRejectThemWhenShowingHelp()
+                    {
+                        // Arrange
+                        var args = new[] { "--help", "--dry-rn" };
+                        // Act
+                        var result = Args.Configure()
+                            .WithFlag("force",
+                                o => o.WithArg("-f")
+                            )
+                            .Parse(args);
+                        // Assert
+                        Expect(result.ShowedHelp)
+                            .To.Be.True();
+                    }
+                }
+
+                [TestFixture]
                 public class ParsedArgumentsBuilding
                 {
                     [TestFixture]

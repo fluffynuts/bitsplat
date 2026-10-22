@@ -109,10 +109,24 @@ namespace bitsplat.CommandLine
             }
             else
             {
+                // recognised arguments have been removed from argsList by now
+                RejectUnknown(argsList);
                 MapCustomProperties(result);
             }
 
             return result;
+        }
+
+        private static void RejectUnknown(IList<string> remainingArgs)
+        {
+            if (remainingArgs.Count == 0)
+            {
+                return;
+            }
+
+            throw new ArgumentException(
+                $"unknown argument(s): {remainingArgs.JoinWith(" ")} (see --help)"
+            );
         }
 
         private void RenderVersion()

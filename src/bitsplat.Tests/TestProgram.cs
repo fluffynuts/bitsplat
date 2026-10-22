@@ -115,6 +115,28 @@ namespace bitsplat.Tests
                 .Not.To.Exist();
         }
 
+        [Test]
+        public void ShouldNotSyncWhenGivenAnUnknownSwitch()
+        {
+            // Arrange
+            using var arena = CreateArena();
+            var newFile = arena.CreateSourceFile();
+            // Act
+            var (exitCode, output) = RunCapturingOutput(
+                "-q",
+                "-s", arena.SourcePath,
+                "-t", arena.TargetPath,
+                "--dry-rn"
+            );
+            // Assert
+            Expect(exitCode)
+                .To.Equal(Program.ExitCodes.INVALID_ARGUMENTS);
+            Expect(output)
+                .To.Contain("--dry-rn");
+            Expect(arena.TargetPathFor(newFile.RelativePath))
+                .Not.To.Exist();
+        }
+
         [TestCase("-H")]
         [TestCase("--history-db")]
         public void ShouldUseTheGivenHistoryDatabase(string historyDbSwitch)
