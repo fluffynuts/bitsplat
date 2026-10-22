@@ -22,10 +22,17 @@ namespace bitsplat.StaleFileRemovers
     public class DefaultStaleFileRemover : IStaleFileRemover
     {
         private readonly IProgressReporter _progressReporter;
+        private readonly IOptions _options;
+        private readonly IMessageWriter _messageWriter;
 
-        public DefaultStaleFileRemover(IProgressReporter progressReporter)
+        public DefaultStaleFileRemover(
+            IProgressReporter progressReporter,
+            IOptions options,
+            IMessageWriter messageWriter)
         {
             _progressReporter = progressReporter;
+            _options = options;
+            _messageWriter = messageWriter;
         }
 
         public void RemoveStaleFiles(IFileSystem source, IFileSystem target)
@@ -37,6 +44,12 @@ namespace bitsplat.StaleFileRemovers
                 .Where(o => !sourcePaths.Contains(o.RelativePath))
                 .ForEach(o =>
                 {
+                    if (_options.DryRun)
+                    {
+                        _messageWriter.Write($"Would remove target: {o.RelativePath}");
+                        return;
+                    }
+
                     _progressReporter.Bookend(
                         $"Remove target: {o.RelativePath}",
                         () => target.Delete(o.RelativePath)
