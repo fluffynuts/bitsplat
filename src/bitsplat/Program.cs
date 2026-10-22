@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using bitsplat.Archivers;
 using bitsplat.CommandLine;
+using bitsplat.Pipes;
 using bitsplat.ResumeStrategies;
 using bitsplat.StaleFileRemovers;
 using bitsplat.Storage;
@@ -13,6 +15,13 @@ namespace bitsplat
 {
     public class Program
     {
+        public static class ExitCodes
+        {
+            public const int SUCCESS = 0;
+            public const int INVALID_ARGUMENTS = -1;
+            public const int FINISHED_WITH_FAILURES = 2;
+        }
+
         public static int Main(params string[] args)
         {
             Console.CancelKeyPress += OnCancel;
@@ -20,13 +29,13 @@ namespace bitsplat
 
             if (!TryParseOptionsFrom(args, out var opts))
             {
-                return -1;
+                return ExitCodes.INVALID_ARGUMENTS;
             }
 
             if (opts.ShowedHelp ||
                 opts.ShowedVersion)
             {
-                return 0;
+                return ExitCodes.SUCCESS;
             }
 
             // TODO: when more than just local filesystems are handled,
@@ -45,7 +54,7 @@ namespace bitsplat
             var archiver = container.Resolve<IArchiver>();
             var staleFileRemover = container.Resolve<IStaleFileRemover>();
 
-            archiver.RunArchiveOperations(
+            var notArchived = archiver.RunArchiveOperations(
                 target,
                 archive,
                 source);
@@ -54,12 +63,33 @@ namespace bitsplat
 
             var synchronizer = container.Resolve<ISynchronizer>();
 
-            synchronizer.Synchronize(
+            var syncResult = synchronizer.Synchronize(
                 $"Start sync: {source.BasePath} => {target.BasePath}",
                 source,
                 target);
 
-            return 0;
+            return ReportFailures(
+                container.Resolve<IMessageWriter>(),
+                notArchived,
+                syncResult.Failed.Select(r => r.RelativePath).ToArray()
+            );
+        }
+
+        private static int ReportFailures(
+            IMessageWriter messageWriter,
+            IReadOnlyList<string> notArchived,
+            IReadOnlyList<string> notSynced)
+        {
+            if (notArchived.Count == 0 &&
+                notSynced.Count == 0)
+            {
+                return ExitCodes.SUCCESS;
+            }
+
+            messageWriter.Write("");
+            notArchived.ForEach(p => messageWriter.Write($"Failed to archive: {p}"));
+            notSynced.ForEach(p => messageWriter.Write($"Failed to sync: {p}"));
+            return ExitCodes.FINISHED_WITH_FAILURES;
         }
 
         private static bool _cancelled;

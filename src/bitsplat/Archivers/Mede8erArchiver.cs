@@ -12,7 +12,8 @@ namespace bitsplat.Archivers
 {
     public interface IArchiver
     {
-        void RunArchiveOperations(
+        /// <returns>relative paths of the files which were marked for archiving but not archived</returns>
+        IReadOnlyList<string> RunArchiveOperations(
             IFileSystem target,
             IFileSystem archive,
             IFileSystem source);
@@ -58,11 +59,12 @@ namespace bitsplat.Archivers
             _messageWriter = messageWriter;
         }
 
-        public void RunArchiveOperations(
+        public IReadOnlyList<string> RunArchiveOperations(
             IFileSystem target,
             IFileSystem archive,
             IFileSystem source)
         {
+            var notArchived = new List<string>();
             var targetResources = target.ListResourcesRecursive();
             var archiveMarkers = targetResources
                 .Where(r => r.Name?.EndsWith(".t") ?? false)
@@ -79,7 +81,7 @@ namespace bitsplat.Archivers
             var result = SynchronizeArchiveFiles(source, archive, toArchive, _options);
             if (_options.DryRun)
             {
-                return;
+                return notArchived;
             }
 
             result.Failed.ForEach(r => ReportNotArchived(r.RelativePath, "copy to archive failed"));
@@ -96,13 +98,16 @@ namespace bitsplat.Archivers
                 target.Delete(r.RelativePath);
                 target.Delete($"{r.RelativePath}.t");
             });
-        }
 
-        private void ReportNotArchived(string path, string reason)
-        {
-            _messageWriter.Write(
-                $"Not archiving {path}: {reason}; it has been left at the source and target"
-            );
+            return notArchived;
+
+            void ReportNotArchived(string path, string reason)
+            {
+                notArchived.Add(path);
+                _messageWriter.Write(
+                    $"Not archiving {path}: {reason}; it has been left at the source and target"
+                );
+            }
         }
 
         private SyncResult SynchronizeArchiveFiles(

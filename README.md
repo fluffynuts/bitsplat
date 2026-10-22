@@ -62,6 +62,11 @@ A simple file synchroniser aimed at media sync
     Path / URI to use for target
 ```
 
+Exit codes:
+- `0`: everything was synchronised (and archived, if requested)
+- `2`: finished, but some files failed to sync or archive; they're listed at the end of the output
+- `255` (`-1`): invalid arguments
+
 Whilst the examples above display how bitsplat is used under Linux, there are binaries available for
 Linux, Windows and OSX (the latter is untested -- feedback welcome). The windows binary can be obtained
 from `scoop` too:

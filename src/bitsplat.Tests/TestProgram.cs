@@ -115,6 +115,73 @@ namespace bitsplat.Tests
                 .Not.To.Exist();
         }
 
+        [TestFixture]
+        public class ExitCode
+        {
+            [Test]
+            public void ShouldBeZeroWhenEverythingSyncs()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                arena.CreateSourceFile();
+                // Act
+                var (exitCode, _) = RunCapturingOutput(
+                    "-q",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(0);
+            }
+
+            [Test]
+            public void ShouldBeNonZeroAndNameTheFileWhenAFileFailsToSync()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var sourceFile = arena.CreateSourceFile();
+                // a folder where the file should go means the file can't be written
+                Directory.CreateDirectory(arena.TargetPathFor(sourceFile.RelativePath));
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-n",
+                    "-r", "0",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.FINISHED_WITH_FAILURES);
+                Expect(output)
+                    .To.Contain($"Failed to sync: {sourceFile.RelativePath}");
+            }
+
+            [Test]
+            public void ShouldBeNonZeroAndNameTheFileWhenAFileIsNotArchived()
+            {
+                // Arrange
+                using var arena = CreateArena();
+                var watched = "watched.mkv";
+                arena.CreateTargetFile(watched);
+                arena.CreateTargetFile($"{watched}.t");
+                // Act
+                var (exitCode, output) = RunCapturingOutput(
+                    "-q",
+                    "-k",
+                    "-s", arena.SourcePath,
+                    "-t", arena.TargetPath,
+                    "-a", arena.ArchivePath
+                );
+                // Assert
+                Expect(exitCode)
+                    .To.Equal(Program.ExitCodes.FINISHED_WITH_FAILURES);
+                Expect(output)
+                    .To.Contain($"Failed to archive: {watched}");
+            }
+        }
+
         [Test]
         public void ShouldArchiveAWatchedFile()
         {
