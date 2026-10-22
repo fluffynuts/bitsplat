@@ -13,12 +13,12 @@ namespace bitsplat
 {
     public interface ISynchronizer
     {
-        void Synchronize(
+        SyncResult Synchronize(
             IFileSystem from,
             IFileSystem to
         );
 
-        void Synchronize(
+        SyncResult Synchronize(
             string label,
             IFileSystem from,
             IFileSystem to
@@ -70,16 +70,16 @@ namespace bitsplat
             });
         }
 
-        public void Synchronize(
+        public SyncResult Synchronize(
             string label,
             IFileSystem from,
             IFileSystem to)
         {
             _label = label;
-            Synchronize(from, to);
+            return Synchronize(from, to);
         }
 
-        public void Synchronize(
+        public SyncResult Synchronize(
             IFileSystem source,
             IFileSystem target
         )
@@ -104,26 +104,31 @@ namespace bitsplat
             if (syncQueue.IsEmpty())
             {
                 NotifyNoWork(source, target);
-                return;
+                return SyncResult.NothingAttempted;
             }
 
             if (_options.DryRun)
             {
                 Debug("would attempt to sync:");
                 syncQueue.ForEach(LogWouldAttemptSync);
-                return;
+                return SyncResult.NothingAttempted;
             }
 
+            var synced = new List<IReadWriteFileResource>();
+            var failed = new List<IReadWriteFileResource>();
             syncQueue.ForEach(sourceResource =>
-                SynchroniseResource(
+            {
+                var succeeded = SynchroniseResource(
                     source,
                     sourceResource,
                     target,
                     targetResources
-                )
-            );
+                );
+                (succeeded ? synced : failed).Add(sourceResource);
+            });
 
             NotifySyncBatchComplete(syncQueue);
+            return new SyncResult(synced, failed);
         }
 
         private void LogWouldAttemptSync(IReadWriteFileResource obj)
@@ -139,7 +144,7 @@ namespace bitsplat
             }
         }
 
-        private void SynchroniseResource(
+        private bool SynchroniseResource(
             IFileSystem source,
             IReadWriteFileResource sourceResource,
             IFileSystem target,
@@ -154,7 +159,7 @@ namespace bitsplat
                         $"source: {sourceResource.RelativePath}"
                     )
                 );
-                return;
+                return false;
             }
 
             var attempts = 0;
@@ -169,9 +174,11 @@ namespace bitsplat
                     targetResources
                 ))
                 {
-                    return;
+                    return true;
                 }
             } while (test());
+
+            return false;
 
             bool CanTryAgain()
             {

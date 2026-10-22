@@ -71,14 +71,41 @@ namespace bitsplat.Archivers
             var toArchive = archiveMarkers
                 .Select(p => p.RegexReplace(".t$", ""))
                 .ToArray();
-            
-            SynchronizeArchiveFiles(source, archive, toArchive, _options);
-            toArchive.ForEach(source.Delete);
-            toArchive.ForEach(target.Delete);
-            archiveMarkers.ForEach(target.Delete);
+
+            toArchive
+                .Where(p => !source.IsFile(p))
+                .ForEach(p => ReportNotArchived(p, "not found at source"));
+
+            var result = SynchronizeArchiveFiles(source, archive, toArchive, _options);
+            if (_options.DryRun)
+            {
+                return;
+            }
+
+            result.Failed.ForEach(r => ReportNotArchived(r.RelativePath, "copy to archive failed"));
+
+            result.Synced.ForEach(r =>
+            {
+                if (archive.FetchSize(r.RelativePath) != r.Size)
+                {
+                    ReportNotArchived(r.RelativePath, "not found at archive after copy");
+                    return;
+                }
+
+                source.Delete(r.RelativePath);
+                target.Delete(r.RelativePath);
+                target.Delete($"{r.RelativePath}.t");
+            });
         }
 
-        private void SynchronizeArchiveFiles(
+        private void ReportNotArchived(string path, string reason)
+        {
+            _messageWriter.Write(
+                $"Not archiving {path}: {reason}; it has been left at the source and target"
+            );
+        }
+
+        private SyncResult SynchronizeArchiveFiles(
             IFileSystem source,
             IFileSystem target,
             string[] toArchive,
@@ -97,7 +124,7 @@ namespace bitsplat.Archivers
                 options
             );
 
-            synchronizer.Synchronize(
+            return synchronizer.Synchronize(
                 $"Start archive: {source.BasePath} => {target.BasePath}",
                 source,
                 target
